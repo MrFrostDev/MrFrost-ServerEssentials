@@ -81,6 +81,16 @@ class MrFrost_ReportSubmit
 			return false;
 
 		float now = GetGame().GetWorld().GetWorldTime();
+
+		// World time restarts at zero with the mission while this map, being
+		// static, survives it. A stamp from the previous mission then sits in the
+		// future, and the subtraction below would report every player as on
+		// cooldown until the clock caught up again - minutes, or an hour on a
+		// long-running server. Treat a stamp ahead of the clock as no cooldown;
+		// the next report overwrites it anyway.
+		if (now < last)
+			return false;
+
 		return (now - last) < (config.m_iCooldownSeconds * 1000);
 	}
 
