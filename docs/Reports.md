@@ -99,6 +99,10 @@ Once a report is in, the menu says so and closes itself a moment later.
 | `logFile` | File name inside the `MrFrost` folder |
 | `webhookUrl` | Discord webhook. Empty means log only |
 | `serverName` | Shown in the Discord message, for people running several servers |
+| `webhookUsername` | The name the message is signed with |
+| `webhookAvatarUrl` | Picture beside that name |
+| `colorPlayer` | Stripe down a player report, as `"r,g,b"` |
+| `colorBug` | Stripe down a bug report |
 
 > [!WARNING]
 > **The webhook URL is a secret.** Anyone holding it can post into that channel. It lives under `delivery`, which is the one part of the file that is read on the server and never sent to a client. Do not put it in the addon config, and do not paste it into a public support thread.
@@ -144,6 +148,10 @@ An embed, with a coloured stripe down the side — red for a player report, ambe
 Every field sits on a row of its own, so a report naming thirty players in "Against" does not squeeze the column beside it. The description sits in the body, which takes 4000 characters against a field's 1000 — a long report stays readable rather than being cut to fit. Anything past those limits is trimmed with `...` rather than dropped, because Discord rejects an oversized embed whole. The log file never truncates, so the full text is always somewhere.
 
 `serverName` becomes the footer. Leave it empty and no footer is drawn.
+
+`webhookUsername` and `webhookAvatarUrl` decide how the message signs itself. Left empty, Discord uses the webhook's own name and picture — whatever it was called when you created it in the channel settings.
+
+The stripe colours are `colorPlayer` and `colorBug`, written the same way as `accentColor` in `infomenu.json`. The wording of the embed comes from the `report.embed.*` keys and is resolved on the server, so it follows your language rather than the reporter's — see [Server content](ServerContent.md#text-and-languages).
 
 The time appears twice on purpose. The **Time** field is the server’s clock, so a line in Discord and a line in `reports.log` can be matched character for character. The footer next to `serverName` is Discord’s own timestamp, which every reader sees in *their* timezone — a moderator abroad reads their own clock without converting anything.
 

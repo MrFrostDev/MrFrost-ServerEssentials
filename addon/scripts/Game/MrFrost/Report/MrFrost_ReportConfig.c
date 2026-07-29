@@ -83,11 +83,25 @@ class MrFrost_ReportDeliveryConfig
 	string m_sWebhookUrl;
 	string m_sServerName;
 
+	//! How the webhook signs its messages. Empty leaves Discord's own default,
+	//! which is whatever the channel's webhook was named when it was created.
+	string m_sWebhookUsername;
+	string m_sWebhookAvatarUrl;
+
+	//! Embed stripe colours, as Discord wants them: one integer, 0xRRGGBB.
+	int m_iColourPlayer;
+	int m_iColourBug;
+
 	//------------------------------------------------------------------------------
 	void MrFrost_ReportDeliveryConfig()
 	{
 		m_bWriteLog = true;
 		m_sLogFile = "reports.log";
+
+		// Red for a player report, amber for a bug, so a moderator scanning the
+		// channel sees which is which before reading a word.
+		m_iColourPlayer = 0xF94343;
+		m_iColourBug = 0xE2A74F;
 	}
 }
 

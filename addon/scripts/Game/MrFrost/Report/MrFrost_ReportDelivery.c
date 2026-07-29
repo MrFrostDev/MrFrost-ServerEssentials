@@ -41,12 +41,6 @@ class MrFrost_ReportDelivery
 	//! players report at once.
 	protected static const int SEND_INTERVAL_MS = 1500;
 
-	//! Embed stripe colours, as Discord wants them: one decimal integer, 0xRRGGBB.
-	//! Red for a player report, amber for a bug, so a moderator scanning the
-	//! channel sees which is which before reading a word.
-	protected static const int COLOUR_PLAYER = 16335683;	// 0xF94343
-	protected static const int COLOUR_BUG = 14853967;	// 0xE2A74F
-
 	//! Discord's own limits. Over either one it rejects the whole embed, so both
 	//! are enforced here rather than trusted to a server owner's maxDescription.
 	protected static const int MAX_DESCRIPTION = 4000;
@@ -235,30 +229,31 @@ class MrFrost_ReportDelivery
 	//! exceed that, while the body takes 4096. The facts follow as fields, one per
 	//! row, so a long list of names never squeezes the column next to it.
 	//!
-	//! Colour separates the two kinds at a glance in a busy channel.
+	//! Colour separates the two kinds at a glance in a busy channel, and both the
+	//! colours and every label here come from the server's own configuration.
 	protected static string BuildPayload(notnull MrFrost_Report report, notnull MrFrost_ReportDeliveryConfig config)
 	{
-		string title = "Bug report";
-		int colour = COLOUR_BUG;
+		string title = MrFrost_Text.Get("report.embed.bug");
+		int colour = config.m_iColourBug;
 
 		if (report.m_eKind == MrFrost_EReportKind.PLAYER)
 		{
-			title = "Player report";
-			colour = COLOUR_PLAYER;
+			title = MrFrost_Text.Get("report.embed.player");
+			colour = config.m_iColourPlayer;
 		}
 
-		string fields = Field("Reported by", report.m_sReporter);
+		string fields = Field(MrFrost_Text.Get("report.embed.reporter"), report.m_sReporter);
 
 		if (!report.m_sTargets.IsEmpty())
-			fields += "," + Field("Against", report.m_sTargets);
+			fields += "," + Field(MrFrost_Text.Get("report.embed.against"), report.m_sTargets);
 
 		if (!report.m_sPosition.IsEmpty())
-			fields += "," + Field("Position", report.m_sPosition);
+			fields += "," + Field(MrFrost_Text.Get("report.embed.position"), report.m_sPosition);
 
-		fields += "," + Field("Time", report.m_sTime);
+		fields += "," + Field(MrFrost_Text.Get("report.embed.time"), report.m_sTime);
 
 		string embed = "{";
-		embed += "\"title\":\"" + title + "\",";
+		embed += "\"title\":\"" + Escape(title) + "\",";
 		embed += "\"description\":\"" + Escape(Clamp(report.m_sDescription, MAX_DESCRIPTION)) + "\",";
 		embed += "\"color\":" + colour.ToString() + ",";
 		embed += "\"fields\":[" + fields + "]";
@@ -274,9 +269,20 @@ class MrFrost_ReportDelivery
 
 		embed += "}";
 
+		string payload = "{\"embeds\":[" + embed + "]";
+
+		// How the message signs itself. Discord falls back to the webhook's own
+		// name and picture when these are absent, which is what a server that
+		// says nothing gets.
+		if (!config.m_sWebhookUsername.IsEmpty())
+			payload += ",\"username\":\"" + Escape(config.m_sWebhookUsername) + "\"";
+
+		if (!config.m_sWebhookAvatarUrl.IsEmpty())
+			payload += ",\"avatar_url\":\"" + Escape(config.m_sWebhookAvatarUrl) + "\"";
+
 		// allowed_mentions empty: a player typing @everyone into a description
 		// must not be able to ping the whole Discord.
-		return "{\"embeds\":[" + embed + "],\"allowed_mentions\":{\"parse\":[]}}";
+		return payload + ",\"allowed_mentions\":{\"parse\":[]}}";
 	}
 
 	//------------------------------------------------------------------------------
