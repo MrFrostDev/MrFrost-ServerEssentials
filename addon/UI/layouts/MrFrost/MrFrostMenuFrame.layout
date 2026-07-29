@@ -1,0 +1,189 @@
+FrameWidgetClass {
+ Name "rootFrame"
+ {
+  OverlayWidgetClass "{7FA1C3D2E4B51200}" {
+   Name "Root"
+   Slot FrameWidgetSlot "{7FA1C3D2E4B51201}" {
+    Anchor 0 0 1 1
+    SizeX -1920
+    OffsetRight 0
+    SizeY -1080
+    OffsetBottom 0
+   }
+   {
+    ImageWidgetClass "{7FA1C3D2E4B51202}" {
+     Name "ScreenDim"
+     Slot OverlayWidgetSlot "{7FA1C3D2E4B51203}" {
+      HorizontalAlign 3
+      VerticalAlign 3
+     }
+     Color 0 0 0 0.30
+    }
+    SizeLayoutWidgetClass "{7FA1C3D2E4B51204}" {
+     Name "Panel"
+     Slot OverlayWidgetSlot "{7FA1C3D2E4B51205}" {
+     }
+     AllowWidthOverride 1
+     WidthOverride 1480
+     AllowHeightOverride 1
+     HeightOverride 840
+     {
+      OverlayWidgetClass "{7FA1C3D2E4B51206}" {
+       Name "PanelSurface"
+       Slot AlignableSlot "{7FA1C3D2E4B51207}" {
+        HorizontalAlign 3
+        VerticalAlign 3
+       }
+       Opacity 0.99
+       Color 0.007 0.0123 0.0137 0.941
+       {
+        BlurWidgetClass "{7FA1C3D2E4B51250}" {
+         Name "PanelBlur"
+         Slot OverlayWidgetSlot "{7FA1C3D2E4B51251}" {
+          HorizontalAlign 3
+          VerticalAlign 3
+         }
+         Color 0.007 0.0123 0.0137 1
+         Intensity 0.4
+         "Tint Blend Mode" Add
+        }
+        VerticalLayoutWidgetClass "{7FA1C3D2E4B5120A}" {
+         Name "PanelColumn"
+         Slot OverlayWidgetSlot "{7FA1C3D2E4B5120B}" {
+          HorizontalAlign 3
+          VerticalAlign 3
+         }
+         {
+          SizeLayoutWidgetClass "{7FA1C3D2E4B5120C}" {
+           Name "HeaderSize"
+           Slot LayoutSlot "{7FA1C3D2E4B5120D}" {
+           }
+           AllowHeightOverride 1
+           HeightOverride 78
+           {
+            OverlayWidgetClass "{7FA1C3D2E4B5120E}" {
+             Name "Header"
+             Slot AlignableSlot "{7FA1C3D2E4B5120F}" {
+              HorizontalAlign 3
+              VerticalAlign 3
+             }
+             {
+               HorizontalLayoutWidgetClass "{7FA1C3D2E4B51270}" {
+                Name "HeaderRow"
+                Slot OverlayWidgetSlot "{7FA1C3D2E4B51271}" {
+                 HorizontalAlign 0
+                 VerticalAlign 3
+                 Padding 32 0 0 0
+                }
+                {
+                 SizeLayoutWidgetClass "{7FA1C3D2E4B51272}" {
+                  Name "HeaderIconSize"
+                  Slot LayoutSlot "{7FA1C3D2E4B51273}" {
+                   Padding 0 0 14 0
+                  }
+                  AllowWidthOverride 1
+                  WidthOverride 40
+                  AllowHeightOverride 1
+                  HeightOverride 40
+                  {
+                   ImageWidgetClass "{7FA1C3D2E4B51274}" {
+                    Name "HeaderIcon"
+                    Slot AlignableSlot "{7FA1C3D2E4B51275}" {
+                    }
+                    Color 1 1 1 1
+                    Size 40 40
+                   }
+                  }
+                 }
+                 TextWidgetClass "{7FA1C3D2E4B51210}" {
+                  Name "MainTitle"
+                  Slot LayoutSlot "{7FA1C3D2E4B51211}" {
+                  }
+                  Text "MrFrost"
+                  "Font Size" 40
+                  "Min Font Size" 40
+                  "Vertical Alignment" Center
+                  Color 1 1 1 1
+                 }
+                }
+               }
+             }
+            }
+           }
+          }
+          ImageWidgetClass "{7FA1C3D2E4B51260}" {
+           Name "HeaderSeparator"
+           Slot LayoutSlot "{7FA1C3D2E4B51261}" {
+           }
+           Color 0.76052 0.38643 0.07819 1
+           Size 1480 2
+          }
+          OverlayWidgetClass "{7FA1C3D2E4B5121B}" {
+           Name "Body"
+           Slot LayoutSlot "{7FA1C3D2E4B5121C}" {
+            SizeMode Fill
+           }
+           {
+            OverlayWidgetClass "{7FA1C3D2E4B51290}" {
+             Name "ContentRoot"
+             Slot OverlayWidgetSlot "{7FA1C3D2E4B51291}" {
+              HorizontalAlign 3
+              VerticalAlign 3
+             }
+            }
+           }
+          }
+          ImageWidgetClass "{7FA1C3D2E4B51262}" {
+           Name "FooterSeparator"
+           Slot LayoutSlot "{7FA1C3D2E4B51263}" {
+           }
+           Color 1 1 1 0.098
+           Size 1480 1
+          }
+          SizeLayoutWidgetClass "{7FA1C3D2E4B51240}" {
+           Name "FooterSize"
+           Slot LayoutSlot "{7FA1C3D2E4B51241}" {
+           }
+           AllowHeightOverride 1
+           HeightOverride 72
+           {
+            OverlayWidgetClass "{7FA1C3D2E4B51242}" {
+             Name "FooterRoot"
+             Slot AlignableSlot "{7FA1C3D2E4B51243}" {
+              HorizontalAlign 3
+              VerticalAlign 3
+              Padding 30 0 30 0
+             }
+             components {
+              SCR_DynamicFooterComponent "{7FA1C3D2E4B51244}" {
+              }
+             }
+             {
+              HorizontalLayoutWidgetClass "{7FA1C3D2E4B51245}" {
+               Name "Footer"
+               Slot OverlayWidgetSlot "{7FA1C3D2E4B51246}" {
+                HorizontalAlign 0
+                VerticalAlign 1
+               }
+              }
+              HorizontalLayoutWidgetClass "{7FA1C3D2E4B51247}" {
+               Name "FooterRight"
+               Slot OverlayWidgetSlot "{7FA1C3D2E4B51248}" {
+                HorizontalAlign 2
+                VerticalAlign 1
+               }
+              }
+             }
+            }
+           }
+          }
+         }
+        }
+       }
+      }
+     }
+    }
+   }
+  }
+ }
+}

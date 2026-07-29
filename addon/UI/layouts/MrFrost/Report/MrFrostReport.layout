@@ -1,0 +1,110 @@
+VerticalLayoutWidgetClass {
+ Name "ReportForm"
+ Clipping False
+ Slot OverlayWidgetSlot "{7FA1C3D2E4B51600}" {
+  HorizontalAlign 3
+  VerticalAlign 3
+  Padding 56 24 56 20
+ }
+ {
+  SizeLayoutWidgetClass "{7FA1C3D2E4B51603}" {
+   Name "TabSlot"
+   Clipping False
+   Slot LayoutSlot "{7FA1C3D2E4B51604}" {
+   }
+   AllowHeightOverride 1
+   HeightOverride 44
+  }
+  OverlayWidgetClass "{7FA1C3D2E4B5160B}" {
+   Name "TargetRow"
+   Slot LayoutSlot "{7FA1C3D2E4B5160C}" {
+    Padding 0 26 0 4
+   }
+  }
+  OverlayWidgetClass "{7FA1C3D2E4B5160D}" {
+   Name "PlayerRow"
+   Slot LayoutSlot "{7FA1C3D2E4B5160E}" {
+    Padding 0 0 0 4
+   }
+  }
+  ImageWidgetClass "{7FA1C3D2E4B5160F}" {
+   Name "FormSeparator"
+   Slot LayoutSlot "{7FA1C3D2E4B51610}" {
+    Padding 0 20 0 20
+   }
+   Color 1 1 1 0.098
+   Size 1400 1
+  }
+  TextWidgetClass "{7FA1C3D2E4B51611}" {
+   Name "DescriptionLabel"
+   Slot LayoutSlot "{7FA1C3D2E4B51612}" {
+    Padding 0 0 0 6
+   }
+   Text ""
+   "Font Size" 24
+   "Min Font Size" 24
+   Color 1 1 1 1
+  }
+  RichTextWidgetClass "{7FA1C3D2E4B51613}" {
+   Name "DescriptionHint"
+   Slot LayoutSlot "{7FA1C3D2E4B51614}" {
+    Padding 0 0 0 12
+   }
+   Text ""
+   "Font Size" 20
+   "Min Font Size" 20
+   Wrap 1
+   Color 0.50888 0.50888 0.50289 1
+  }
+  OverlayWidgetClass "{7FA1C3D2E4B51615}" {
+   Name "DescriptionRow"
+   Slot LayoutSlot "{7FA1C3D2E4B51616}" {
+   }
+  }
+  SizeLayoutWidgetClass "{7FA1C3D2E4B51617}" {
+   Name "Spacer"
+   Slot LayoutSlot "{7FA1C3D2E4B51618}" {
+    SizeMode Fill
+   }
+  }
+  SizeLayoutWidgetClass "{7FA1C3D2E4B51619}" {
+   Name "FooterRowSize"
+   Slot LayoutSlot "{7FA1C3D2E4B5161A}" {
+    Padding 0 16 0 0
+   }
+   AllowHeightOverride 1
+   HeightOverride 50
+   {
+    HorizontalLayoutWidgetClass "{7FA1C3D2E4B5161B}" {
+     Name "FooterRow"
+     Slot AlignableSlot "{7FA1C3D2E4B5161C}" {
+      HorizontalAlign 3
+      VerticalAlign 3
+     }
+     {
+      SizeLayoutWidgetClass "{7FA1C3D2E4B5161D}" {
+       Name "StatusSize"
+       Slot LayoutSlot "{7FA1C3D2E4B5161E}" {
+        SizeMode Fill
+       }
+       {
+        TextWidgetClass "{7FA1C3D2E4B5161F}" {
+         Name "StatusLine"
+         Slot AlignableSlot "{7FA1C3D2E4B51620}" {
+          HorizontalAlign 0
+          VerticalAlign 3
+         }
+         Text ""
+         "Font Size" 20
+         "Min Font Size" 20
+         "Vertical Alignment" Center
+         Color 0.76052 0.38643 0.07819 1
+        }
+       }
+      }
+     }
+    }
+   }
+  }
+ }
+}

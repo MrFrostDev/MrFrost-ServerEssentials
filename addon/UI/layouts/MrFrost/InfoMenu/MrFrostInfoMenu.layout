@@ -1,0 +1,122 @@
+HorizontalLayoutWidgetClass {
+ Name "Columns"
+ Slot OverlayWidgetSlot "{7FA1C3D2E4B51222}" {
+  HorizontalAlign 3
+  VerticalAlign 3
+ }
+ {
+  SizeLayoutWidgetClass "{7FA1C3D2E4B51223}" {
+   Name "SidebarSize"
+   Slot LayoutSlot "{7FA1C3D2E4B51224}" {
+   }
+   AllowWidthOverride 1
+   WidthOverride 380
+   {
+    OverlayWidgetClass "{7FA1C3D2E4B51225}" {
+     Name "Sidebar"
+     Slot AlignableSlot "{7FA1C3D2E4B51226}" {
+      HorizontalAlign 3
+      VerticalAlign 3
+     }
+     {
+      ImageWidgetClass "{7FA1C3D2E4B51227}" {
+       Name "SidebarBackground"
+       Slot OverlayWidgetSlot "{7FA1C3D2E4B51228}" {
+        HorizontalAlign 3
+        VerticalAlign 3
+       }
+       Color 0 0 0 0.4
+      }
+      ScrollLayoutWidgetClass "{7FA1C3D2E4B51229}" {
+       Name "TreeScroll"
+       Slot OverlayWidgetSlot "{7FA1C3D2E4B5122A}" {
+        HorizontalAlign 3
+        VerticalAlign 3
+        Padding 0 14 0 14
+       }
+       {
+        VerticalLayoutWidgetClass "{7FA1C3D2E4B5122B}" {
+         Name "TreeList"
+         Slot AlignableSlot "{7FA1C3D2E4B5122C}" {
+          HorizontalAlign 3
+          VerticalAlign 0
+         }
+        }
+       }
+      }
+     }
+    }
+   }
+  }
+  SizeLayoutWidgetClass "{7FA1C3D2E4B51231}" {
+   Name "ContentColumn"
+   Slot LayoutSlot "{7FA1C3D2E4B51232}" {
+    SizeMode Fill
+   }
+   {
+    VerticalLayoutWidgetClass "{7FA1C3D2E4B51233}" {
+     Name "ContentColumnLayout"
+     Slot AlignableSlot "{7FA1C3D2E4B51234}" {
+      HorizontalAlign 3
+      VerticalAlign 3
+     }
+     {
+      SizeLayoutWidgetClass "{7FA1C3D2E4B51235}" {
+       Name "EntryTitleSize"
+       Slot LayoutSlot "{7FA1C3D2E4B51236}" {
+       }
+       AllowHeightOverride 1
+       HeightOverride 72
+       {
+        TextWidgetClass "{7FA1C3D2E4B51237}" {
+         Name "EntryTitle"
+         Slot AlignableSlot "{7FA1C3D2E4B51238}" {
+          HorizontalAlign 0
+          VerticalAlign 3
+          Padding 34 0 0 0
+         }
+         Text ""
+         "Font Size" 28
+         "Min Font Size" 28
+         "Vertical Alignment" Center
+         Color 1 1 1 1
+        }
+       }
+      }
+      ScrollLayoutWidgetClass "{7FA1C3D2E4B5123B}" {
+       Name "ContentScroll"
+       Slot LayoutSlot "{7FA1C3D2E4B5123C}" {
+        SizeMode Fill
+       }
+       {
+        VerticalLayoutWidgetClass "{7FA1C3D2E4B51280}" {
+         Name "ContentHolder"
+         Slot OverlayWidgetSlot "{7FA1C3D2E4B51281}" {
+          HorizontalAlign 3
+          VerticalAlign 3
+         }
+         {
+          RichTextWidgetClass "{7FA1C3D2E4B5123D}" {
+           Name "ContentText"
+           Slot AlignableSlot "{7FA1C3D2E4B5123E}" {
+            HorizontalAlign 3
+            VerticalAlign 0
+            Padding 34 24 34 24
+           }
+           Text ""
+           "Font Size" 20
+           "Min Font Size" 20
+           Wrap 1
+           "Line Spacing" 6
+           Color 0.50888 0.50888 0.50289 1
+          }
+         }
+        }
+       }
+      }
+     }
+    }
+   }
+  }
+ }
+}

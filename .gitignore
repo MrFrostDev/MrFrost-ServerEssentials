@@ -1,0 +1,23 @@
+# Workbench and engine output
+Build/
+*.pak
+*.log
+logs/
+profile/
+
+# The one secret this project has: a server's own files, including the
+# Discord webhook URL. These belong in the server's profile directory,
+# never in the repository. server/MrFrost/ holds the examples instead.
+**/profile/MrFrost/
+reports.log
+
+# Editors
+.vscode/
+.idea/
+*.bak
+*~
+
+# OS
+Thumbs.db
+desktop.ini
+.DS_Store

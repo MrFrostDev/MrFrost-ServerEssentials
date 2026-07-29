@@ -1,0 +1,58 @@
+name: Feature request
+description: Something a server owner or player needs that the addon does not do
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Most changes to what players read are configuration rather than code —
+        see [docs/ServerContent.md](../blob/main/docs/ServerContent.md) before
+        filing.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: The problem
+      description: >
+        What a server owner or player cannot do today, and what they do
+        instead.
+    validations:
+      required: true
+
+  - type: textarea
+    id: outcome
+    attributes:
+      label: What should happen
+      description: The behaviour you want, from the point of view of whoever uses it.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Which part
+      options:
+        - Info menu
+        - Reports
+        - Server content and configuration
+        - Localisation
+        - Something else
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: What you have tried
+      description: >
+        Existing settings that come close, and why they fall short. This is the
+        most useful field in the form.
+
+  - type: textarea
+    id: risks
+    attributes:
+      label: What it would cost
+      description: >
+        Anything it could break, expose or slow down. A feature that reveals
+        player positions or lets a client decide something the server should
+        decide needs saying so here.

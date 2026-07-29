@@ -1,0 +1,151 @@
+//------------------------------------------------------------------------------
+//! What a player can report, and where the report goes.
+//!
+//! Everything a server owner sets lives in MrFrost/report.json. The addon config
+//! is the fallback, exactly as for the info menu.
+//!
+//! The webhook URL is deliberately **not** part of anything a client ever sees.
+//! It is a secret: anyone holding it can post to that channel. Only the fields
+//! a player needs to draw the menu are sent to clients; delivery happens on the
+//! server and the URL never leaves it.
+//------------------------------------------------------------------------------
+
+//------------------------------------------------------------------------------
+//! What the player is reporting.
+enum MrFrost_EReportKind
+{
+	BUG,
+	PLAYER,
+}
+
+//------------------------------------------------------------------------------
+//! How the reported player or players are picked.
+enum MrFrost_EReportTarget
+{
+	NONE,		//!< Bug report - nobody is being accused.
+	SELECTED,	//!< One player the reporter picked from the list.
+	KILLER,		//!< Whoever killed the reporter last.
+	ATTACKER,	//!< Whoever injured the reporter last.
+	NEARBY,		//!< Everyone within the configured radius.
+}
+
+//------------------------------------------------------------------------------
+//! Root of the report config.
+[BaseContainerProps(configRoot: true)]
+class MrFrost_ReportConfig
+{
+	[Attribute(defvalue: "1", desc: "Off hides the menu, its pause entry and its key")]
+	bool m_bEnabled;
+
+	[Attribute(defvalue: "{3262679C50EF4F01}UI/Textures/Icons/icons_wrapperUI.imageset", uiwidget: UIWidgets.ResourceNamePicker, params: "imageset", desc: "Imageset for the menu icon")]
+	ResourceName m_MenuIconImageset;
+
+	[Attribute(defvalue: "feedback", desc: "Sprite name for the menu icon. Leave empty to hide it.")]
+	string m_sMenuIconName;
+
+	[Attribute(defvalue: "1", desc: "Offer 'Report a bug'")]
+	bool m_bAllowBugReports;
+
+	[Attribute(defvalue: "1", desc: "Offer 'Report a player'")]
+	bool m_bAllowPlayerReports;
+
+	[Attribute(defvalue: "300", desc: "Radius in metres for the 'everyone nearby' option")]
+	float m_fNearbyRadius;
+
+	[Attribute(defvalue: "10", desc: "Seconds a player has to wait between two reports")]
+	int m_iCooldownSeconds;
+
+	[Attribute(defvalue: "0", desc: "Tell the reporter when nobody was within the radius. Off keeps the report menu from doubling as a radar.")]
+	bool m_bRevealNobodyNearby;
+
+	[Attribute(defvalue: "1000", desc: "Longest description a player can send, in characters")]
+	int m_iMaxDescription;
+
+	//------------------------------------------------------------------------------
+	void MrFrost_ReportConfig()
+	{
+		m_bEnabled = true;
+		m_bAllowBugReports = true;
+		m_bAllowPlayerReports = true;
+		m_fNearbyRadius = 300;
+		m_iCooldownSeconds = 10;
+		m_bRevealNobodyNearby = false;
+		m_iMaxDescription = 1000;
+	}
+}
+
+//------------------------------------------------------------------------------
+//! Delivery settings. Server side only — never replicated, never in a menu.
+class MrFrost_ReportDeliveryConfig
+{
+	bool m_bWriteLog;
+	string m_sLogFile;
+	string m_sWebhookUrl;
+	string m_sServerName;
+
+	//------------------------------------------------------------------------------
+	void MrFrost_ReportDeliveryConfig()
+	{
+		m_bWriteLog = true;
+		m_sLogFile = "reports.log";
+	}
+}
+
+//------------------------------------------------------------------------------
+//! Picks the config the same way the info menu does: the server's version when
+//! it has one, the addon's otherwise.
+class MrFrost_ReportConfigLoader
+{
+	static const ResourceName CONFIG_PATH = "{7FA1C3D2E4B50621}Configs/MrFrost/Report.conf";
+
+	protected static ref MrFrost_ReportConfig s_Config;
+	protected static ref MrFrost_ReportConfig s_ServerConfig;
+
+	//! Server side only. Stays null on every client.
+	protected static ref MrFrost_ReportDeliveryConfig s_Delivery;
+
+	//------------------------------------------------------------------------------
+	static MrFrost_ReportConfig Get()
+	{
+		if (s_ServerConfig)
+			return s_ServerConfig;
+
+		if (!s_Config)
+			s_Config = SCR_ConfigHelperT<MrFrost_ReportConfig>.GetConfigObject(CONFIG_PATH);
+
+		if (!s_Config)
+			s_Config = new MrFrost_ReportConfig();
+
+		return s_Config;
+	}
+
+	//------------------------------------------------------------------------------
+	//! Delivery settings, or null on a client — which is the correct answer there.
+	static MrFrost_ReportDeliveryConfig GetDelivery()
+	{
+		return s_Delivery;
+	}
+
+	//------------------------------------------------------------------------------
+	static void SetServerConfig(MrFrost_ReportConfig config)
+	{
+		s_ServerConfig = config;
+	}
+
+	//------------------------------------------------------------------------------
+	static void SetDelivery(MrFrost_ReportDeliveryConfig delivery)
+	{
+		s_Delivery = delivery;
+	}
+
+	//------------------------------------------------------------------------------
+	//! True when this server offers reporting at all.
+	static bool IsEnabled()
+	{
+		MrFrost_ReportConfig config = Get();
+		if (!config || !config.m_bEnabled)
+			return false;
+
+		return config.m_bAllowBugReports || config.m_bAllowPlayerReports;
+	}
+}
