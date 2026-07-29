@@ -7,6 +7,10 @@
   "menuIcon": "field-manual",
   "discordUrl": "",
   "discordLabel": "Discord",
+  "websiteUrl": "",
+  "websiteLabel": "Website",
+  "customUrl": "",
+  "customLabel": "",
   "categories": [
     {
       "name": "Welcome",

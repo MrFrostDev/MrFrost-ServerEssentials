@@ -61,6 +61,10 @@ JSON has no comments, so the files stay clean and everything is documented here 
 | `menuIconImageset` | string | the shared set | Only if you ship your own artwork |
 | `discordUrl` | string | — | Invite link for the footer button. Empty hides the button entirely |
 | `discordLabel` | string | `Discord` | Label of that button |
+| `websiteUrl` | string | — | Your website, opened by the same mechanism. Empty hides the button |
+| `websiteLabel` | string | `Website` | Label of that button |
+| `customUrl` | string | — | A third link of your choosing — a ruleset, a ban appeal form, a Teamspeak address |
+| `customLabel` | string | — | Label of that button. **Required** — an unlabelled third slot stays hidden even with a URL set |
 | `strings` | array | — | Override individual UI strings — see [Text and languages](#text-and-languages) |
 | `categories` | array | — | The list on the left |
 
@@ -101,6 +105,10 @@ Menu, pause entry and key all disappear. `report.json` takes the same key.
   "pauseMenuEntry": "Server Info",
   "discordUrl": "https://discord.gg/example",
   "discordLabel": "Discord",
+  "websiteUrl": "https://example.com",
+  "websiteLabel": "Website",
+  "customUrl": "https://example.com/appeal",
+  "customLabel": "Ban appeal",
   "accentColor": "226,167,79",
   "menuIcon": "field-manual",
   "openOnJoin": true,

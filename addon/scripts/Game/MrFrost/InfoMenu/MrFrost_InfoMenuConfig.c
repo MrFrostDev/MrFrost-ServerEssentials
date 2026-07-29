@@ -95,6 +95,18 @@ class MrFrost_InfoMenuConfig
 	[Attribute(defvalue: "Discord", uiwidget: UIWidgets.LocaleEditBox, desc: "Label of the Discord button in the footer")]
 	string m_sDiscordLabel;
 
+	[Attribute(desc: "Website URL. Leave empty to hide the website button in the footer.")]
+	string m_sWebsiteUrl;
+
+	[Attribute(defvalue: "Website", uiwidget: UIWidgets.LocaleEditBox, desc: "Label of the website button in the footer")]
+	string m_sWebsiteLabel;
+
+	[Attribute(desc: "A third link of your choosing - a ruleset, a ban appeal form, a Teamspeak address. Leave empty to hide the button.")]
+	string m_sCustomUrl;
+
+	[Attribute(uiwidget: UIWidgets.LocaleEditBox, desc: "Label of that third button. Leave empty and the button stays hidden even with a URL set, because an unlabelled prompt tells a player nothing.")]
+	string m_sCustomLabel;
+
 	[Attribute(defvalue: "{3262679C50EF4F01}UI/Textures/Icons/icons_wrapperUI.imageset", uiwidget: UIWidgets.ResourceNamePicker, params: "imageset", desc: "Imageset for the menu icon, shown next to the title and on the pause menu entry")]
 	ResourceName m_MenuIconImageset;
 

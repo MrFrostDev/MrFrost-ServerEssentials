@@ -163,6 +163,8 @@ Taking simply the first image in the subtree finds the button's own arrow decora
 
 ## Gotchas found the hard way
 
+**A script method cannot take a function reference.** Passing a callback to a helper fails to compile with `func arguments are not supported in script methods`. A helper that would wire up several near-identical buttons therefore has to return the button and let each caller attach its own handler — see `MrFrost_InfoMenuUI.BuildLinkButtons()`, where three link slots are spelled out for exactly this reason.
+
 **`WLib_TabViewHorizontal` sizes its accent line by fill weight, not in pixels.** Its root is a vertical layout of three: a 40 px tab row, then `Separator` at weight `0.005` and `ContentOverlay` at `0.95`, sharing whatever is left over. A menu that gives the tab view the whole panel gets a few pixels of line. A menu that gives it only the height of the bar gets half a percent of almost nothing, and the line disappears — while still being drawn, which is why nothing shows up in any log.
 
 The report menu renders its form *below* the tab view rather than inside it, so `ShowTabSeparator()` hands the whole remainder to the separator and none to the unused content overlay. The tab slot is 44 px: 40 for the bar, 4 for the line, which is the thickness vanilla authored.
@@ -189,6 +191,10 @@ This is why the input actions are documented here rather than in the file they d
 | `MrFrost_OpenReportMenu` | F10 | Same context |
 | `MrFrost_ReportSubmit` | Enter / right trigger | `MenuContext`. Carries `InputFilterHoldOnce` |
 | `MrFrost_MenuDiscord` | D / gamepad Y | `MenuContext` |
+| `MrFrost_MenuWebsite` | W / gamepad X | `MenuContext` |
+| `MrFrost_MenuCustom` | L / gamepad D-pad up | `MenuContext` |
+
+The three link actions exist whether or not a server fills the matching slot. An action with no button behind it fires nothing, which costs less than making the keybinding category change shape per server.
 
 `FilterPreset` on its own does nothing — it is the label the controls settings group a binding under. The behaviour comes from the `Filter` object declared next to `Input`.
 
