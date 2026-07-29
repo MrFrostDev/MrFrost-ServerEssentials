@@ -11,6 +11,10 @@
     "writeLog": true,
     "logFile": "reports.log",
     "webhookUrl": "",
-    "serverName": "My Server"
+    "serverName": "My Server",
+    "webhookUsername": "",
+    "webhookAvatarUrl": "",
+    "colorPlayer": "249,67,67",
+    "colorBug": "226,167,79"
   }
 }

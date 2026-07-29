@@ -12,6 +12,10 @@ class MrFrost_ReportDeliveryJson : JsonApiStruct
 	string logFile;
 	string webhookUrl;
 	string serverName;
+	string webhookUsername;
+	string webhookAvatarUrl;
+	string colorPlayer;
+	string colorBug;
 
 	//------------------------------------------------------------------------------
 	void MrFrost_ReportDeliveryJson()
@@ -23,6 +27,10 @@ class MrFrost_ReportDeliveryJson : JsonApiStruct
 		RegV("logFile");
 		RegV("webhookUrl");
 		RegV("serverName");
+		RegV("webhookUsername");
+		RegV("webhookAvatarUrl");
+		RegV("colorPlayer");
+		RegV("colorBug");
 	}
 }
 
@@ -106,14 +114,53 @@ class MrFrost_ReportJson : JsonApiStruct
 		if (!delivery)
 			return result;
 
-		result.m_bWriteLog   = delivery.writeLog;
-		result.m_sWebhookUrl = delivery.webhookUrl;
-		result.m_sServerName = delivery.serverName;
+		result.m_bWriteLog          = delivery.writeLog;
+		result.m_sWebhookUrl        = delivery.webhookUrl;
+		result.m_sServerName        = delivery.serverName;
+		result.m_sWebhookUsername   = delivery.webhookUsername;
+		result.m_sWebhookAvatarUrl  = delivery.webhookAvatarUrl;
 
 		if (!delivery.logFile.IsEmpty())
 			result.m_sLogFile = delivery.logFile;
 
+		// Left at the built-in colour when the server did not name one, rather
+		// than falling to black, which reads as a broken embed.
+		int colour = ParseRgb(delivery.colorPlayer, "colorPlayer");
+		if (colour >= 0)
+			result.m_iColourPlayer = colour;
+
+		colour = ParseRgb(delivery.colorBug, "colorBug");
+		if (colour >= 0)
+			result.m_iColourBug = colour;
+
 		return result;
+	}
+
+	//------------------------------------------------------------------------------
+	//! Turns "249,67,67" into the single integer Discord wants.
+	//!
+	//! Same notation as accentColor in infomenu.json - ordinary sRGB, the numbers
+	//! a colour picker shows - so a server owner learns one format. Returns -1
+	//! when there is nothing usable, which the caller reads as "keep the default".
+	protected int ParseRgb(string value, string keyName)
+	{
+		if (value.IsEmpty())
+			return -1;
+
+		array<string> parts = {};
+		value.Split(",", parts, true);
+
+		if (parts.Count() < 3)
+		{
+			MrFrost_Log.Warn(keyName + " '" + value + "' is not 'r,g,b' - ignoring it.");
+			return -1;
+		}
+
+		int r = Math.ClampInt(parts[0].Trim().ToInt(), 0, 255);
+		int g = Math.ClampInt(parts[1].Trim().ToInt(), 0, 255);
+		int b = Math.ClampInt(parts[2].Trim().ToInt(), 0, 255);
+
+		return (r * 65536) + (g * 256) + b;
 	}
 }
 
@@ -156,6 +203,12 @@ class MrFrost_ReportChannel : MrFrost_ServerContentChannel
 		parsed.ExpandFromRAW(json);
 
 		MrFrost_ReportConfigLoader.SetDelivery(parsed.ToDeliveryConfig());
+
+		// Also applied here, not only in Apply(): the Discord embed is built on
+		// the server, so its labels are resolved on the server. Without this a
+		// server could rename them for its players and still get English in its
+		// own moderation channel.
+		ApplyStrings(parsed);
 
 		MrFrost_ReportDeliveryConfig delivery = parsed.ToDeliveryConfig();
 		if (delivery.m_sWebhookUrl.IsEmpty())

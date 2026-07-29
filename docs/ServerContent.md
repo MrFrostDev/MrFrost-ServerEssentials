@@ -159,6 +159,10 @@ A tab the server switches off is not drawn at all, so a server taking only bug r
 | `logFile` | string | `reports.log` | One line per report, appended, so it can be tailed while the server runs |
 | `webhookUrl` | string | — | Discord: channel settings → Integrations → Webhooks. Empty means log only |
 | `serverName` | string | — | Shown in the Discord message. Useful when several servers post to one channel |
+| `webhookUsername` | string | — | The name the message is signed with. Empty leaves Discord's own, which is whatever the webhook was called when it was created |
+| `webhookAvatarUrl` | string | — | Picture beside that name. Any public image URL |
+| `colorPlayer` | string | `249,67,67` | Stripe down a player report. Ordinary sRGB, the same notation as `accentColor` |
+| `colorBug` | string | `226,167,79` | Stripe down a bug report |
 
 > [!WARNING]
 > **The webhook URL is a secret.** Anyone holding it can post into that channel. `delivery` is the one block that is read on the server and never sent to a client, which is why it belongs here and nowhere else. Never put it in the addon config — that ships to every subscriber — and never paste it into a public thread. If it leaks, regenerate it in the Discord channel settings and the old one stops working.
@@ -199,6 +203,14 @@ Every key lives in `addon/Configs/MrFrost/Language.conf`. The ones a server owne
 | `report.description_hint` | Describe it in your own words. The more precise, the better. |
 | `report.type_bug` | Report a bug |
 | `report.type_player` | Report a player |
+| `report.embed.player` | Player report |
+| `report.embed.bug` | Bug report |
+| `report.embed.reporter` | Reported by |
+| `report.embed.against` | Against |
+| `report.embed.position` | Position |
+| `report.embed.time` | Time |
+
+The six `report.embed.*` keys are the wording of the Discord message itself. They are resolved on the server rather than on a player's machine, so they follow the server's language and its overrides — a German unit gets a German embed while its players still read the menus in whatever language they play in.
 
 > [!TIP]
 > Overrides are shared across features. Whichever file carries a key, that wording is what every menu uses — so it does not matter which JSON you put them in.
