@@ -1,0 +1,93 @@
+name: Bug report
+description: Something in the addon behaves differently from what the documentation says
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before filing, check the `[MrFrost]` lines in your server and client
+        logs — they usually name the cause directly. See
+        [docs/Troubleshooting.md](../blob/main/docs/Troubleshooting.md).
+
+        **Never paste a Discord webhook URL.** Anyone reading the issue could
+        post into your channel with it.
+
+  - type: input
+    id: version
+    attributes:
+      label: Addon version
+      description: From the Workshop entry, or the tag you built from.
+      placeholder: "1.0.2"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: environment
+    attributes:
+      label: Where it happens
+      options:
+        - Dedicated server
+        - Hosted from the game (listen server)
+        - Single player
+        - Not sure
+    validations:
+      required: true
+
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Player platform
+      description: Several apply where the server is mixed.
+      multiple: true
+      options:
+        - PC
+        - Xbox
+        - PlayStation
+    validations:
+      required: true
+
+  - type: textarea
+    id: observed
+    attributes:
+      label: What happens
+      description: What you saw, and which menu or feature it was in.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected instead
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: How to reproduce it
+      description: The shortest sequence that shows the problem.
+      placeholder: |
+        1. Open the report menu with F10
+        2. Pick "report a player"
+        3. …
+    validations:
+      required: true
+
+  - type: textarea
+    id: config
+    attributes:
+      label: Relevant configuration
+      description: >
+        The part of your infomenu.json or report.json that matters, with the
+        webhook URL removed.
+      render: json
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Log lines
+      description: >
+        The `[MrFrost]` lines from around the problem, plus any `SCRIPT (E)`,
+        `DEFAULT (E)` or `INPUT (E)` nearby. Paths and player names may be
+        redacted.
+      render: text

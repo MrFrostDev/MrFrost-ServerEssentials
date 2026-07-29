@@ -1,0 +1,7 @@
+OverlayWidgetClass {
+ Name "Empty"
+ Slot AlignableSlot "{7FA1C3D2E4B51700}" {
+  HorizontalAlign 3
+  VerticalAlign 3
+ }
+}

@@ -1,0 +1,144 @@
+ButtonWidgetClass {
+ Name "Row"
+ Slot LayoutSlot "{7FA1C3D2E4B51100}" {
+ }
+ components {
+  MrFrost_InfoMenuRowComponent "{7FA1C3D2E4B51101}" {
+  }
+ }
+ style blank
+ {
+  SizeLayoutWidgetClass "{7FA1C3D2E4B51102}" {
+   Name "RowSize"
+   Slot ButtonWidgetSlot "{7FA1C3D2E4B51103}" {
+    HorizontalAlign 3
+   }
+   AllowHeightOverride 1
+   HeightOverride 38
+   {
+    OverlayWidgetClass "{7FA1C3D2E4B51104}" {
+     Name "RowOverlay"
+     Slot AlignableSlot "{7FA1C3D2E4B51105}" {
+      HorizontalAlign 3
+      VerticalAlign 3
+     }
+     {
+      ImageWidgetClass "{7FA1C3D2E4B51106}" {
+       Name "RowHighlight"
+       Slot OverlayWidgetSlot "{7FA1C3D2E4B51107}" {
+        HorizontalAlign 3
+        VerticalAlign 3
+       }
+       Color 0 0 0 0
+      }
+      HorizontalLayoutWidgetClass "{7FA1C3D2E4B51108}" {
+       Name "RowContent"
+       Slot OverlayWidgetSlot "{7FA1C3D2E4B51109}" {
+        HorizontalAlign 3
+        VerticalAlign 3
+        Padding 10 0 10 0
+       }
+       {
+        SizeLayoutWidgetClass "{7FA1C3D2E4B5110A}" {
+         Name "RowIndent"
+         Slot LayoutSlot "{7FA1C3D2E4B5110B}" {
+         }
+         AllowWidthOverride 1
+         WidthOverride 0
+        }
+        SizeLayoutWidgetClass "{7FA1C3D2E4B5110C}" {
+         Name "RowLeadSize"
+         Slot LayoutSlot "{7FA1C3D2E4B5110D}" {
+         }
+         AllowWidthOverride 1
+         WidthOverride 20
+         {
+          OverlayWidgetClass "{7FA1C3D2E4B51120}" {
+           Name "RowLead"
+           Slot AlignableSlot "{7FA1C3D2E4B51121}" {
+            HorizontalAlign 3
+            VerticalAlign 3
+           }
+           {
+            ImageWidgetClass "{7FA1C3D2E4B51122}" {
+             Name "TreeStemFull"
+             Slot OverlayWidgetSlot "{7FA1C3D2E4B51123}" {
+              HorizontalAlign 0
+              VerticalAlign 3
+              Padding 6 0 0 0
+             }
+             Color 0.07421 0.07421 0.07421 1
+             Size 1 38
+            }
+            ImageWidgetClass "{7FA1C3D2E4B51124}" {
+             Name "TreeStemHalf"
+             Slot OverlayWidgetSlot "{7FA1C3D2E4B51125}" {
+              HorizontalAlign 0
+              VerticalAlign 0
+              Padding 6 0 0 0
+             }
+             Color 0.07421 0.07421 0.07421 1
+             Size 1 19
+            }
+            ImageWidgetClass "{7FA1C3D2E4B51126}" {
+             Name "TreeBranch"
+             Slot OverlayWidgetSlot "{7FA1C3D2E4B51127}" {
+              HorizontalAlign 0
+              Padding 6 0 0 0
+             }
+             Color 0.07421 0.07421 0.07421 1
+             Size 11 1
+            }
+            TextWidgetClass "{7FA1C3D2E4B5110E}" {
+             Name "RowMarker"
+             Slot OverlayWidgetSlot "{7FA1C3D2E4B5110F}" {
+              HorizontalAlign 0
+             }
+             Text "+"
+             "Font Size" 20
+             "Min Font Size" 20
+             "Vertical Alignment" Center
+             Color 0.76052 0.38643 0.07819 1
+            }
+           }
+          }
+         }
+        }
+        SizeLayoutWidgetClass "{7FA1C3D2E4B51110}" {
+         Name "RowIconSize"
+         Slot LayoutSlot "{7FA1C3D2E4B51111}" {
+          Padding 0 0 7 0
+         }
+         AllowWidthOverride 1
+         WidthOverride 24
+         AllowHeightOverride 1
+         HeightOverride 24
+         {
+          ImageWidgetClass "{7FA1C3D2E4B51112}" {
+           Name "RowIcon"
+           Slot AlignableSlot "{7FA1C3D2E4B51113}" {
+           }
+           Color 0.50888 0.50888 0.50289 1
+           Size 24 24
+          }
+         }
+        }
+        TextWidgetClass "{7FA1C3D2E4B51114}" {
+         Name "RowText"
+         Slot LayoutSlot "{7FA1C3D2E4B51115}" {
+          SizeMode Fill
+         }
+         Text ""
+         "Font Size" 20
+         "Min Font Size" 20
+         "Vertical Alignment" Center
+         Color 0.50888 0.50888 0.50289 1
+        }
+       }
+      }
+     }
+    }
+   }
+  }
+ }
+}

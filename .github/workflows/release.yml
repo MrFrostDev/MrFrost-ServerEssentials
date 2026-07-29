@@ -1,0 +1,70 @@
+# Builds a clean addon archive and attaches it to the release for the tag.
+#
+# Only what the game loads goes in. That needs no filtering: the addon lives in
+# addon/, and documentation, the README and .git sit beside it rather than
+# inside it. The check below is a safety net for that arrangement.
+#
+# No Workbench is involved. Packing a .pak needs one, and the Workbench is a Qt
+# application that wants a graphical Windows session, so it cannot run on a
+# GitHub-hosted runner. This archive is the addon folder as the engine reads it,
+# which is what a manual install and a dedicated server both want.
+
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Existing tag to build for, e.g. v1.0.0'
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  addon:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Assemble the addon
+        id: build
+        run: |
+          set -euo pipefail
+          TAG="${{ github.event.inputs.tag || github.ref_name }}"
+          VERSION="${TAG#v}"
+          NAME="MrFrost-ServerEssentials"
+
+          mkdir -p "build/$NAME"
+          cp -r addon/. "build/$NAME/"
+
+          cd build && zip -qr "../$NAME-$VERSION.zip" "$NAME" && cd ..
+
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "file=$NAME-$VERSION.zip" >> "$GITHUB_OUTPUT"
+
+      - name: Check nothing unwanted got in
+        run: |
+          set -euo pipefail
+          LEAKED=$(unzip -Z1 "${{ steps.build.outputs.file }}" | grep -iE '(^|/)(docs|\.github|\.git)/|\.md$|\.png$|\.jpg$' || true)
+          if [ -n "$LEAKED" ]; then
+            echo "Documentation or repository files ended up in the archive:"
+            echo "$LEAKED"
+            exit 1
+          fi
+          echo "Archive contents:"
+          unzip -Z1 "${{ steps.build.outputs.file }}" | head -40
+          echo "Size: $(du -h "${{ steps.build.outputs.file }}" | cut -f1)"
+
+      - name: Attach it to the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          TAG="${{ steps.build.outputs.tag }}"
+          gh release view "$TAG" >/dev/null 2>&1 \
+            || gh release create "$TAG" --title "$TAG" --generate-notes
+          gh release upload "$TAG" "${{ steps.build.outputs.file }}" --clobber

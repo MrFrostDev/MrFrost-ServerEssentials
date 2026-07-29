@@ -1,0 +1,7 @@
+# Normalise text to LF in the repository. The Enfusion parser reads either,
+# so this is only about keeping diffs free of whole-file line-ending churn.
+* text=auto eol=lf
+
+# Workbench's resource cache. Binary, and rewritten wholesale on every scan —
+# diffing it is noise.
+*.rdb binary

@@ -1,0 +1,16 @@
+{
+  "enabled": true,
+  "allowBugReports": true,
+  "allowPlayerReports": true,
+  "nearbyRadius": 300,
+  "revealNobodyNearby": false,
+  "cooldownSeconds": 10,
+  "maxDescription": 1000,
+  "menuIcon": "feedback",
+  "delivery": {
+    "writeLog": true,
+    "logFile": "reports.log",
+    "webhookUrl": "",
+    "serverName": "My Server"
+  }
+}

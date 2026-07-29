@@ -1,0 +1,71 @@
+{
+  "enabled": true,
+  "title": "My Server",
+  "pauseMenuEntry": "Server Info",
+  "openOnJoin": true,
+  "accentColor": "226,167,79",
+  "menuIcon": "field-manual",
+  "discordUrl": "",
+  "discordLabel": "Discord",
+  "categories": [
+    {
+      "name": "Welcome",
+      "title": "Welcome",
+      "icon": "field-manual",
+      "text": "<color rgba='226,167,79,255'><b>Good to have you here.</b></color><br/><br/>Read the rules before you play - they are short, and they are enforced.<br/><br/>Everything else you need is in the list on the left."
+    },
+    {
+      "name": "Rules",
+      "title": "Server Rules",
+      "icon": "warning",
+      "expanded": true,
+      "text": "The short version: play as a team, talk to people, do not ruin someone else's evening.<br/><br/>Pick a rule on the left for the detail.",
+      "entries": [
+        {
+          "name": "Teamplay",
+          "title": "§ 1 - Teamplay",
+          "icon": "players",
+          "text": "<color rgba='226,167,79,255'><b>§ 1</b></color><br/><color rgba='240,240,240,255'><b>Play as a team</b></color><br/><br/>This is a milsim, not a deathmatch. Kills are not the score.<br/><br/><image set='{3262679C50EF4F01}UI/Textures/Icons/icons_wrapperUI.imageset' name='cancelCircle' scale='1'/>  Stealing vehicles or supplies from your own side<br/><br/><image set='{3262679C50EF4F01}UI/Textures/Icons/icons_wrapperUI.imageset' name='cancelCircle' scale='1'/>  Leaving wounded teammates behind without a word<br/><br/><image set='{3262679C50EF4F01}UI/Textures/Icons/icons_wrapperUI.imageset' name='cancelCircle' scale='1'/>  Going off alone and calling it reconnaissance"
+        },
+        {
+          "name": "Teamkilling",
+          "title": "§ 2 - Teamkilling",
+          "icon": "cancelCircle",
+          "text": "<color rgba='249,67,67,255'><b>§ 2</b></color><br/><color rgba='240,240,240,255'><b>Deliberate teamkilling is a permanent ban</b></color><br/><br/>Accidents happen and are forgiven. Say so on the radio and move on.<br/><br/><color rgba='234,203,131,255'>Repeated carelessness counts as deliberate.</color>"
+        },
+        {
+          "name": "Communication",
+          "title": "§ 3 - Radio",
+          "icon": "ingameInteraction",
+          "text": "<color rgba='226,167,79,255'><b>§ 3</b></color><br/><color rgba='240,240,240,255'><b>Carry a radio and use it</b></color><br/><br/>Nobody has to be good at it. Everybody has to be reachable.<br/><br/>Keep the platoon net clear - squad chatter belongs on the squad net."
+        }
+      ]
+    },
+    {
+      "name": "Getting Started",
+      "title": "Getting Started",
+      "icon": "compass",
+      "text": "The things new players ask on their first evening.",
+      "entries": [
+        {
+          "name": "Joining a squad",
+          "title": "Joining a squad",
+          "icon": "characters",
+          "text": "<color rgba='226,167,79,255'><b>In three steps</b></color><br/><br/><image set='{3262679C50EF4F01}UI/Textures/Icons/icons_wrapperUI.imageset' name='check' scale='1'/>  Open the group menu<br/><image set='{3262679C50EF4F01}UI/Textures/Icons/icons_wrapperUI.imageset' name='check' scale='1'/>  Pick a squad with a free slot<br/><image set='{3262679C50EF4F01}UI/Textures/Icons/icons_wrapperUI.imageset' name='check' scale='1'/>  Set your radio to its frequency<br/><br/>If every squad is full, ask on the platoon net - somebody will make room."
+        },
+        {
+          "name": "Reporting someone",
+          "title": "Reporting someone",
+          "icon": "feedback",
+          "text": "Press <b>F10</b> and hold <b>Enter</b> to send.<br/><br/>You can name a specific player, the one who killed you last, the one who hurt you last, or everyone nearby - the server works out who that was, so you do not have to catch a name mid-firefight.<br/><br/><color rgba='234,203,131,255'>A clip helps. A precise description helps more than an angry one.</color>"
+        }
+      ]
+    },
+    {
+      "name": "Server",
+      "title": "Our Server",
+      "icon": "compass",
+      "text": "<color rgba='226,167,79,255'><b>Direct connect</b></color><br/><br/><b>127.0.0.1:2001</b><br/><br/>In the game under <b>Multiplayer > Direct Connect</b>.<br/><br/><color rgba='226,167,79,255'><b>Capacity</b></color><br/><br/>128 slots"
+    }
+  ]
+}
