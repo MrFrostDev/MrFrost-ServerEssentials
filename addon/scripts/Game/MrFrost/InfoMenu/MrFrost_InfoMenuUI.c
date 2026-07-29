@@ -23,6 +23,8 @@ class MrFrost_InfoMenuUI : MrFrost_MenuBase
 	//! Declared in chimeraInputCommon.conf inside the shared menu context, so it
 	//! only fires while a MrFrost menu is up and never steals D from movement.
 	protected static const string ACTION_DISCORD = "MrFrost_MenuDiscord";
+	protected static const string ACTION_WEBSITE = "MrFrost_MenuWebsite";
+	protected static const string ACTION_CUSTOM  = "MrFrost_MenuCustom";
 
 	// Widget names inside MrFrostInfoMenu.layout.
 	protected static const string WIDGET_ENTRY_TITLE = "EntryTitle";
@@ -89,7 +91,7 @@ class MrFrost_InfoMenuUI : MrFrost_MenuBase
 
 		SetHeader(title, m_Config.m_MenuIconImageset, m_Config.m_sMenuIconName);
 
-		BuildDiscordButton();
+		BuildLinkButtons();
 		BuildRows();
 		SelectFirstRow();
 
@@ -116,37 +118,83 @@ class MrFrost_InfoMenuUI : MrFrost_MenuBase
 	}
 
 	//------------------------------------------------------------------------------
-	//! Adds a Discord prompt on the right, mirroring how the group menu keeps its
+	//! Adds the link prompts on the right, mirroring how the group menu keeps its
 	//! secondary actions there.
 	//!
-	//! Only appears when the config actually carries a URL — a server that does
-	//! not run a Discord gets no dead button.
-	protected void BuildDiscordButton()
+	//! Three slots, each independent: Discord, a website, and one a server owner
+	//! names itself. A slot with no URL draws no button, so a server that runs
+	//! only a Discord gets one prompt rather than two dead ones beside it.
+	//!
+	//! They are built in a fixed order so the footer does not reshuffle when a
+	//! server fills in a slot it had left empty.
+	//! The wiring is spelled out per slot rather than passed to a shared helper:
+	//! EnforceScript rejects a function reference as a script method parameter
+	//! ("func arguments are not supported in script methods"), so the helper can
+	//! only decide *whether* to draw a button and hand it back.
+	protected void BuildLinkButtons()
 	{
-		if (m_Config.m_sDiscordUrl.IsEmpty())
-			return;
-
-		string label = m_Config.m_sDiscordLabel;
-		if (label.IsEmpty())
-			label = "Discord";
-
-		SCR_InputButtonComponent button = AddFooterButton("MrFrost_Discord", label, ACTION_DISCORD, SCR_EDynamicFooterButtonAlignment.RIGHT);
-		if (button)
-			button.m_OnActivated.Insert(OnDiscordClicked);
-
-		// See MrFrost_ReportUI.BuildSubmit(): a runtime-created prompt never gets
-		// its keybind flag set, so the key half of it has to be wired by hand.
 		InputManager inputManager = GetGame().GetInputManager();
-		if (inputManager)
-			inputManager.AddActionListener(ACTION_DISCORD, EActionTrigger.DOWN, OnDiscordClicked);
+		SCR_InputButtonComponent button;
+
+		button = BuildLinkButton(m_Config.m_sDiscordUrl, m_Config.m_sDiscordLabel, "Discord", "MrFrost_Discord", ACTION_DISCORD);
+		if (button)
+		{
+			button.m_OnActivated.Insert(OnDiscordClicked);
+			if (inputManager)
+				inputManager.AddActionListener(ACTION_DISCORD, EActionTrigger.DOWN, OnDiscordClicked);
+		}
+
+		button = BuildLinkButton(m_Config.m_sWebsiteUrl, m_Config.m_sWebsiteLabel, "Website", "MrFrost_Website", ACTION_WEBSITE);
+		if (button)
+		{
+			button.m_OnActivated.Insert(OnWebsiteClicked);
+			if (inputManager)
+				inputManager.AddActionListener(ACTION_WEBSITE, EActionTrigger.DOWN, OnWebsiteClicked);
+		}
+
+		// No fallback label for this one: the other two are named after what they
+		// are, while this slot is whatever the server made it. A prompt reading
+		// "Custom" tells a player nothing, so an unlabelled slot stays hidden.
+		button = BuildLinkButton(m_Config.m_sCustomUrl, m_Config.m_sCustomLabel, string.Empty, "MrFrost_Custom", ACTION_CUSTOM);
+		if (button)
+		{
+			button.m_OnActivated.Insert(OnCustomClicked);
+			if (inputManager)
+				inputManager.AddActionListener(ACTION_CUSTOM, EActionTrigger.DOWN, OnCustomClicked);
+		}
 	}
 
 	//------------------------------------------------------------------------------
+	//! Draws one footer prompt, or nothing when the slot is unused. Returns the
+	//! button so the caller can attach its own handler — see BuildLinkButtons().
+	protected SCR_InputButtonComponent BuildLinkButton(string url, string label, string fallbackLabel, string widgetName, string action)
+	{
+		if (url.IsEmpty())
+			return null;
+
+		if (label.IsEmpty())
+			label = fallbackLabel;
+
+		if (label.IsEmpty())
+			return null;
+
+		// See MrFrost_ReportUI.BuildSubmit(): a runtime-created prompt never gets
+		// its keybind flag set, so the key half of it is wired by the caller.
+		return AddFooterButton(widgetName, label, action, SCR_EDynamicFooterButtonAlignment.RIGHT);
+	}
+
+	//------------------------------------------------------------------------------
+	//! Removing a listener that was never added is harmless, so all three come off
+	//! regardless of which ones the config put on.
 	override void OnMenuClose()
 	{
 		InputManager inputManager = GetGame().GetInputManager();
 		if (inputManager)
+		{
 			inputManager.RemoveActionListener(ACTION_DISCORD, EActionTrigger.DOWN, OnDiscordClicked);
+			inputManager.RemoveActionListener(ACTION_WEBSITE, EActionTrigger.DOWN, OnWebsiteClicked);
+			inputManager.RemoveActionListener(ACTION_CUSTOM, EActionTrigger.DOWN, OnCustomClicked);
+		}
 
 		super.OnMenuClose();
 	}
@@ -154,18 +202,39 @@ class MrFrost_InfoMenuUI : MrFrost_MenuBase
 	//------------------------------------------------------------------------------
 	protected void OnDiscordClicked()
 	{
-		if (!m_Config || m_Config.m_sDiscordUrl.IsEmpty())
+		OpenLink(m_Config.m_sDiscordUrl, "Discord");
+	}
+
+	//------------------------------------------------------------------------------
+	protected void OnWebsiteClicked()
+	{
+		OpenLink(m_Config.m_sWebsiteUrl, "website");
+	}
+
+	//------------------------------------------------------------------------------
+	protected void OnCustomClicked()
+	{
+		OpenLink(m_Config.m_sCustomUrl, "custom");
+	}
+
+	//------------------------------------------------------------------------------
+	//! Hands the URL to the platform, which is what makes these work on console:
+	//! a link in a text widget cannot be clicked there, an overlay opened by the
+	//! platform can.
+	protected void OpenLink(string url, string what)
+	{
+		if (!m_Config || url.IsEmpty())
 			return;
 
 		PlatformService platformService = GetGame().GetPlatformService();
 		if (!platformService)
 		{
-			MrFrost_Log.Warn("No platform service - cannot open the Discord link.");
+			MrFrost_Log.Warn("No platform service - cannot open the " + what + " link.");
 			return;
 		}
 
-		MrFrost_Log.Debug("Opening Discord link.");
-		platformService.OpenBrowser(m_Config.m_sDiscordUrl);
+		MrFrost_Log.Debug("Opening the " + what + " link.");
+		platformService.OpenBrowser(url);
 	}
 
 	//------------------------------------------------------------------------------

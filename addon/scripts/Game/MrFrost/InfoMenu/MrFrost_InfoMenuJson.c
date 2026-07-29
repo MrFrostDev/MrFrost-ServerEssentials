@@ -78,6 +78,10 @@ class MrFrost_InfoMenuJson : JsonApiStruct
 	string pauseMenuEntry;
 	string discordUrl;
 	string discordLabel;
+	string websiteUrl;
+	string websiteLabel;
+	string customUrl;
+	string customLabel;
 	string accentColor;
 	string menuIcon;
 	string menuIconImageset;
@@ -100,6 +104,10 @@ class MrFrost_InfoMenuJson : JsonApiStruct
 		RegV("pauseMenuEntry");
 		RegV("discordUrl");
 		RegV("discordLabel");
+		RegV("websiteUrl");
+		RegV("websiteLabel");
+		RegV("customUrl");
+		RegV("customLabel");
 		RegV("accentColor");
 		RegV("menuIcon");
 		RegV("menuIconImageset");
@@ -119,6 +127,10 @@ class MrFrost_InfoMenuJson : JsonApiStruct
 		config.m_sPauseMenuEntry = pauseMenuEntry;
 		config.m_sDiscordUrl     = discordUrl;
 		config.m_sDiscordLabel   = discordLabel;
+		config.m_sWebsiteUrl     = websiteUrl;
+		config.m_sWebsiteLabel   = websiteLabel;
+		config.m_sCustomUrl      = customUrl;
+		config.m_sCustomLabel    = customLabel;
 		config.m_sMenuIconName   = menuIcon;
 		config.m_bOpenOnJoin     = openOnJoin;
 		config.m_aCategories     = {};

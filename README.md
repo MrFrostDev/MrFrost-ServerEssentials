@@ -36,7 +36,9 @@ The content is a JSON file in your server's profile directory. Edit it, restart 
 
 ![The info menu in game: category tree on the left, formatted text on the right](https://github.com/MrFrostDev/MrFrost-ServerEssentials/releases/download/v1.0.0/infomenu.png)
 
-Two levels of hierarchy: categories, each holding entries. The text supports bold, colours and inline icons. Title, accent colour and icons come from your config. The Discord button opens your invite, on console as well as on PC.
+Two levels of hierarchy: categories, each holding entries. The text supports bold, colours and inline icons. Title, accent colour and icons come from your config.
+
+The footer holds up to three link buttons — Discord on <kbd>D</kbd>, your website on <kbd>W</kbd>, and one more on <kbd>L</kbd> that you name yourself: a ruleset, a ban appeal form, a Teamspeak address. Each appears once its URL is set, and each opens through the platform, which is what makes them work on console.
 
 The menu is built from the game's own widget library, so it matches the vanilla settings and group menus.
 
@@ -100,7 +102,7 @@ Where those files are absent, the content bundled with the addon is shown, which
 | **Delivery** | Discord embed **and** a log file, each written independently of the other |
 | **Localisation** | Thirteen languages, picked from the player's game language; every string overridable per server |
 | **Per-server config** | Each menu can be switched off; its menu, pause entry and key go together |
-| **Console** | Controller support throughout, and a Discord button that opens on console |
+| **Console** | Controller support throughout, and link buttons that open on console |
 | **Anti-radar** | "Everyone within 300 m" files the report without disclosing whether anyone was in range, until you enable it |
 
 Both menus share one panel, one input category and one folder of server-side content.

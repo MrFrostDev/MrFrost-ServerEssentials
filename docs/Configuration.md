@@ -65,6 +65,10 @@ MrFrost_InfoMenuConfig {
 | `m_bOpenOnJoin` | `0` / `1` | Open the info menu once per session after joining |
 | `m_sDiscordUrl` | text | Discord invite. Empty hides the footer button |
 | `m_sDiscordLabel` | text | Label of the Discord button |
+| `m_sWebsiteUrl` | text | Your website. Empty hides the footer button |
+| `m_sWebsiteLabel` | text | Label of the website button |
+| `m_sCustomUrl` | text | A third link of your choosing. Empty hides the footer button |
+| `m_sCustomLabel` | text | Label of that button. Required — an unlabelled slot stays hidden |
 
 ## Category fields
 
