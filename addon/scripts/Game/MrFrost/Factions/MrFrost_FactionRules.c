@@ -152,4 +152,58 @@ class MrFrost_FactionRules
 	{
 		return SCR_PlayerIdentityUtils.GetPlayerIdentityId(playerId);
 	}
+
+	//------------------------------------------------------------------------------
+	//! Whether this player counts as an administrator.
+	//!
+	//! Two ways, because servers grant it two ways.
+	//!
+	//! The engine's own role is checked first. Admin systems built as separate
+	//! addons log their people in through it — that is what an admin login does —
+	//! so honouring the role covers them without this addon knowing any of them
+	//! exists, and keeps working when a server swaps one for another.
+	//!
+	//! The identity list in the config covers the rest: someone whose rights live
+	//! somewhere the engine never hears about, or an admin who should be treated
+	//! as one before they log in.
+	static bool IsAdmin(int playerId)
+	{
+		PlayerManager playerManager = GetGame().GetPlayerManager();
+		if (playerManager)
+		{
+			EPlayerRole roles = playerManager.GetPlayerRoles(playerId);
+			if (SCR_Global.IsAdminRole(roles))
+				return true;
+		}
+
+		MrFrost_FactionConfig config = MrFrost_FactionConfigLoader.Get();
+		if (!config || !config.m_aAdmins || config.m_aAdmins.IsEmpty())
+			return false;
+
+		string identity = GetIdentity(playerId);
+		if (identity.IsEmpty())
+			return false;
+
+		return config.m_aAdmins.Contains(identity);
+	}
+
+	//------------------------------------------------------------------------------
+	//! Whether the config lets this player past balance and the queue.
+	//!
+	//! The player limit is deliberately not part of this: a bypass decides who
+	//! waits, and no bypass puts more people on a faction than it has room for.
+	static bool SkipsSoftRules(int playerId, Faction faction)
+	{
+		MrFrost_FactionConfig config = MrFrost_FactionConfigLoader.Get();
+		if (!config)
+			return false;
+
+		if (config.m_bAdminsSkipQueue && IsAdmin(playerId))
+			return true;
+
+		if (config.m_bReturningPlayersSkipQueue && faction && MrFrost_FactionHistory.WasOn(playerId, faction))
+			return true;
+
+		return false;
+	}
 }

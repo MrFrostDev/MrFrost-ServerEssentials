@@ -92,6 +92,9 @@ class MrFrost_FactionConfig
 	[Attribute(defvalue: "0", desc: "Server administrators go straight in. The player limit still applies to them.")]
 	bool m_bAdminsSkipQueue;
 
+	[Attribute(desc: "Identity IDs treated as administrators on top of anyone the engine already grants the role to. For rights that live outside the engine.")]
+	ref array<string> m_aAdmins;
+
 	[Attribute(desc: "Per-faction limits and whitelists")]
 	ref array<ref MrFrost_FactionSettings> m_aFactions;
 
@@ -105,6 +108,7 @@ class MrFrost_FactionConfig
 		m_iQueueLimit = 10;
 		m_bReturningPlayersSkipQueue = true;
 		m_bAdminsSkipQueue = false;
+		m_aAdmins = {};
 		m_aFactions = {};
 	}
 

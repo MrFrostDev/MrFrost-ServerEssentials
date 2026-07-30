@@ -6,6 +6,7 @@
   "queueLimit": 10,
   "returningPlayersSkipQueue": true,
   "adminsSkipQueue": false,
+  "admins": [],
   "factions": [
     {
       "key": "US",

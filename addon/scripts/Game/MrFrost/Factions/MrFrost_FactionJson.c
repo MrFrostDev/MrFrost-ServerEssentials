@@ -37,6 +37,7 @@ class MrFrost_FactionJson : JsonApiStruct
 	int queueLimit;
 	bool returningPlayersSkipQueue;
 	bool adminsSkipQueue;
+	ref array<string> admins;
 	ref array<ref MrFrost_FactionJsonEntry> factions;
 
 	//------------------------------------------------------------------------------
@@ -49,6 +50,7 @@ class MrFrost_FactionJson : JsonApiStruct
 		queueLimit = 10;
 		returningPlayersSkipQueue = true;
 		adminsSkipQueue = false;
+		admins = {};
 		factions = {};
 
 		RegV("enabled");
@@ -58,6 +60,7 @@ class MrFrost_FactionJson : JsonApiStruct
 		RegV("queueLimit");
 		RegV("returningPlayersSkipQueue");
 		RegV("adminsSkipQueue");
+		RegV("admins");
 		RegV("factions");
 	}
 
@@ -73,12 +76,19 @@ class MrFrost_FactionJson : JsonApiStruct
 		config.m_bReturningPlayersSkipQueue   = returningPlayersSkipQueue;
 		config.m_bAdminsSkipQueue             = adminsSkipQueue;
 		config.m_aBalancedFactions            = {};
+		config.m_aAdmins                      = {};
 		config.m_aFactions                    = {};
 
 		foreach (string key : balancedFactions)
 		{
 			if (!key.IsEmpty())
 				config.m_aBalancedFactions.Insert(key);
+		}
+
+		foreach (string admin : admins)
+		{
+			if (!admin.IsEmpty())
+				config.m_aAdmins.Insert(admin);
 		}
 
 		foreach (MrFrost_FactionJsonEntry entry : factions)
@@ -161,6 +171,9 @@ class MrFrost_FactionChannel : MrFrost_ServerContentChannel
 				if (settings && settings.m_aWhitelist)
 					settings.m_aWhitelist.Clear();
 			}
+
+			if (config.m_aAdmins)
+				config.m_aAdmins.Clear();
 		}
 
 		MrFrost_FactionConfigLoader.SetServerConfig(config);
