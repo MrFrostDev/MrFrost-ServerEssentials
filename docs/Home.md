@@ -11,6 +11,7 @@ Running a server? Read [Installation](Installation.md) and then [Server content]
 - **[Installation](Installation.md)** — server setup, local testing, and the one situation where you need the Workbench
 - **[Server content](ServerContent.md)** — the JSON files on your server, their keys, and how they reach players
 - **[Reports](Reports.md)** — the report menu, Discord webhook and log file
+- **[Faction queue](FactionQueue.md)** — limits, balance and the queue for a full faction *(design notes, not built yet)*
 - **[Configuration](Configuration.md)** — the complete field reference for the addon config
 
 ### Writing content
