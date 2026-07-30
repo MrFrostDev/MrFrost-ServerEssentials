@@ -173,6 +173,31 @@ class MrFrost_ServerContent
 	}
 
 	//------------------------------------------------------------------------------
+	//! Shortens text to a byte limit without slicing a character in half.
+	//!
+	//! Lives beside Split() because it is the same hazard: Substring() counts
+	//! bytes, so a limit landing inside a multi-byte character leaves half of one
+	//! behind. That half breaks the JSON it is written into and the log line it
+	//! is appended to, and a German or Japanese report reaches a limit sooner
+	//! than an English one of the same apparent length.
+	//!
+	//! The cut moves back to the nearest space when one is close, so a sentence
+	//! ends on a word rather than mid-syllable.
+	static string Truncate(string value, int limit)
+	{
+		if (limit <= 0 || value.Length() <= limit)
+			return value;
+
+		string cut = value.Substring(0, limit);
+
+		int lastSpace = cut.LastIndexOf(" ");
+		if (lastSpace > limit - 64)
+			cut = cut.Substring(0, lastSpace);
+
+		return cut;
+	}
+
+	//------------------------------------------------------------------------------
 	//! Splits a file for transfer, cutting only at spaces.
 	//!
 	//! Substring() counts bytes, and rule texts are full of multi-byte characters

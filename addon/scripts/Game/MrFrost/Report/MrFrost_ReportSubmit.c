@@ -35,8 +35,11 @@ class MrFrost_ReportSubmit
 		// Trimmed rather than rejected: a player who wrote too much should not
 		// lose what they wrote, and the cut is on the server so no client can
 		// send a megabyte of text at the webhook.
-		if (config.m_iMaxDescription > 0 && description.Length() > config.m_iMaxDescription)
-			description = description.Substring(0, config.m_iMaxDescription);
+		//
+		// Truncate rather than Substring: the limit counts bytes, and landing
+		// inside a multi-byte character would leave half of one in the JSON and
+		// in the log line.
+		description = MrFrost_ServerContent.Truncate(description, config.m_iMaxDescription);
 
 		if (IsOnCooldown(reporterId, config))
 			return "report.cooldown";
