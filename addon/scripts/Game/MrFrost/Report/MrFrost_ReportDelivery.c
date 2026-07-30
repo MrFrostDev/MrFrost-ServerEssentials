@@ -46,6 +46,9 @@ class MrFrost_ReportDelivery
 	protected static const int MAX_DESCRIPTION = 4000;
 	protected static const int MAX_FIELD = 1000;
 
+	//! Used when a server names no log file, or names something that is a path.
+	protected static const string DEFAULT_LOG_FILE = "reports.log";
+
 	//! Reports waiting for their turn at the webhook.
 	protected static ref array<ref MrFrost_Report> s_aQueue;
 	protected static bool s_bSending;
@@ -86,13 +89,37 @@ class MrFrost_ReportDelivery
 	}
 
 	//------------------------------------------------------------------------------
+	//! Keeps logFile a file name rather than a path.
+	//!
+	//! The value comes from a server's JSON, and anything containing a separator
+	//! or ".." would place the log outside the MrFrost folder. A server owner
+	//! already controls the machine, so this is not a privilege boundary - it
+	//! stops a typo from writing somewhere nobody thinks to look, and stops one
+	//! shared config from scattering logs across a box that hosts several
+	//! servers.
+	protected static string SafeLogName(string name)
+	{
+		if (name.IsEmpty())
+			return DEFAULT_LOG_FILE;
+
+		if (name.Contains("/") || name.Contains("\\") || name.Contains(":") || name.Contains(".."))
+		{
+			MrFrost_Log.Warn("logFile must be a file name, not a path. Using "
+				+ DEFAULT_LOG_FILE + " instead of: " + name);
+			return DEFAULT_LOG_FILE;
+		}
+
+		return name;
+	}
+
+	//------------------------------------------------------------------------------
 	//! Appends one line per report.
 	//!
 	//! Append rather than rewrite, and one line per report, so the file can be
 	//! tailed while the server runs and never has to be held in memory.
 	protected static bool WriteToLog(notnull MrFrost_Report report, notnull MrFrost_ReportDeliveryConfig config)
 	{
-		string path = MrFrost_ServerContent.FOLDER + config.m_sLogFile;
+		string path = MrFrost_ServerContent.FOLDER + SafeLogName(config.m_sLogFile);
 
 		FileHandle file = FileIO.OpenFile(path, FileMode.APPEND);
 		if (!file)
@@ -218,7 +245,9 @@ class MrFrost_ReportDelivery
 			return;
 		}
 
-		MrFrost_Log.Error("Discord rejected a report (HTTP " + callback.GetHttpCode() + "). It is still in the log file.");
+		MrFrost_Log.Error("Discord rejected a report (HTTP " + callback.GetHttpCode()
+			+ "). Check webhookUrl, webhookAvatarUrl and webhookUsername in report.json."
+			+ " The report is still in the log file.");
 	}
 
 	//------------------------------------------------------------------------------
@@ -277,8 +306,16 @@ class MrFrost_ReportDelivery
 		if (!config.m_sWebhookUsername.IsEmpty())
 			payload += ",\"username\":\"" + Escape(config.m_sWebhookUsername) + "\"";
 
+		// Discord rejects the whole message over a malformed avatar_url, which
+		// would silently cost every report. A value that cannot be a URL is
+		// dropped and named in the log instead.
 		if (!config.m_sWebhookAvatarUrl.IsEmpty())
-			payload += ",\"avatar_url\":\"" + Escape(config.m_sWebhookAvatarUrl) + "\"";
+		{
+			if (config.m_sWebhookAvatarUrl.StartsWith("http"))
+				payload += ",\"avatar_url\":\"" + Escape(config.m_sWebhookAvatarUrl) + "\"";
+			else
+				MrFrost_Log.Warn("webhookAvatarUrl is not a URL and was ignored: " + config.m_sWebhookAvatarUrl);
+		}
 
 		// allowed_mentions empty: a player typing @everyone into a description
 		// must not be able to ping the whole Discord.
@@ -290,9 +327,12 @@ class MrFrost_ReportDelivery
 	//! Discord's default, so the fields stack instead of sharing a line.
 	//!
 	//! Discord rejects an empty value, so callers only pass fields they have.
+	//! The name is escaped as well as the value. Both are server-supplied now
+	//! that the labels come from the text table, and a quote in either one would
+	//! break the JSON and cost the whole embed.
 	protected static string Field(string name, string value)
 	{
-		return "{\"name\":\"" + name + "\",\"value\":\"" + Escape(Clamp(value, MAX_FIELD)) + "\"}";
+		return "{\"name\":\"" + Escape(Clamp(name, MAX_FIELD)) + "\",\"value\":\"" + Escape(Clamp(value, MAX_FIELD)) + "\"}";
 	}
 
 	//------------------------------------------------------------------------------
@@ -313,13 +353,7 @@ class MrFrost_ReportDelivery
 		if (value.Length() <= limit)
 			return value;
 
-		string cut = value.Substring(0, limit - 3);
-
-		int space = cut.LastIndexOf(" ");
-		if (space > limit - 64)
-			cut = cut.Substring(0, space);
-
-		return cut + "...";
+		return MrFrost_ServerContent.Truncate(value, limit - 3) + "...";
 	}
 
 	//------------------------------------------------------------------------------
