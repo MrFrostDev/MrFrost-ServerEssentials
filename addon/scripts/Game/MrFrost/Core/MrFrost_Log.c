@@ -5,14 +5,30 @@
 //! has the story of every feature in one place instead of learning a prefix per
 //! menu.
 //!
-//! Verbose logging is meant for bring-up. It must be off in a release build.
+//! Verbose logging is off unless a server asks for it. A shipped build that
+//! logs every menu open and every content chunk buries the lines that matter in
+//! a server log somebody has to read.
 //------------------------------------------------------------------------------
 class MrFrost_Log
 {
 	static const string PREFIX = "[MrFrost] ";
 
-	//! Diagnostics switch. Enabled during bring-up, disabled for release.
-	static bool s_bVerbose = true;
+	//! Diagnostics switch. Off by default; a server turns it on with
+	//! "verboseLogging": true in its report.json, which is where the rest of its
+	//! operational settings live.
+	static bool s_bVerbose = false;
+
+	//------------------------------------------------------------------------------
+	static void SetVerbose(bool enabled)
+	{
+		if (s_bVerbose == enabled)
+			return;
+
+		s_bVerbose = enabled;
+
+		if (enabled)
+			Info("Verbose logging is on.");
+	}
 
 	//------------------------------------------------------------------------------
 	static void Info(string msg)

@@ -45,6 +45,7 @@ class MrFrost_ReportJson : JsonApiStruct
 	int cooldownSeconds;
 	bool revealNobodyNearby;
 	int maxDescription;
+	bool verboseLogging;
 	string menuIcon;
 	string menuIconImageset;
 	ref MrFrost_ReportDeliveryJson delivery;
@@ -70,6 +71,7 @@ class MrFrost_ReportJson : JsonApiStruct
 		RegV("cooldownSeconds");
 		RegV("revealNobodyNearby");
 		RegV("maxDescription");
+		RegV("verboseLogging");
 		RegV("menuIcon");
 		RegV("menuIconImageset");
 		RegV("delivery");
@@ -187,6 +189,7 @@ class MrFrost_ReportChannel : MrFrost_ServerContentChannel
 		MrFrost_ReportJson parsed = new MrFrost_ReportJson();
 		parsed.ExpandFromRAW(json);
 
+		MrFrost_Log.SetVerbose(parsed.verboseLogging);
 		MrFrost_ReportConfigLoader.SetServerConfig(parsed.ToConfig());
 		ApplyStrings(parsed);
 
@@ -202,6 +205,7 @@ class MrFrost_ReportChannel : MrFrost_ServerContentChannel
 		MrFrost_ReportJson parsed = new MrFrost_ReportJson();
 		parsed.ExpandFromRAW(json);
 
+		MrFrost_Log.SetVerbose(parsed.verboseLogging);
 		MrFrost_ReportConfigLoader.SetDelivery(parsed.ToDeliveryConfig());
 
 		// Also applied here, not only in Apply(): the Discord embed is built on

@@ -7,6 +7,7 @@
   "cooldownSeconds": 10,
   "maxDescription": 1000,
   "menuIcon": "feedback",
+  "verboseLogging": false,
   "delivery": {
     "writeLog": true,
     "logFile": "reports.log",
