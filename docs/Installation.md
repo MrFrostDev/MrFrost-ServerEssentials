@@ -18,6 +18,20 @@ Those files are what your players see. They live on the server, not in the addon
 
 Without them, players see the sample content bundled with the addon.
 
+## Getting the mod
+
+[**MrFrost Server Essentials on the Workshop**](https://reforger.armaplatform.com/workshop/697F04F543907FAF)
+
+Server owners add it to the mod list in their server config:
+
+```json
+"mods": [
+    { "modId": "697F04F543907FAF", "name": "MrFrost Server Essentials" }
+]
+```
+
+The mod ID is what a server config and the launcher both refer to. It stays the same across versions.
+
 ## Testing locally
 
 With the mod unpacked in a folder:
