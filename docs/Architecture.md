@@ -165,6 +165,18 @@ Taking simply the first image in the subtree finds the button's own arrow decora
 
 ## Gotchas found the hard way
 
+**A key name in an input action is only checked when a mission starts.** `chimeraInputCommon.conf` is not loaded at the main menu, so the headless compile check never sees it — a binding naming a button that does not exist passes every check and then fails in game:
+
+```
+INPUT (E): InputManager: unknown key 'gamepad0:dpad_up'
+```
+
+The button is called `pad_up`. The names that exist can be read off the vanilla configs rather than guessed:
+
+```
+grep -rhoE '"gamepad0:[a-z_0-9]+"' vanilla-export/ reference/ | sort -u
+```
+
 **A script method cannot take a function reference.** Passing a callback to a helper fails to compile with `func arguments are not supported in script methods`. A helper that would wire up several near-identical buttons therefore has to return the button and let each caller attach its own handler — see `MrFrost_InfoMenuUI.BuildLinkButtons()`, where three link slots are spelled out for exactly this reason.
 
 **A key name in an input action is only checked when a mission starts.** `chimeraInputCommon.conf` is not loaded at the main menu, so the headless compile check never sees it — a binding naming a button that does not exist passes every check and then fails in game:
