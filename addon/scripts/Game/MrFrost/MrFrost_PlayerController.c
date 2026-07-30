@@ -42,7 +42,15 @@ modded class SCR_PlayerController
 
 	//! Static, so the info menu greets the player once per session rather than on
 	//! every respawn.
+	//! Whether the info menu has already opened itself this session, and the
+	//! world time at which that happened.
+	//!
+	//! Static, so it survives a mission restart while the world clock does not.
+	//! A stamp ahead of the clock therefore means the mission has restarted and
+	//! the menu should be offered again - the same hazard the report cooldown
+	//! has, and the same test for it.
 	protected static bool s_bAutoOpened;
+	protected static float s_fAutoOpenedAt;
 
 	//! Server side: what is left to send to this one client, flattened across all
 	//! channels. Each item carries its own channel, so one queue serves them all.
@@ -368,7 +376,10 @@ modded class SCR_PlayerController
 	{
 		super.OnControlledEntityChanged(from, to);
 
-		if (s_bAutoOpened || !to)
+		if (!to)
+			return;
+
+		if (s_bAutoOpened && !MrFrost_HasMissionRestarted())
 			return;
 
 		if (this != GetGame().GetPlayerController())
@@ -379,7 +390,16 @@ modded class SCR_PlayerController
 			return;
 
 		s_bAutoOpened = true;
+		s_fAutoOpenedAt = GetGame().GetWorld().GetWorldTime();
 		GetGame().GetCallqueue().CallLater(MrFrost_AutoOpenInfoMenu, MRFROST_AUTO_OPEN_DELAY_MS, false);
+	}
+
+	//------------------------------------------------------------------------------
+	//! True when the world clock has gone backwards since the menu last opened,
+	//! which only happens when the mission restarted underneath these statics.
+	protected static bool MrFrost_HasMissionRestarted()
+	{
+		return GetGame().GetWorld().GetWorldTime() < s_fAutoOpenedAt;
 	}
 
 	//------------------------------------------------------------------------------
