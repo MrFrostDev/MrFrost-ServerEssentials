@@ -190,6 +190,10 @@ the addon.
 > [!NOTE]
 > Reports, the log file and the Discord webhook are verified working. The **server-to-client content transfer** is compile-verified and still awaits a run on a live dedicated server — local hosting reads the files directly. The `[MrFrost]` lines in the server and client logs say how far it got. See [Troubleshooting](docs/Troubleshooting.md).
 
+## Contributing
+
+[Contributing guide](CONTRIBUTING.md) · [Code of Conduct](CODE_OF_CONDUCT.md) · [Security policy](SECURITY.md) · [Changelog](CHANGELOG.md)
+
 ## Credits
 
 By **MrFrost**. Released under the [MIT licence](license.txt).
