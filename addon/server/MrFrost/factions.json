@@ -1,0 +1,26 @@
+{
+  "enabled": true,
+  "maxImbalance": 3,
+  "balanceMode": "INCLUDE",
+  "balancedFactions": ["US", "USSR"],
+  "queueLimit": 10,
+  "returningPlayersSkipQueue": true,
+  "adminsSkipQueue": false,
+  "factions": [
+    {
+      "key": "US",
+      "playerLimit": 32,
+      "whitelist": []
+    },
+    {
+      "key": "USSR",
+      "playerLimit": 32,
+      "whitelist": []
+    },
+    {
+      "key": "FIA",
+      "playerLimit": 8,
+      "whitelist": []
+    }
+  ]
+}

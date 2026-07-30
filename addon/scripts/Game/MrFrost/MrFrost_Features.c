@@ -156,6 +156,7 @@ class MrFrost_Features
 		// Order is the wire format. Append only.
 		MrFrost_ServerContent.Register(new MrFrost_InfoMenuChannel());
 		MrFrost_ServerContent.Register(new MrFrost_ReportChannel());
+		MrFrost_ServerContent.Register(new MrFrost_FactionChannel());
 	}
 
 	//------------------------------------------------------------------------------
