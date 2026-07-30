@@ -13,6 +13,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Player limits, whitelists and a balance rule as one system, with a queue that
   catches everyone they turn away. See [docs/FactionQueue.md](docs/FactionQueue.md).
 
+## [1.0.3] - 2026-07-30
+
+### Added
+
+- `verboseLogging` in `report.json` turns the diagnostic log lines back on for a
+  server that needs them.
+
+### Fixed
+
+- Verbose logging shipped switched on, burying the lines that matter in every
+  server log.
+- `maxDescription` was applied by byte count, so a limit landing inside a
+  multi-byte character left half of one in the Discord payload and in the log
+  file. Text is now cut on a character boundary, and at a space where one is
+  near.
+- Embed field names went into the JSON unescaped. They stopped being constants
+  when the labels became overridable, so a quote in a `report.embed.*` override
+  broke the whole embed.
+- A `webhookAvatarUrl` that is not a URL made Discord reject the entire message,
+  costing every report. It is dropped with a warning instead, and the rejection
+  message names the settings to check.
+- `logFile` accepted a path, placing the log outside the `MrFrost` folder. It
+  falls back to `reports.log` and says so.
+- The info menu stopped offering itself after a mission restart, and never
+  appeared at all for a player who joined a second server in the same session.
+
 ## [1.0.2] - 2026-07-30
 
 ### Added
@@ -70,7 +96,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   server's profile directory, so one published mod carries different content on
   every server that runs it.
 
-[Unreleased]: https://github.com/MrFrostDev/MrFrost-ServerEssentials/compare/v1.0.2...HEAD
+[Unreleased]: https://github.com/MrFrostDev/MrFrost-ServerEssentials/compare/v1.0.3...HEAD
+[1.0.3]: https://github.com/MrFrostDev/MrFrost-ServerEssentials/compare/v1.0.2...v1.0.3
 [1.0.2]: https://github.com/MrFrostDev/MrFrost-ServerEssentials/compare/v1.0.1...v1.0.2
 [1.0.1]: https://github.com/MrFrostDev/MrFrost-ServerEssentials/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/MrFrostDev/MrFrost-ServerEssentials/releases/tag/v1.0.0
