@@ -202,8 +202,11 @@ class MrFrost_ServerContent
 
 		string cut = value.Substring(0, limit);
 
+		// LastIndexOf answers -1 when there is no space at all, and a limit below
+		// 63 makes -1 pass the proximity test - which would call Substring with a
+		// negative length. Both conditions have to hold.
 		int lastSpace = cut.LastIndexOf(" ");
-		if (lastSpace > limit - 64)
+		if (lastSpace > 0 && lastSpace > limit - 64)
 			cut = cut.Substring(0, lastSpace);
 
 		return cut;
@@ -216,32 +219,38 @@ class MrFrost_ServerContent
 	//! — cutting at a fixed offset would eventually slice one in half and corrupt
 	//! the two chunks around it. A space is always a single byte, so a cut there
 	//! is always on a character boundary.
+	//!
+	//! Walked with an offset rather than by re-slicing the remainder. Substring()
+	//! caps its output at 8191 characters, so taking the tail of a longer file
+	//! returned a truncated tail and everything past it was lost — silently, with
+	//! the server still logging the full byte count it had read. Reading forward
+	//! from an offset means every call asks for at most a chunk.
 	static void Split(string raw, int chunkSize, notnull out array<string> chunks)
 	{
-		string rest = raw;
+		int total = raw.Length();
+		int offset = 0;
 
-		while (!rest.IsEmpty())
+		while (offset < total)
 		{
-			int length = rest.Length();
-			if (length <= chunkSize)
+			int take = total - offset;
+			if (take > chunkSize)
+				take = chunkSize;
+
+			// The last chunk keeps whatever is left, so it needs no word boundary.
+			if (offset + take < total)
 			{
-				chunks.Insert(rest);
-				break;
+				string head = raw.Substring(offset, take);
+				int lastSpace = head.LastIndexOf(" ");
+
+				// No space in a whole chunk means a very long unbroken token.
+				// Cutting hard is the only option left; it is also the only case
+				// where a character could be split, and JSON structure is ASCII.
+				if (lastSpace > 0)
+					take = lastSpace;
 			}
 
-			int cut = chunkSize;
-
-			string head = rest.Substring(0, cut);
-			int lastSpace = head.LastIndexOf(" ");
-
-			// No space in a whole chunk means a very long unbroken token. Cutting
-			// hard is the only option left; it is also the only case where a
-			// character could be split, and JSON structure itself is pure ASCII.
-			if (lastSpace > 0)
-				cut = lastSpace;
-
-			chunks.Insert(rest.Substring(0, cut));
-			rest = rest.Substring(cut, length - cut);
+			chunks.Insert(raw.Substring(offset, take));
+			offset += take;
 		}
 	}
 }
