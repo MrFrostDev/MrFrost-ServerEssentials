@@ -38,6 +38,18 @@ class MrFrost_ServerContentChannel
 	//! broken file is reported on the server console — where the owner will see
 	//! it — instead of silently on every client.
 	bool Validate(string json);
+
+	//------------------------------------------------------------------------------
+	//! Server side: the version of this file a client may hold.
+	//!
+	//! The transfer sends a file's text, so anything a channel keeps out of a
+	//! client's hands has to be removed here rather than merely ignored when the
+	//! client parses it. Returning the text unchanged is the right default; a
+	//! channel carrying a secret overrides this and re-emits without it.
+	string ForClient(string json)
+	{
+		return json;
+	}
 }
 
 //------------------------------------------------------------------------------

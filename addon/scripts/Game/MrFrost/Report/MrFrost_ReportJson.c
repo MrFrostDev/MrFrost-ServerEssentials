@@ -198,6 +198,46 @@ class MrFrost_ReportChannel : MrFrost_ServerContentChannel
 	}
 
 	//------------------------------------------------------------------------------
+	//! Re-emits the file without the delivery block.
+	//!
+	//! The transfer sends text, so reading delivery on the server is not the same
+	//! as keeping it there — the bytes still travelled. This parses the file and
+	//! packs it back out with delivery dropped, so what reaches a client cannot
+	//! contain the webhook URL whatever a server owner put in the file.
+	//!
+	//! A parse failure returns nothing rather than the original: sending a file
+	//! this code could not read would mean sending a secret it could not find.
+	override string ForClient(string json)
+	{
+		MrFrost_ReportJson parsed = new MrFrost_ReportJson();
+		parsed.ExpandFromRAW(json);
+
+		parsed.delivery = null;
+		parsed.UnregV("delivery");
+		parsed.Pack();
+
+		string safe = parsed.AsString();
+		if (safe.IsEmpty())
+		{
+			MrFrost_Log.Error("Could not repack report.json without its delivery block - sending nothing rather than risking the webhook URL.");
+			return string.Empty;
+		}
+
+		// Checked rather than assumed. This function's whole job is that one
+		// field never leaves the machine, and it rests on how the JSON layer
+		// treats an unregistered member - which is not something the addon can
+		// prove at build time. If the block survived the round trip, nothing
+		// goes out and the server says why.
+		if (safe.Contains("webhookUrl") || safe.Contains("delivery"))
+		{
+			MrFrost_Log.Error("report.json still carried its delivery block after repacking - refusing to send it. Reports still work; the menu falls back to the bundled settings.");
+			return string.Empty;
+		}
+
+		return safe;
+	}
+
+	//------------------------------------------------------------------------------
 	//! Server side. Also the point at which the delivery settings are taken out —
 	//! they are read here and never put anywhere a client could reach.
 	override bool Validate(string json)
@@ -207,6 +247,7 @@ class MrFrost_ReportChannel : MrFrost_ServerContentChannel
 
 		MrFrost_Log.SetVerbose(parsed.verboseLogging);
 		MrFrost_ReportConfigLoader.SetDelivery(parsed.ToDeliveryConfig());
+
 
 		// Also applied here, not only in Apply(): the Discord embed is built on
 		// the server, so its labels are resolved on the server. Without this a

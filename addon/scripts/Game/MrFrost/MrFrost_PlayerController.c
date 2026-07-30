@@ -250,6 +250,12 @@ modded class SCR_PlayerController
 			if (raw.IsEmpty())
 				continue;	// No file for this feature. The client keeps its bundled content.
 
+			// What leaves the server is the channel's client-safe version, never
+			// the file as it sits on disk.
+			raw = channels[c].ForClient(raw);
+			if (raw.IsEmpty())
+				continue;
+
 			array<string> chunks = {};
 			MrFrost_ServerContent.Split(raw, MrFrost_ServerContent.CHUNK_SIZE, chunks);
 
