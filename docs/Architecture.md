@@ -165,6 +165,18 @@ Taking simply the first image in the subtree finds the button's own arrow decora
 
 **A script method cannot take a function reference.** Passing a callback to a helper fails to compile with `func arguments are not supported in script methods`. A helper that would wire up several near-identical buttons therefore has to return the button and let each caller attach its own handler — see `MrFrost_InfoMenuUI.BuildLinkButtons()`, where three link slots are spelled out for exactly this reason.
 
+**A key name in an input action is only checked when a mission starts.** `chimeraInputCommon.conf` is not loaded at the main menu, so the headless compile check never sees it — a binding naming a button that does not exist passes every check and then fails in game:
+
+```
+INPUT (E): InputManager: unknown key 'gamepad0:dpad_up'
+```
+
+The button is called `pad_up`. The names that exist can be read off the vanilla configs rather than guessed:
+
+```
+grep -rhoE '"gamepad0:[a-z_0-9]+"' vanilla-export/ reference/ | sort -u
+```
+
 **`WLib_TabViewHorizontal` sizes its accent line by fill weight, not in pixels.** Its root is a vertical layout of three: a 40 px tab row, then `Separator` at weight `0.005` and `ContentOverlay` at `0.95`, sharing whatever is left over. A menu that gives the tab view the whole panel gets a few pixels of line. A menu that gives it only the height of the bar gets half a percent of almost nothing, and the line disappears — while still being drawn, which is why nothing shows up in any log.
 
 The report menu renders its form *below* the tab view rather than inside it, so `ShowTabSeparator()` hands the whole remainder to the separator and none to the unused content overlay. The tab slot is 44 px: 40 for the bar, 4 for the line, which is the thickness vanilla authored.

@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="https://github.com/MrFrostDev/MrFrost-ServerEssentials/releases/download/v1.0.0/banner.jpg" alt="MrFrost Server Essentials — info menu and rules, player reports, bug reports, local server logs, Discord webhook embed" width="100%">
+<img src="https://github.com/MrFrostDev/MrFrost-ServerEssentials/releases/download/v1.0.0/banner.png" alt="MrFrost Server Essentials — in-game info menu and player reports for Arma Reforger servers" width="100%">
 
 # MrFrost Server Essentials
 
@@ -8,7 +8,8 @@
 
 The content lives on your server — one published addon, a different setup on every server that runs it.
 
-[![Game](https://img.shields.io/badge/Arma_Reforger-1.3+-E2A74F?style=flat-square)](https://reforger.armaplatform.com/)
+[![Workshop](https://img.shields.io/badge/Workshop-subscribe-E2A74F?style=flat-square)](https://reforger.armaplatform.com/workshop/69F71634BA1052A0-MrFrostServerEssentials)
+[![Game](https://img.shields.io/badge/Arma_Reforger-1.3+-4B5563?style=flat-square)](https://reforger.armaplatform.com/)
 [![Platform](https://img.shields.io/badge/platform-PC_%7C_Xbox_%7C_PlayStation-4B5563?style=flat-square)](#requirements)
 [![Script](https://img.shields.io/badge/Enfusion_Script-1F2937?style=flat-square)](addon/scripts/Game/MrFrost)
 [![Content](https://img.shields.io/badge/content-server--side_JSON-2563EB?style=flat-square)](#one-mod-many-servers)
@@ -111,7 +112,11 @@ Both menus share one panel, one input category and one folder of server-side con
 
 ### Running a server
 
-1. Add the mod as a dependency in your server config.
+1. Add the mod as a dependency in your server config:
+
+   ```json
+   { "modId": "69F71634BA1052A0", "name": "MrFrost Server Essentials" }
+   ```
 2. Copy [`addon/server/MrFrost/`](addon/server/MrFrost) into your server's profile directory and write your own text into it.
 3. Restart the server.
 
@@ -144,6 +149,7 @@ Players open the info menu with <kbd>F11</kbd> and the report menu with <kbd>F10
 | [Presets](docs/Presets.md) | Shipping and switching complete configurations |
 | [Troubleshooting](docs/Troubleshooting.md) | Log messages and what they mean |
 | [Architecture](docs/Architecture.md) | How the addon is built, for modders |
+| [Changelog](CHANGELOG.md) | What changed in each release |
 
 Start at [docs/Home.md](docs/Home.md) for the full index.
 
