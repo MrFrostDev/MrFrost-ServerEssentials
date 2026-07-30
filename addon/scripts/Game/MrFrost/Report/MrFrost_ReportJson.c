@@ -248,6 +248,12 @@ class MrFrost_ReportChannel : MrFrost_ServerContentChannel
 		MrFrost_Log.SetVerbose(parsed.verboseLogging);
 		MrFrost_ReportConfigLoader.SetDelivery(parsed.ToDeliveryConfig());
 
+		// Also the menu settings, not only delivery. Validate() is the only entry
+		// point on a dedicated server - Apply() runs on clients and on a listen
+		// host - so without this the authority enforced the addon's bundled
+		// defaults while every client honoured the server's file. A server that
+		// switched reporting off still accepted reports from a modified client.
+		MrFrost_ReportConfigLoader.SetServerConfig(parsed.ToConfig());
 
 		// Also applied here, not only in Apply(): the Discord embed is built on
 		// the server, so its labels are resolved on the server. Without this a
