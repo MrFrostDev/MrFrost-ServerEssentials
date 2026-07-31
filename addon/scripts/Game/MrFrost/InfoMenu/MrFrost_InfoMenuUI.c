@@ -155,7 +155,7 @@ class MrFrost_InfoMenuUI : MrFrost_MenuBase
 			button.m_OnActivated.Insert(OnDiscordClicked);
 		}
 
-		button = BuildLinkButton(m_Config.m_sWebsiteUrl, m_Config.m_sWebsiteLabel, "Website", "MrFrost_Website", ACTION_WEBSITE, "websiteUrl");
+		button = BuildLinkButton(m_Config.m_sWebsiteUrl, m_Config.m_sWebsiteLabel, MrFrost_Text.Get("infomenu.website"), "MrFrost_Website", ACTION_WEBSITE, "websiteUrl");
 		if (button)
 		{
 			button.m_OnActivated.Insert(OnWebsiteClicked);

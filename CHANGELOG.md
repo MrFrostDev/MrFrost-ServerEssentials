@@ -13,6 +13,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Player limits, whitelists and a balance rule as one system, with a queue that
   catches everyone they turn away. Design notes live on that branch.
 
+## [Unreleased]
+
+### Fixed
+
+- With `revealNobodyNearby` on, a nearby report with nobody in range was thrown
+  away rather than filed. The player was told something true about their
+  surroundings and nothing about their report, and left able to send it again
+  and lose it again. The report goes either way now.
+- Fifteen fields and a method on the modded player controller carried no prefix.
+  A second mod picking one of those names collides in the same chain, and for
+  the method that is a compile error — which takes down every mod on the server.
+- `nearbyRadius` set to zero selected nobody and printed a bare `%1` in the
+  dropdown. It falls back to 300, the way `maxDescription` falls back to 1000.
+- Several translations said the wrong thing: German called a bug report an error
+  message, Portuguese and Chinese used the verb for denouncing a person, and
+  Spanish said players *at* the radius rather than within it. Four more drifted
+  from the word their own language uses everywhere else.
+- The website button was labelled in English for every player.
+
 ## [1.0.6] - 2026-08-01
 
 ### Fixed
