@@ -268,7 +268,7 @@ class MrFrost_InfoMenuConfigLoader
 		// the server left out arrives blank rather than at its default, and
 		// taking the result as-is would have cost the bundled accent colour and
 		// the menu icon on a file that never mentioned either.
-		if (parsed.categories.IsEmpty())
+		if (!parsed.categories || parsed.categories.IsEmpty())
 		{
 			s_ServerConfig = null;
 			MrFrost_InfoMenuConfig bundled = Get();

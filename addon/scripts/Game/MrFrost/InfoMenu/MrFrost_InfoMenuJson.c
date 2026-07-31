@@ -174,6 +174,11 @@ class MrFrost_InfoMenuJson : JsonApiStruct
 		int rows = 0;
 		bool dropped = false;
 
+		// Null rather than empty is what "categories": null parses into, and the
+		// server-side warning pass already guards it. This did not.
+		if (!categories)
+			return config;
+
 		foreach (MrFrost_InfoMenuJsonCategory source : categories)
 		{
 			if (!source)
@@ -309,9 +314,17 @@ class MrFrost_InfoMenuChannel : MrFrost_ServerContentChannel
 	//------------------------------------------------------------------------------
 	//! A server's own wording for the addon's own strings. Shared across features:
 	//! whichever file carries a key, that is the wording every menu uses.
-	static void ApplyStrings(notnull array<ref MrFrost_JsonString> strings)
+	//! Takes the array as it came out of the JSON layer, which may be null.
+	//!
+	//! A file writing "strings": null parses into one, and the constructor's
+	//! empty array does not survive that. The report channel has always guarded
+	//! this; here it reached a notnull parameter from both the server and the
+	//! client, so a single null key cost the server the rest of its startup read
+	//! and cost every client the content of a channel it had already marked as
+	//! delivered.
+	static void ApplyStrings(array<ref MrFrost_JsonString> strings)
 	{
-		if (strings.IsEmpty())
+		if (!strings || strings.IsEmpty())
 			return;
 
 		map<string, string> overrides = new map<string, string>();

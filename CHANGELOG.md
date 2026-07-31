@@ -15,6 +15,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- A server whose `report.json` could not be repacked without its webhook block
+  said so once, in the middle of the first player's join, and every client after
+  that quietly used the bundled settings. The client-safe form is now built when
+  the server starts, where an owner is watching.
+- `"categories": null` or `"strings": null` in `infomenu.json` passed every check
+  and then broke — on the server it cost the rest of the startup read, on clients
+  it cost the content of a channel already marked as delivered.
+- A server file too large to send was transmitted in full to every joining player
+  and discarded in total on arrival, with nothing said on either machine. The
+  limit is now checked before sending, and named.
 - A report against a player picked from the list could name whoever inherited
   that player's id if they left while the report was being written. The pick now
   carries the name the reporter was looking at, and the server refuses it when

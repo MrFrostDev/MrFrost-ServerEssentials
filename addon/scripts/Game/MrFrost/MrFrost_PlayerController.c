@@ -44,8 +44,6 @@ modded class SCR_PlayerController
 	//! Ceiling on how many chunks one channel may claim to have. At 900 bytes a
 	//! chunk this allows a file of about 3.6 MB, far past anything a server has
 	//! reason to send, and it stops a hostile one from having every client
-	//! allocate an array sized by a number it made up.
-	protected static const int MRFROST_MAX_CHUNKS = 4096;
 
 	//! Server side: whether this client has already been sent the server files.
 	protected bool m_bContentServed;
@@ -353,7 +351,11 @@ modded class SCR_PlayerController
 	{
 		if (!m_aOutgoingData)
 		{
+			// Releases too. This is unreachable while the queue is armed, but it is
+			// the one exit that would otherwise leave the counter inflated for the
+			// life of the server, throttling every later transfer to the floor.
 			GetGame().GetCallqueue().Remove(MrFrost_SendChunks);
+			ReleaseSendSlot();
 			return;
 		}
 
@@ -427,7 +429,7 @@ modded class SCR_PlayerController
 		// Bounded above as well as below. A hostile server sending total = 2e9
 		// would have the client allocate a two-billion-entry array on the main
 		// thread before a single byte of content arrived.
-		if (total <= 0 || total > MRFROST_MAX_CHUNKS || index < 0 || index >= total)
+		if (total <= 0 || total > MrFrost_ServerContent.MAX_CHUNKS || index < 0 || index >= total)
 			return;
 
 		if (!m_mIncoming)
@@ -580,8 +582,10 @@ modded class SCR_PlayerController
 		// queue drains channel by channel, so the client looked done every time a
 		// channel completed, and the menu could open on bundled content that the
 		// next channel was still on its way to replace. The server says when it is
-		// finished; the pending set catches the case where that word overtakes the
-		// last chunk, which reliable delivery does not rule out.
+		// finished; the pending set catches a channel that is half-arrived. It
+		// cannot catch one that has not started, since it only learns of a channel
+		// from its first chunk - so the two together are a strong check, not a
+		// proof.
 		if (!m_bContentComplete || MrFrost_IsTransferPending() || menuManager.IsAnyMenuOpen())
 		{
 			m_iAutoOpenAttempts++;

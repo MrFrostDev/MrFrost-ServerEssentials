@@ -193,7 +193,14 @@ class MrFrost_Features
 
 		foreach (MrFrost_ServerContentChannel channel : MrFrost_ServerContent.GetChannels())
 		{
-			MrFrost_ServerContent.Read(channel);
+			// Not just read - built all the way to the form a client receives. The
+			// point of doing this at boot is that an owner is watching the console
+			// then, and the half that can refuse to send anything at all lives in
+			// ForClient, not in Read. Leaving it until the first request meant a
+			// channel that could not repack itself said so in the middle of
+			// somebody's join, once, and every client after that quietly ran on
+			// bundled settings.
+			MrFrost_ServerContent.ChunksForClient(channel);
 		}
 	}
 }

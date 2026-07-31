@@ -66,6 +66,11 @@ class MrFrost_ServerContent
 	//! silently dropped packet to lose.
 	static const int CHUNK_SIZE = 900;
 
+	//! Most packets one channel may take. The receiving side refuses anything
+	//! above this, so a file past it cannot arrive - better to say so at the
+	//! server console than to send megabytes nobody will accept.
+	static const int MAX_CHUNKS = 4096;
+
 	//! The engine's ceiling on a single Substring() result, documented in the
 	//! vanilla string type. Everything here that cuts text has to stay under it.
 	static const int MAX_SUBSTRING = 8191;
@@ -174,6 +179,16 @@ class MrFrost_ServerContent
 			raw = channel.ForClient(raw);
 			if (!raw.IsEmpty())
 				Split(raw, CHUNK_SIZE, chunks);
+		}
+
+		// Judged here as well as on arrival. A client refuses a packet claiming
+		// more chunks than this, and it does so before it records the channel as
+		// pending - so an oversized file was transmitted in full to every player
+		// and discarded in total, with nothing said on either machine.
+		if (chunks.Count() > MAX_CHUNKS)
+		{
+			MrFrost_Log.Error(channel.GetFileName() + " is too large to send (" + chunks.Count() + " packets, the limit is " + MAX_CHUNKS + "). Clients will use the content bundled with the addon.");
+			chunks.Clear();
 		}
 
 		s_mChunks.Set(id, chunks);
