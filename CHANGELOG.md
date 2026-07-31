@@ -13,14 +13,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Player limits, whitelists and a balance rule as one system, with a queue that
   catches everyone they turn away. Design notes live on that branch.
 
+## [1.0.6] - 2026-08-01
+
 ### Fixed
 
 - A server whose `report.json` could not be repacked without its webhook block
   said so once, in the middle of the first player's join, and every client after
   that quietly used the bundled settings. The client-safe form is now built when
   the server starts, where an owner is watching.
-- `"categories": null` or `"strings": null` in `infomenu.json` passed every check
-  and then broke — on the server it cost the rest of the startup read, on clients
+- `"categories": null`, `"strings": null` or `"entries": null` in `infomenu.json`
+  passed every check and then broke — on the server it cost the rest of the startup read, on clients
   it cost the content of a channel already marked as delivered.
 - A server file too large to send was transmitted in full to every joining player
   and discarded in total on arrival, with nothing said on either machine. The
@@ -304,7 +306,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   server's profile directory, so one published mod carries different content on
   every server that runs it.
 
-[Unreleased]: https://github.com/MrFrostDev/MrFrost-ServerEssentials/compare/v1.0.5...HEAD
+[Unreleased]: https://github.com/MrFrostDev/MrFrost-ServerEssentials/compare/v1.0.6...HEAD
+[1.0.6]: https://github.com/MrFrostDev/MrFrost-ServerEssentials/compare/v1.0.5...v1.0.6
 [1.0.5]: https://github.com/MrFrostDev/MrFrost-ServerEssentials/compare/v1.0.4...v1.0.5
 [1.0.4]: https://github.com/MrFrostDev/MrFrost-ServerEssentials/compare/v1.0.3...v1.0.4
 [1.0.3]: https://github.com/MrFrostDev/MrFrost-ServerEssentials/compare/v1.0.2...v1.0.3
