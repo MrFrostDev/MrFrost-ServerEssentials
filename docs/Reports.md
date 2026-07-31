@@ -162,11 +162,11 @@ Sending is queued at roughly one message every one and a half seconds, which sta
 > [!NOTE]
 > A failed webhook is not a lost report **as long as `writeLog` is on** — the log file already has it, and the reason appears in the server log. With `writeLog` off the webhook is the only copy, and a player whose report reaches neither is told so rather than thanked.
 
-## Why "nobody nearby" is not reported by default
+## Why "nobody nearby" is not mentioned by default
 
 "Nobody is within 300 m" is a useful answer to someone who wanted to report a player. It is an equally useful answer to someone who just wanted to know whether anyone is out there — which would turn the report menu into a radar.
 
-With `revealNobodyNearby` off, the report is still filed; it simply names nobody, and the reporter gets the same confirmation as always. Turn it on only if you would rather have the honest error message than the closed hole.
+The report is filed either way — it simply names nobody. `revealNobodyNearby` only decides whether the confirmation mentions that: off, the reporter is thanked as always; on, they are told the report went and that nobody was in range. Leave it off if you would rather not answer the question "is anyone out there".
 
 ## Rate limiting
 

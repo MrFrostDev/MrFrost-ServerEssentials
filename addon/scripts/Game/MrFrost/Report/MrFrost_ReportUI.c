@@ -641,7 +641,12 @@ class MrFrost_ReportUI : MrFrost_MenuBase
 		// A rejected report leaves the text where it is, so the player can fix it
 		// and try again. A filed one is done with - clear it and get out of the
 		// way, after a beat so the confirmation is actually read.
-		if (textKey != "report.sent")
+		// Two keys mean the report was filed. "nobody_nearby" is one of them: the
+		// server builds and delivers the report and only then says that nobody was
+		// named. Treating it as a refusal left the menu open with the text still in
+		// it, so the player sent the same report a second time - the first version
+		// of this lost the report, and this one duplicated it.
+		if (textKey != "report.sent" && textKey != "report.nobody_nearby")
 			return;
 
 		m_bAnswered = true;

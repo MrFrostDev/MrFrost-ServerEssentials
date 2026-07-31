@@ -169,7 +169,7 @@ A tab the server switches off is not drawn at all, so a server taking only bug r
 
 "Nobody is within 300 m" is a useful answer to someone who wanted to report a player. It is an equally useful answer to someone who just wanted to know whether anyone is out there — which would turn the report menu into a radar.
 
-With it off, the report is still filed; it simply names nobody, and the reporter gets the same confirmation as always. Turn it on only if you would rather have the honest error message than the closed hole.
+The report is filed either way — it simply names nobody. The setting only decides whether the confirmation mentions that: off, the reporter is thanked as always; on, they are told the report went and that nobody was in range. Leave it off if you would rather not answer the question "is anyone out there".
 
 Full walkthrough of the menu itself: [Reports](Reports.md).
 
