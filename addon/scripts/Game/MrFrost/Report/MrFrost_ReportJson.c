@@ -88,7 +88,11 @@ class MrFrost_ReportJson : JsonApiStruct
 		config.m_bAllowPlayerReports = allowPlayerReports;
 		config.m_iCooldownSeconds    = cooldownSeconds;
 		config.m_bRevealNobodyNearby = revealNobodyNearby;
-		config.m_iMaxDescription     = maxDescription;
+		// Zero or less would not mean "no limit", it would mean the cut is skipped
+		// entirely - the same trap nearbyRadius is guarded against below. An
+		// unset key keeps the built-in ceiling.
+		if (maxDescription > 0)
+			config.m_iMaxDescription = maxDescription;
 		config.m_sMenuIconName       = menuIcon;
 
 		// A radius of zero would silently disable the nearby option rather than
@@ -117,7 +121,19 @@ class MrFrost_ReportJson : JsonApiStruct
 			return result;
 
 		result.m_bWriteLog          = delivery.writeLog;
-		result.m_sWebhookUrl        = delivery.webhookUrl;
+		// Judged now, not at the first report. A value that is not a URL used to
+		// surface only when a report was already on its way, so the player had
+		// been told it was sent and - on a server keeping no log file - it was
+		// gone. Dropped here instead, which puts the server in the same state as
+		// one that configured no webhook at all: honest about it from the start.
+		if (delivery.webhookUrl.IsEmpty() || delivery.webhookUrl.StartsWith("https://"))
+		{
+			result.m_sWebhookUrl = delivery.webhookUrl;
+		}
+		else
+		{
+			MrFrost_Log.Error("webhookUrl in report.json is not an https:// address and was ignored - this server has no Discord webhook.");
+		}
 		result.m_sServerName        = delivery.serverName;
 		result.m_sWebhookUsername   = delivery.webhookUsername;
 		result.m_sWebhookAvatarUrl  = delivery.webhookAvatarUrl;
@@ -246,7 +262,9 @@ class MrFrost_ReportChannel : MrFrost_ServerContentChannel
 		// test that only knew one spelling.
 		string probe = safe;
 		probe.Replace(" ", "");
-		probe.Replace("	", "");
+		probe.Replace("\t", "");
+		probe.Replace("\n", "");
+		probe.Replace("\r", "");
 
 		if (probe.Contains("\"delivery\":") || probe.Contains("\"webhookUrl\":"))
 		{
@@ -286,7 +304,11 @@ class MrFrost_ReportChannel : MrFrost_ServerContentChannel
 		parsed.ExpandFromRAW(json);
 
 		MrFrost_Log.SetVerbose(parsed.verboseLogging);
-		MrFrost_ReportConfigLoader.SetDelivery(parsed.ToDeliveryConfig());
+		// Built once. Two calls meant every warning this produces - a colour that
+		// is not "r,g,b", a webhookUrl that is not a URL - appeared twice in the
+		// console for one file.
+		MrFrost_ReportDeliveryConfig delivery = parsed.ToDeliveryConfig();
+		MrFrost_ReportConfigLoader.SetDelivery(delivery);
 
 		// Also the menu settings, not only delivery. Validate() is the only entry
 		// point on a dedicated server - Apply() runs on clients and on a listen
@@ -301,7 +323,6 @@ class MrFrost_ReportChannel : MrFrost_ServerContentChannel
 		// own moderation channel.
 		ApplyStrings(parsed);
 
-		MrFrost_ReportDeliveryConfig delivery = parsed.ToDeliveryConfig();
 		if (delivery.m_sWebhookUrl.IsEmpty())
 			MrFrost_Log.Info("No Discord webhook configured - reports are written to the log only.");
 		else

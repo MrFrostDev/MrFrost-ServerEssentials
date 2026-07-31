@@ -17,9 +17,26 @@ class MrFrost_ReportSubmit
 	//! own language.
 	static string Accept(int reporterId, MrFrost_EReportKind kind, MrFrost_EReportTarget mode, int selectedId, string description)
 	{
+		// Throttled before anything else is touched. The cooldown below only
+		// stamps an *accepted* report, so every path that bounces one - no
+		// description, no target, nobody nearby, feature switched off - was
+		// free, and a modified client could hold the server in a loop of
+		// player sweeps and string work at packet rate. This floor is short
+		// enough that no human hits it and does not consume the real cooldown,
+		// so a player who forgot their description is not locked out.
+		if (IsFlooding(reporterId))
+			return "report.cooldown";
+
 		MrFrost_ReportConfig config = MrFrost_ReportConfigLoader.Get();
 
 		if (!MrFrost_ReportConfigLoader.IsEnabled())
+			return "report.disabled";
+
+		// The wire carries an int, so the enum is a claim like everything else.
+		// Testing only for equality let a third value past both permission
+		// checks and out the other side as a bug report, on a server that had
+		// switched those off.
+		if (kind != MrFrost_EReportKind.BUG && kind != MrFrost_EReportKind.PLAYER)
 			return "report.disabled";
 
 		if (kind == MrFrost_EReportKind.BUG && !config.m_bAllowBugReports)
@@ -64,10 +81,49 @@ class MrFrost_ReportSubmit
 			}
 		}
 
-		Build(reporterId, kind, targets, description);
+		// Stamped either way. A report the server could not put anywhere is not a
+		// sent report and the player is told so - but retrying immediately will
+		// not help, because whatever is broken is still broken. Letting a failure
+		// go unstamped took the cooldown off entirely on exactly the server that
+		// was already struggling, leaving only the half-second flood floor: a
+		// twentyfold rise in requests, each one an O(players) sweep and a line
+		// into the log, at the moment relief was most needed.
+		bool built = Build(reporterId, kind, targets, description);
 		Stamp(reporterId);
 
+		if (!built)
+			return "report.failed";
+
 		return "report.sent";
+	}
+
+	//------------------------------------------------------------------------------
+	//! Shortest gap between two requests from one player, accepted or not.
+	protected static const float REQUEST_FLOOR_MS = 500;
+
+	//! Player id -> world time of their last request of any kind.
+	protected static ref map<int, float> s_mLastRequest;
+
+	//------------------------------------------------------------------------------
+	//! Whether this player is sending faster than a person can click.
+	protected static bool IsFlooding(int reporterId)
+	{
+		if (!s_mLastRequest)
+			s_mLastRequest = new map<int, float>();
+
+		float now = GetGame().GetWorld().GetWorldTime();
+
+		float last;
+		if (s_mLastRequest.Find(reporterId, last))
+		{
+			// A stamp ahead of the clock is one from before a mission restart,
+			// the same case IsOnCooldown handles below.
+			if (now >= last && (now - last) < REQUEST_FLOOR_MS)
+				return true;
+		}
+
+		s_mLastRequest.Set(reporterId, now);
+		return false;
 	}
 
 	//------------------------------------------------------------------------------
@@ -104,6 +160,9 @@ class MrFrost_ReportSubmit
 	{
 		if (s_mLastReport)
 			s_mLastReport.Remove(playerId);
+
+		if (s_mLastRequest)
+			s_mLastRequest.Remove(playerId);
 	}
 
 	//------------------------------------------------------------------------------
@@ -116,7 +175,8 @@ class MrFrost_ReportSubmit
 	}
 
 	//------------------------------------------------------------------------------
-	protected static void Build(int reporterId, MrFrost_EReportKind kind, notnull array<int> targets, string description)
+	//! Returns false when delivery found nowhere to put the report.
+	protected static bool Build(int reporterId, MrFrost_EReportKind kind, notnull array<int> targets, string description)
 	{
 		MrFrost_Report report = new MrFrost_Report();
 
@@ -138,9 +198,12 @@ class MrFrost_ReportSubmit
 
 		report.m_sTargets = names;
 
-		MrFrost_ReportDelivery.Deliver(report);
+		if (!MrFrost_ReportDelivery.Deliver(report))
+			return false;
 
 		MrFrost_Log.Info("Report accepted from " + report.m_sReporter + " (" + report.GetKindLabel() + ").");
+
+		return true;
 	}
 
 	//------------------------------------------------------------------------------

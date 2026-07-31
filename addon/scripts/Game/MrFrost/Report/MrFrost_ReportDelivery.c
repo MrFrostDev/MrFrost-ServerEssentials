@@ -70,6 +70,10 @@ class MrFrost_ReportDelivery
 	//! enough for any server name; past it, every report was rejected.
 	protected static const int MAX_USERNAME = 80;
 
+	//! How many reports may wait for Discord at once. About five minutes of
+	//! backlog at the send interval, already longer than a moderator wants.
+	protected static const int MAX_QUEUE = 200;
+
 	//! Nothing this long is a working image URL, and a truncated one is worse
 	//! than none, so an over-long value is dropped rather than cut.
 	protected static const int MAX_AVATAR_URL = 2000;
@@ -106,8 +110,10 @@ class MrFrost_ReportDelivery
 
 		if (!config.m_sWebhookUrl.IsEmpty())
 		{
-			Enqueue(report);
-			delivered = true;
+			// Only counts as delivered if it was actually taken. A full queue drops
+			// the report, and telling the player it was sent would leave them
+			// believing an incident was reported when nothing was.
+			delivered = Enqueue(report) || delivered;
 		}
 
 		if (!delivered)
@@ -188,19 +194,37 @@ class MrFrost_ReportDelivery
 	}
 
 	//------------------------------------------------------------------------------
-	protected static void Enqueue(notnull MrFrost_Report report)
+	//! Returns false when the report was dropped rather than queued.
+	protected static bool Enqueue(notnull MrFrost_Report report)
 	{
 		if (!s_aQueue)
 			s_aQueue = {};
 
+		// Bounded. The queue drains at one report every SEND_INTERVAL_MS, so a
+		// few players reporting at the cooldown floor fill it faster than it
+		// empties - and an unbounded queue does not only grow, it delays the
+		// reports already in it until they are useless. Past the cap the newest
+		// is dropped, not the oldest: the first reports of an incident are the
+		// ones a moderator wants.
+		if (s_aQueue.Count() >= MAX_QUEUE)
+		{
+			// What the owner is told depends on whether there is a log file. The
+			// line used to promise one unconditionally, and writeLog can be off.
+			// Says what happened, and claims nothing about the log file. Whether a
+			// line reached it is WriteToLog's business and it reports that itself.
+			MrFrost_Log.Error("The Discord queue is full (" + MAX_QUEUE + " waiting) - this report was not queued.");
+			return false;
+		}
+
 		s_aQueue.Insert(report);
 
 		if (s_bSending)
-			return;
+			return true;
 
 		s_bSending = true;
 		GetGame().GetCallqueue().CallLater(SendNext, SEND_INTERVAL_MS, true);
 		SendNext();
+		return true;
 	}
 
 	//------------------------------------------------------------------------------
@@ -238,7 +262,7 @@ class MrFrost_ReportDelivery
 		{
 			// Named, never printed. This is the file a server owner pastes into a
 			// support channel when something is wrong.
-			MrFrost_Log.Error("webhookUrl in report.json is not a URL. Reports go to the log file only.");
+			MrFrost_Log.Error("webhookUrl in report.json is not a URL - this report was not sent to Discord.");
 			return;
 		}
 
@@ -436,6 +460,47 @@ class MrFrost_ReportDelivery
 	//! Everything here comes from a text field a player typed into, so it is
 	//! hostile input by default: an unescaped quote or backslash would break the
 	//! JSON and lose the report.
+	//! Removes bytes below 0x20 and leaves everything else alone.
+	//!
+	//! Cut rather than rebuilt: slicing around the offending byte keeps every
+	//! multi-byte character intact, because a control byte can never be part
+	//! of a UTF-8 sequence. In the ordinary case there is nothing to remove
+	//! and the original is handed straight back.
+	protected static string StripControls(string value)
+	{
+		int len = value.Length();
+
+		int start = 0;
+		string result;
+		bool found = false;
+
+		for (int i = 0; i < len; i++)
+		{
+			int c = value.ToAscii(i);
+
+			// Negative means a byte above 0x7F arrived sign-extended - part of a
+			// character, never a control.
+			if (c < 0 || c >= 32)
+				continue;
+
+			found = true;
+
+			if (i > start)
+				result += value.Substring(start, i - start);
+
+			start = i + 1;
+		}
+
+		if (!found)
+			return value;
+
+		if (start < len)
+			result += value.Substring(start, len - start);
+
+		return result;
+	}
+
+	//------------------------------------------------------------------------------
 	protected static string Escape(string value)
 	{
 		string result = value;
@@ -446,7 +511,12 @@ class MrFrost_ReportDelivery
 		result.Replace("\r", " ");
 		result.Replace("\t", " ");
 
-		return result;
+		// Everything below 0x20 that the lines above did not already turn into
+		// something printable. JSON forbids a raw control character inside a
+		// string, so one byte a player typed - or pasted - was enough for
+		// Discord to reject the whole message, with an error naming the webhook
+		// settings rather than the cause.
+		return StripControls(result);
 	}
 
 	//------------------------------------------------------------------------------

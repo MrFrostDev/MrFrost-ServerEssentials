@@ -575,9 +575,20 @@ class MrFrost_ReportUI : MrFrost_MenuBase
 	}
 
 	//------------------------------------------------------------------------------
+	//! Set once a report has been accepted, so a later answer cannot undo it.
+	protected bool m_bAnswered;
+
+	//------------------------------------------------------------------------------
 	//! Called from the player controller once the server has ruled on a report.
 	void OnServerAnswer(string textKey)
 	{
+		// A report that already went through is final. Two activations inside the
+		// server's flood floor produce two answers, and the second - a refusal -
+		// would otherwise land on top of the first and leave the menu open,
+		// telling a player their filed report had bounced.
+		if (m_bAnswered)
+			return;
+
 		SetStatus(MrFrost_Text.Get(textKey));
 
 		// A rejected report leaves the text where it is, so the player can fix it
@@ -585,6 +596,8 @@ class MrFrost_ReportUI : MrFrost_MenuBase
 		// way, after a beat so the confirmation is actually read.
 		if (textKey != "report.sent")
 			return;
+
+		m_bAnswered = true;
 
 		if (m_Description)
 			m_Description.SetValue(string.Empty);
