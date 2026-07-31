@@ -278,6 +278,13 @@ class MrFrost_ReportDelivery
 			return;
 		}
 
+		// Set immediately before every POST, and knowingly so. GetContext pools one
+		// context per host and SetHeaders replaces the whole set on it - there is no
+		// per-request form in the API. So any other mod on this server posting to
+		// discord.com shares this object, and whatever it installed is gone after
+		// this line. Re-setting ours each time makes us recover from theirs; nothing
+		// here can make them recover from ours. Deliberately no SetTimeout, which
+		// would clobber a second thing for no gain.
 		context.SetHeaders("Content-Type,application/json");
 
 		if (!s_Callback)

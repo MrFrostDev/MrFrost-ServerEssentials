@@ -42,10 +42,10 @@ modded class SCR_PlayerController
 	protected static const int MRFROST_CHUNK_TICK_MS = 100;
 
 	//! Server side: whether this client has already been sent the server files.
-	protected bool m_bContentServed;
+	protected bool m_bMrFrostContentServed;
 
 	//! Client: the server has said it sent everything.
-	protected bool m_bContentComplete;
+	protected bool m_bMrFrostContentComplete;
 
 	//! How many controllers are sending content right now.
 	//!
@@ -54,12 +54,12 @@ modded class SCR_PlayerController
 	//! exists for: sixty-four clients asking within seconds of a restart ran
 	//! sixty-four independent 10 Hz senders at once, which is the burst the
 	//! pacing was meant to prevent.
-	protected static int s_iActiveSenders;
+	protected static int s_iMrFrostActiveSenders;
 
 	//! Whether this controller currently holds a share of that budget.
-	protected bool m_bSending;
+	protected bool m_bMrFrostSending;
 
-	protected int m_iAutoOpenAttempts;
+	protected int m_iMrFrostAutoOpenAttempts;
 
 	//! Static, so the info menu greets the player once per session rather than on
 	//! every respawn.
@@ -70,22 +70,22 @@ modded class SCR_PlayerController
 	//! A stamp ahead of the clock therefore means the mission has restarted and
 	//! the menu should be offered again - the same hazard the report cooldown
 	//! has, and the same test for it.
-	protected static bool s_bAutoOpened;
-	protected static float s_fAutoOpenedAt;
+	protected static bool s_bMrFrostAutoOpened;
+	protected static float s_fMrFrostAutoOpenedAt;
 
 	//! Server side: what is left to send to this one client, flattened across all
 	//! channels. Each item carries its own channel, so one queue serves them all.
-	protected ref array<int> m_aOutgoingChannel;
-	protected ref array<int> m_aOutgoingIndex;
-	protected ref array<int> m_aOutgoingTotal;
-	protected ref array<string> m_aOutgoingData;
-	protected int m_iOutgoingSent;
+	protected ref array<int> m_aMrFrostOutgoingChannel;
+	protected ref array<int> m_aMrFrostOutgoingIndex;
+	protected ref array<int> m_aMrFrostOutgoingTotal;
+	protected ref array<string> m_aMrFrostOutgoingData;
+	protected int m_iMrFrostOutgoingSent;
 
 	//! Client side: packets received per channel, by channel index.
-	protected ref map<int, ref array<string>> m_mIncoming;
+	protected ref map<int, ref array<string>> m_mMrFrostIncoming;
 
 	//! Channels still expected to arrive. Empty means the transfer is done.
-	protected ref set<int> m_aPendingChannels;
+	protected ref set<int> m_aMrFrostPendingChannels;
 
 	//------------------------------------------------------------------------------
 	protected override void UpdateLocalPlayerController()
@@ -103,8 +103,8 @@ modded class SCR_PlayerController
 		// welcome reads, so every join wiped the host's latch and the menu came
 		// back over their screen on the next respawn. Vanilla calls this once, for
 		// the controller that is actually ours, which is the granularity wanted.
-		s_bAutoOpened = false;
-		s_fAutoOpenedAt = 0;
+		s_bMrFrostAutoOpened = false;
+		s_fMrFrostAutoOpenedAt = 0;
 
 		MrFrost_Features.Init();
 
@@ -263,14 +263,14 @@ modded class SCR_PlayerController
 			// it the flag stayed false forever - a host never sends the request and
 			// so never receives the answer that sets it - and the welcome menu never
 			// opened in single player or on a listen host at all.
-			m_bContentComplete = true;
+			m_bMrFrostContentComplete = true;
 			return;
 		}
 
 		// Cleared before asking, not as each answer arrives: a server that ships
 		// no file for a feature sends nothing at all for it, so there is no
 		// arrival to hang the reset on.
-		m_bContentComplete = false;
+		m_bMrFrostContentComplete = false;
 		MrFrost_Features.ForgetServerContent();
 
 		Rpc(MrFrost_RpcAsk_ServerContent);
@@ -291,21 +291,21 @@ modded class SCR_PlayerController
 		// It is also the answer for a server whose files produce no chunks at
 		// all. That path returned without arming the sender, leaving the old
 		// test false and the whole rebuild reachable at packet rate.
-		if (m_bContentServed)
+		if (m_bMrFrostContentServed)
 		{
 			MrFrost_Log.Debug("Ignoring a repeated content request.");
 			return;
 		}
 
-		m_bContentServed = true;
+		m_bMrFrostContentServed = true;
 
 		MrFrost_Features.Init();
 
-		m_aOutgoingChannel = {};
-		m_aOutgoingIndex = {};
-		m_aOutgoingTotal = {};
-		m_aOutgoingData = {};
-		m_iOutgoingSent = 0;
+		m_aMrFrostOutgoingChannel = {};
+		m_aMrFrostOutgoingIndex = {};
+		m_aMrFrostOutgoingTotal = {};
+		m_aMrFrostOutgoingData = {};
+		m_iMrFrostOutgoingSent = 0;
 
 		array<ref MrFrost_ServerContentChannel> channels = MrFrost_ServerContent.GetChannels();
 
@@ -320,16 +320,16 @@ modded class SCR_PlayerController
 
 			for (int i = 0, chunkCount = chunks.Count(); i < chunkCount; i++)
 			{
-				m_aOutgoingChannel.Insert(c);
-				m_aOutgoingIndex.Insert(i);
-				m_aOutgoingTotal.Insert(chunkCount);
-				m_aOutgoingData.Insert(chunks[i]);
+				m_aMrFrostOutgoingChannel.Insert(c);
+				m_aMrFrostOutgoingIndex.Insert(i);
+				m_aMrFrostOutgoingTotal.Insert(chunkCount);
+				m_aMrFrostOutgoingData.Insert(chunks[i]);
 			}
 		}
 
 		// Nothing to send is still an answer. Without it a client waiting on a
 		// server that ships no files never hears anything at all.
-		if (m_aOutgoingData.IsEmpty())
+		if (m_aMrFrostOutgoingData.IsEmpty())
 		{
 			Rpc(MrFrost_RpcDo_ServerContentDone);
 			return;
@@ -337,25 +337,25 @@ modded class SCR_PlayerController
 
 		GetGame().GetCallqueue().Remove(MrFrost_SendChunks);
 		GetGame().GetCallqueue().CallLater(MrFrost_SendChunks, MRFROST_CHUNK_TICK_MS, true);
-		s_iActiveSenders++;
-		m_bSending = true;
+		s_iMrFrostActiveSenders++;
+		m_bMrFrostSending = true;
 	}
 
 	//------------------------------------------------------------------------------
 	//! Server: hand out the next few packets.
 	protected void MrFrost_SendChunks()
 	{
-		if (!m_aOutgoingData)
+		if (!m_aMrFrostOutgoingData)
 		{
 			// Releases too. This is unreachable while the queue is armed, but it is
 			// the one exit that would otherwise leave the counter inflated for the
 			// life of the server, throttling every later transfer to the floor.
 			GetGame().GetCallqueue().Remove(MrFrost_SendChunks);
-			ReleaseSendSlot();
+			MrFrost_ReleaseSendSlot();
 			return;
 		}
 
-		int total = m_aOutgoingData.Count();
+		int total = m_aMrFrostOutgoingData.Count();
 
 		// Shared budget: the more transfers are running, the fewer packets each
 		// gets per tick. One is the floor, so a busy restart takes longer rather
@@ -363,49 +363,49 @@ modded class SCR_PlayerController
 		// senders, so this is a fourfold reduction of the burst rather than a cap
 		// on it.
 		int budget = MRFROST_CHUNKS_PER_TICK;
-		if (s_iActiveSenders > 1)
-			budget = MRFROST_CHUNKS_PER_TICK / s_iActiveSenders;
+		if (s_iMrFrostActiveSenders > 1)
+			budget = MRFROST_CHUNKS_PER_TICK / s_iMrFrostActiveSenders;
 
 		if (budget < 1)
 			budget = 1;
 
-		for (int i = 0; i < budget && m_iOutgoingSent < total; i++)
+		for (int i = 0; i < budget && m_iMrFrostOutgoingSent < total; i++)
 		{
 			Rpc(MrFrost_RpcDo_ServerContentChunk,
-				m_aOutgoingChannel[m_iOutgoingSent],
-				m_aOutgoingIndex[m_iOutgoingSent],
-				m_aOutgoingTotal[m_iOutgoingSent],
-				m_aOutgoingData[m_iOutgoingSent]);
+				m_aMrFrostOutgoingChannel[m_iMrFrostOutgoingSent],
+				m_aMrFrostOutgoingIndex[m_iMrFrostOutgoingSent],
+				m_aMrFrostOutgoingTotal[m_iMrFrostOutgoingSent],
+				m_aMrFrostOutgoingData[m_iMrFrostOutgoingSent]);
 
-			m_iOutgoingSent++;
+			m_iMrFrostOutgoingSent++;
 		}
 
-		if (m_iOutgoingSent < total)
+		if (m_iMrFrostOutgoingSent < total)
 			return;
 
 		GetGame().GetCallqueue().Remove(MrFrost_SendChunks);
-		ReleaseSendSlot();
+		MrFrost_ReleaseSendSlot();
 		Rpc(MrFrost_RpcDo_ServerContentDone);
-		m_aOutgoingChannel = null;
-		m_aOutgoingIndex = null;
-		m_aOutgoingTotal = null;
-		m_aOutgoingData = null;
+		m_aMrFrostOutgoingChannel = null;
+		m_aMrFrostOutgoingIndex = null;
+		m_aMrFrostOutgoingTotal = null;
+		m_aMrFrostOutgoingData = null;
 	}
 
 	//------------------------------------------------------------------------------
 	//! Gives this controller's share of the send budget back.
-	protected void ReleaseSendSlot()
+	protected void MrFrost_ReleaseSendSlot()
 	{
 		// Flag rather than a look at the queue. The queue is non-null but empty
 		// on the path that never took a slot, so testing it would have released
 		// one that was never held.
-		if (!m_bSending)
+		if (!m_bMrFrostSending)
 			return;
 
-		m_bSending = false;
+		m_bMrFrostSending = false;
 
-		if (s_iActiveSenders > 0)
-			s_iActiveSenders--;
+		if (s_iMrFrostActiveSenders > 0)
+			s_iMrFrostActiveSenders--;
 	}
 
 	//------------------------------------------------------------------------------
@@ -430,13 +430,13 @@ modded class SCR_PlayerController
 		if (total <= 0 || total > MrFrost_ServerContent.MAX_CHUNKS || index < 0 || index >= total)
 			return;
 
-		if (!m_mIncoming)
+		if (!m_mMrFrostIncoming)
 		{
-			m_mIncoming = new map<int, ref array<string>>();
-			m_aPendingChannels = new set<int>();
+			m_mMrFrostIncoming = new map<int, ref array<string>>();
+			m_aMrFrostPendingChannels = new set<int>();
 		}
 
-		array<string> parts = m_mIncoming.Get(channelIndex);
+		array<string> parts = m_mMrFrostIncoming.Get(channelIndex);
 		if (!parts || parts.Count() != total)
 		{
 			parts = {};
@@ -445,8 +445,8 @@ modded class SCR_PlayerController
 				parts.Insert(string.Empty);
 			}
 
-			m_mIncoming.Set(channelIndex, parts);
-			m_aPendingChannels.Insert(channelIndex);
+			m_mMrFrostIncoming.Set(channelIndex, parts);
+			m_aMrFrostPendingChannels.Insert(channelIndex);
 		}
 
 		parts[index] = data;
@@ -463,8 +463,8 @@ modded class SCR_PlayerController
 			json += piece;
 		}
 
-		m_mIncoming.Remove(channelIndex);
-		m_aPendingChannels.RemoveItem(channelIndex);
+		m_mMrFrostIncoming.Remove(channelIndex);
+		m_aMrFrostPendingChannels.RemoveItem(channelIndex);
 
 		MrFrost_ServerContentChannel channel = channels[channelIndex];
 
@@ -487,7 +487,7 @@ modded class SCR_PlayerController
 	[RplRpc(RplChannel.Reliable, RplRcver.Owner)]
 	protected void MrFrost_RpcDo_ServerContentDone()
 	{
-		m_bContentComplete = true;
+		m_bMrFrostContentComplete = true;
 		MrFrost_Log.Debug("Server content complete.");
 	}
 
@@ -495,7 +495,7 @@ modded class SCR_PlayerController
 	//! True while at least one feature's content is still on its way.
 	protected bool MrFrost_IsTransferPending()
 	{
-		return m_aPendingChannels && !m_aPendingChannels.IsEmpty();
+		return m_aMrFrostPendingChannels && !m_aMrFrostPendingChannels.IsEmpty();
 	}
 
 	//------------------------------------------------------------------------------
@@ -510,7 +510,7 @@ modded class SCR_PlayerController
 	//! regardless of how far this controller got.
 	void ~SCR_PlayerController()
 	{
-		ReleaseSendSlot();
+		MrFrost_ReleaseSendSlot();
 
 		ScriptCallQueue queue = GetGame().GetCallqueue();
 		if (!queue)
@@ -532,7 +532,7 @@ modded class SCR_PlayerController
 		if (!to)
 			return;
 
-		if (s_bAutoOpened && !MrFrost_HasMissionRestarted())
+		if (s_bMrFrostAutoOpened && !MrFrost_HasMissionRestarted())
 			return;
 
 		if (this != GetGame().GetPlayerController())
@@ -542,8 +542,8 @@ modded class SCR_PlayerController
 		if (!config || !config.m_bOpenOnJoin)
 			return;
 
-		s_bAutoOpened = true;
-		s_fAutoOpenedAt = GetGame().GetWorld().GetWorldTime();
+		s_bMrFrostAutoOpened = true;
+		s_fMrFrostAutoOpenedAt = GetGame().GetWorld().GetWorldTime();
 		GetGame().GetCallqueue().CallLater(MrFrost_AutoOpenInfoMenu, MRFROST_AUTO_OPEN_DELAY_MS, false);
 	}
 
@@ -558,7 +558,7 @@ modded class SCR_PlayerController
 		// the latch is also released in UpdateLocalPlayerController, which vanilla
 		// calls once for the controller that is actually ours.
 		// MrFrost_ReportSubmit guards its own stamps the same way.
-		return GetGame().GetWorld().GetWorldTime() < s_fAutoOpenedAt;
+		return GetGame().GetWorld().GetWorldTime() < s_fMrFrostAutoOpenedAt;
 	}
 
 	//------------------------------------------------------------------------------
@@ -584,11 +584,11 @@ modded class SCR_PlayerController
 		// cannot catch one that has not started, since it only learns of a channel
 		// from its first chunk - so the two together are a strong check, not a
 		// proof.
-		if (!m_bContentComplete || MrFrost_IsTransferPending() || menuManager.IsAnyMenuOpen())
+		if (!m_bMrFrostContentComplete || MrFrost_IsTransferPending() || menuManager.IsAnyMenuOpen())
 		{
-			m_iAutoOpenAttempts++;
+			m_iMrFrostAutoOpenAttempts++;
 
-			if (m_iAutoOpenAttempts > MRFROST_AUTO_OPEN_MAX_TRIES)
+			if (m_iMrFrostAutoOpenAttempts > MRFROST_AUTO_OPEN_MAX_TRIES)
 			{
 				MrFrost_Log.Debug("Gave up on the welcome info menu.");
 				return;

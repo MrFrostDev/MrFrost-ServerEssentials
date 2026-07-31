@@ -70,6 +70,7 @@ class MrFrost_ReportSubmit
 			return "report.cooldown";
 
 		array<int> targets = {};
+		bool nobodyNearby = false;
 		if (kind == MrFrost_EReportKind.PLAYER)
 		{
 			MrFrost_ReportTargets.Resolve(reporterId, mode, selectedId, selectedName, targets);
@@ -79,13 +80,16 @@ class MrFrost_ReportSubmit
 				if (mode != MrFrost_EReportTarget.NEARBY)
 					return "report.need_target";
 
-				// "Nobody is within 300 m" is a useful answer to a player who
-				// wanted to report someone, and an equally useful one to a player
-				// who just wanted to know whether anyone is out there. Off by
-				// default: the report still goes, it simply names nobody, and the
-				// reporter is told the same thing either way.
-				if (config.m_bRevealNobodyNearby)
-					return "report.nobody_nearby";
+				// Not a rejection. "Nobody is within 300 m" is a useful answer to a
+				// player who wanted to report someone, and this used to return it
+				// instead of filing the report - so with the setting on, the report
+				// was thrown away, the cooldown was never spent, the player was told
+				// something true about their surroundings and nothing about their
+				// report, and the menu stayed open so they could send it again and
+				// lose it again. The comment here claimed the opposite of what the
+				// code did. The report goes either way; the setting only decides
+				// whether the answer mentions that nobody was named.
+				nobodyNearby = config.m_bRevealNobodyNearby;
 			}
 		}
 
@@ -101,6 +105,9 @@ class MrFrost_ReportSubmit
 
 		if (!built)
 			return "report.failed";
+
+		if (nobodyNearby)
+			return "report.nobody_nearby";
 
 		return "report.sent";
 	}

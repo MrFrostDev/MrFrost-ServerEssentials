@@ -327,7 +327,11 @@ class MrFrost_ReportUI : MrFrost_MenuBase
 		AddTargetMode(MrFrost_EReportTarget.SELECTED, "report.target_select");
 		AddTargetMode(MrFrost_EReportTarget.KILLER,   "report.target_killer");
 		AddTargetMode(MrFrost_EReportTarget.ATTACKER, "report.target_attacker");
-		AddTargetMode(MrFrost_EReportTarget.NEARBY,   "report.target_nearby", config.m_fNearbyRadius);
+		float nearbyRadius = config.m_fNearbyRadius;
+		if (nearbyRadius <= 0)
+			nearbyRadius = MrFrost_ReportConfig.DEFAULT_NEARBY_RADIUS;
+
+		AddTargetMode(MrFrost_EReportTarget.NEARBY,   "report.target_nearby", nearbyRadius);
 
 		m_TargetCombo.SetCurrentItem(0);
 		m_TargetCombo.m_OnChanged.Insert(OnTargetChanged);
@@ -343,8 +347,9 @@ class MrFrost_ReportUI : MrFrost_MenuBase
 	{
 		string label = MrFrost_Text.Get(key);
 
-		if (radius > 0)
-			label.Replace("%1", Math.Round(radius).ToString());
+		// Always substituted. Skipping it for a zero radius left a literal "%1"
+		// in the dropdown, in every language.
+		label.Replace("%1", Math.Round(radius).ToString());
 
 		m_TargetCombo.AddItem(label);
 		m_aTargetModes.Insert(mode);

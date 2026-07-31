@@ -270,7 +270,11 @@ class MrFrost_ReportTargets
 			return;
 
 		MrFrost_ReportConfig config = MrFrost_ReportConfigLoader.Get();
+		// Floored the same way maxDescription is. The addon config path has no
+		// guard of its own, and a zero radius silently selects nobody.
 		float radius = config.m_fNearbyRadius;
+		if (radius <= 0)
+			radius = MrFrost_ReportConfig.DEFAULT_NEARBY_RADIUS;
 		float radiusSq = radius * radius;
 
 		vector origin = reporter.GetOrigin();

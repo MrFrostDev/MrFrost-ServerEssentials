@@ -62,6 +62,10 @@ class MrFrost_ReportConfig
 	//! otherwise mean no limit rather than the small one it looks like.
 	static const int DEFAULT_MAX_DESCRIPTION = 1000;
 
+	//! Used when a config leaves the radius at zero or below, which would make
+	//! the nearby option select nobody and print a bare 0 in the menu.
+	static const float DEFAULT_NEARBY_RADIUS = 300;
+
 	[Attribute(defvalue: "1000", desc: "Longest description a player can send, in bytes, up to 8191 - an umlaut counts two. Zero or less falls back to 1000")]
 	int m_iMaxDescription;
 
@@ -71,7 +75,7 @@ class MrFrost_ReportConfig
 		m_bEnabled = true;
 		m_bAllowBugReports = true;
 		m_bAllowPlayerReports = true;
-		m_fNearbyRadius = 300;
+		m_fNearbyRadius = DEFAULT_NEARBY_RADIUS;
 		m_iCooldownSeconds = 10;
 		m_bRevealNobodyNearby = false;
 		m_iMaxDescription = 1000;
