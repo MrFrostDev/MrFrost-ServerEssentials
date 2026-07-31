@@ -13,6 +13,69 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Player limits, whitelists and a balance rule as one system, with a queue that
   catches everyone they turn away. Design notes live on that branch.
 
+## [1.0.4] - 2026-07-31
+
+### Added
+
+- `report.failed`, told to a player whose report reached neither the log file
+  nor Discord. Until now that was reported as sent.
+
+### Changed
+
+- A footer link is only offered if it is an `https://` address. The URL comes
+  from the server and is never shown, so a button labelled Discord could lead
+  anywhere. A link that does not qualify draws no button, and the server names
+  the key on its own console when it reads the file.
+- A `webhookUrl` that is not an `https://` address is dropped when the file is
+  read rather than when the first report is already on its way.
+- The Discord queue is bounded. Past the cap the newest report is dropped, not
+  the oldest, because the first reports of an incident are the ones a moderator
+  wants.
+
+### Fixed
+
+- Damage was watched on everything the world spawned, not only on players.
+  That allocated per-entity data vanilla deliberately avoids, and with it
+  present every bullet, fragment and damage tick on the server ran a script
+  dispatch that could only ever be discarded. On a Conflict server with a few
+  hundred AI alive, hundreds of them a second.
+- The report kind was taken from the client and only two values were tested
+  for. A third slipped past both permission checks and arrived as a bug report
+  on a server that had switched bug reports off.
+- Only accepted reports were rate limited. Every rejected one - no description,
+  no target, nobody nearby, feature switched off - was free, so a modified
+  client could hold the server in a loop of player sweeps at packet rate.
+- A client could ask for the server's files repeatedly. The guard only stopped
+  overlapping transfers, so waiting for one to finish and asking again rebuilt
+  everything, without limit.
+- A report could be lost while the player was told it had been sent.
+- Server files were sent with their indentation, which on a pretty-printed
+  config is easily a tenth of every byte sent to every player who joins.
+- The packet count for a transfer depended on how the server owner had
+  formatted their JSON, not on how large it was.
+- The client-safe form of each file was rebuilt for every joining player,
+  though it is the same for all of them.
+- Transfer pacing was per player, so sixty-four clients joining after a restart
+  ran sixty-four independent senders at once - the burst the pacing exists to
+  prevent.
+- A control character in a description made Discord reject the whole message,
+  with an error naming the webhook settings rather than the cause.
+- Embed titles, footers and the webhook username went to Discord unbounded.
+- `maxDescription` set to zero disabled the length cut entirely instead of
+  meaning what it says.
+- Reports left the Discord queue out of order when several arrived close
+  together.
+- A second answer could overwrite the first, telling a player their filed
+  report had bounced.
+- The info menu built every row with two colour animations that ramped from
+  transparent to transparent, each costing a scan of a global animation list.
+
+### Security
+
+- A malicious client could make the server allocate an array sized by a number
+  it chose, and a malicious server could do the same to every client that
+  joined it. Both are bounded now.
+
 ## [1.0.3] - 2026-07-31
 
 ### Security
@@ -171,7 +234,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   server's profile directory, so one published mod carries different content on
   every server that runs it.
 
-[Unreleased]: https://github.com/MrFrostDev/MrFrost-ServerEssentials/compare/v1.0.3...HEAD
+[Unreleased]: https://github.com/MrFrostDev/MrFrost-ServerEssentials/compare/v1.0.4...HEAD
+[1.0.4]: https://github.com/MrFrostDev/MrFrost-ServerEssentials/compare/v1.0.3...v1.0.4
 [1.0.3]: https://github.com/MrFrostDev/MrFrost-ServerEssentials/compare/v1.0.2...v1.0.3
 [1.0.2]: https://github.com/MrFrostDev/MrFrost-ServerEssentials/compare/v1.0.1...v1.0.2
 [1.0.1]: https://github.com/MrFrostDev/MrFrost-ServerEssentials/compare/v1.0.0...v1.0.1
