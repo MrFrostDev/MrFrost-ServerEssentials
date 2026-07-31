@@ -30,7 +30,10 @@ modded class SCR_PlayerController
 
 	//! Retry cadence while the deploy screen or a dialog still owns the display.
 	protected static const int MRFROST_AUTO_OPEN_RETRY_MS = 2000;
-	protected static const int MRFROST_AUTO_OPEN_MAX_TRIES = 30;
+	//! Raised when the transfer became part of what this waits for. At thirty the
+	//! window was about a minute, shared with the deploy screen; a large set of
+	//! server files arriving under a mass join can outlast that on its own.
+	protected static const int MRFROST_AUTO_OPEN_MAX_TRIES = 75;
 
 	//! Packets per tick, and the tick. Spreading the transfer keeps a joining
 	//! player from spending their whole reliable budget on our content while the
@@ -247,6 +250,11 @@ modded class SCR_PlayerController
 					MrFrost_Log.Error("This server's " + channel.GetId() + " content did not parse - using the content bundled with the addon.");
 			}
 
+			// Nothing is in flight here, so this machine is already finished. Without
+			// it the flag stayed false forever - a host never sends the request and
+			// so never receives the answer that sets it - and the welcome menu never
+			// opened in single player or on a listen host at all.
+			m_bContentComplete = true;
 			return;
 		}
 

@@ -473,11 +473,15 @@ class MrFrost_InfoMenuUI : MrFrost_MenuBase
 		if (m_wEntryTitle)
 			m_wEntryTitle.SetText(title);
 
-		// A page with nothing in it says so rather than showing a blank panel. It
-		// happens to a server that left an entry's text out, and to one whose page
-		// was too long to send - which reads as broken unless it is named.
+		// A page with nothing on it says so rather than showing a blank panel.
+		//
+		// Its own string, not the one the empty *menu* uses: that reads "this info
+		// menu has no entries yet", which is plainly false standing beside a full
+		// tree of categories. Two servers reach this - one that left an entry's
+		// text out, and one whose page was too long to send. The player cannot act
+		// on the difference; the owner is told which it was, on their console.
 		if (text.IsEmpty())
-			text = MrFrost_Text.Get("infomenu.empty");
+			text = MrFrost_Text.Get("infomenu.page_empty");
 
 		m_wText.SetText(text);
 

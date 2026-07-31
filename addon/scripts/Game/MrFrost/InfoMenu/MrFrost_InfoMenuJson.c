@@ -116,6 +116,10 @@ class MrFrost_InfoMenuJson : JsonApiStruct
 	}
 
 	//------------------------------------------------------------------------------
+	//! Ceiling on how many rows one menu may ask a client to build. Each row is
+	//! fifteen widgets, created up front, and nothing else bounded this - a
+	//! server could hand every joining player tens of thousands of them, on the
+	//! main thread, in a menu that opens by itself.
 	static const int MAX_ROWS = 512;
 
 	//! Ceiling on one page of text. Far past any rule set anyone writes.
@@ -145,10 +149,6 @@ class MrFrost_InfoMenuJson : JsonApiStruct
 	//! Translates the parsed file into the config object the menu already knows
 	//! how to render, so nothing downstream has to care where the content came
 	//! from.
-	//! Ceiling on how many rows one menu may ask a client to build. Each row is
-	//! fifteen widgets, created up front, and nothing else bounded this - a
-	//! server could hand every joining player tens of thousands of them, on the
-	//! main thread, in a menu that opens by itself.
 	MrFrost_InfoMenuConfig ToConfig()
 	{
 		MrFrost_InfoMenuConfig config = new MrFrost_InfoMenuConfig();
@@ -179,16 +179,20 @@ class MrFrost_InfoMenuJson : JsonApiStruct
 			if (!source)
 				continue;
 
-			if (rows >= MAX_ROWS)
-			{
-				dropped = true;
-				break;
-			}
-
-			// Only what will actually be built. A file that keeps archived sections
-			// switched off should not spend its budget on rows nobody draws.
+			// Budget asked only of rows that would be drawn, and in that order. Asking
+			// first meant a file trailed by switched-off sections reported itself as
+			// cut when nothing a player could see had been - and said so only on the
+			// client, while the server reading the same file stayed quiet.
 			if (source.enabled)
+			{
+				if (rows >= MAX_ROWS)
+				{
+					dropped = true;
+					break;
+				}
+
 				rows++;
+			}
 
 			MrFrost_InfoMenuCategory category = new MrFrost_InfoMenuCategory();
 			category.m_bEnabled           = source.enabled;
@@ -205,14 +209,16 @@ class MrFrost_InfoMenuJson : JsonApiStruct
 				if (!sourceEntry)
 					continue;
 
-				if (rows >= MAX_ROWS)
-				{
-					dropped = true;
-					break;
-				}
-
 				if (source.enabled && sourceEntry.enabled)
+				{
+					if (rows >= MAX_ROWS)
+					{
+						dropped = true;
+						break;
+					}
+
 					rows++;
+				}
 
 				MrFrost_InfoMenuEntry entry = new MrFrost_InfoMenuEntry();
 				entry.m_bEnabled     = sourceEntry.enabled;
@@ -320,6 +326,7 @@ class MrFrost_InfoMenuChannel : MrFrost_ServerContentChannel
 	}
 
 	//------------------------------------------------------------------------------
+	//! Names a menu the client will have to cut down.
 	protected void WarnOversizedMenu(notnull MrFrost_InfoMenuJson probe)
 	{
 		if (!probe.categories)
@@ -348,11 +355,14 @@ class MrFrost_InfoMenuChannel : MrFrost_ServerContentChannel
 			if (!category)
 				continue;
 
+			if (!category.enabled)
+				continue;
+
 			WarnOversizedPage(category.text, category.name);
 
 			foreach (MrFrost_InfoMenuJsonEntry entry : category.entries)
 			{
-				if (entry)
+				if (entry && entry.enabled)
 					WarnOversizedPage(entry.text, entry.name);
 			}
 		}
@@ -391,7 +401,6 @@ class MrFrost_InfoMenuChannel : MrFrost_ServerContentChannel
 	//------------------------------------------------------------------------------
 	//! Parsed on the server purely so a broken file is reported on the server
 	//! console, where the owner will see it.
-	//! Names a menu the client will have to cut down.
 	override bool Validate(string json)
 	{
 		MrFrost_InfoMenuJson probe = new MrFrost_InfoMenuJson();
