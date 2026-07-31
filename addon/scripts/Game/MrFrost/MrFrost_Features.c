@@ -165,4 +165,59 @@ class MrFrost_Features
 		Init();
 		return s_aMenus;
 	}
+
+	//------------------------------------------------------------------------------
+	//! Client side: forget everything the last server sent.
+	//!
+	//! All of it lives in statics that outlive a connection, and a server that
+	//! ships no file of its own sends nothing rather than an instruction to go
+	//! back to the bundled content. Without this, a player who left one server
+	//! and joined another without restarting the game carried the first server's
+	//! rules, title, colours and Discord invite with them - and, if the first had
+	//! switched reporting off, a report key that did nothing on a server that
+	//! wanted reports.
+	static void ForgetServerContent()
+	{
+		MrFrost_InfoMenuConfigLoader.ClearServerConfig();
+		MrFrost_ReportConfigLoader.ClearServerConfig();
+		MrFrost_Text.ClearOverrides();
+		MrFrost_Log.SetVerbose(false);
+	}
+
+	//------------------------------------------------------------------------------
+	//! Server side: reads every channel's file, which is also where each channel
+	//! installs the settings it keeps to itself.
+	static void LoadServerContent()
+	{
+		Init();
+
+		foreach (MrFrost_ServerContentChannel channel : MrFrost_ServerContent.GetChannels())
+		{
+			MrFrost_ServerContent.Read(channel);
+		}
+	}
+}
+
+//------------------------------------------------------------------------------
+//! Reads the server's files when the world starts.
+//!
+//! They used to be read on the first client request, and everything the server
+//! itself decides - whether reports are accepted at all, where they are
+//! delivered - was read out of them along the way. A dedicated server therefore
+//! ran on the addon's bundled defaults until somebody connected: a server that
+//! had switched reporting off accepted reports until its first player joined,
+//! and a broken file was reported to the console at that same late moment
+//! rather than at startup where an owner is watching.
+modded class SCR_BaseGameMode
+{
+	//------------------------------------------------------------------------------
+	override protected void OnGameStart()
+	{
+		super.OnGameStart();
+
+		// Only where the files are. A client has none, and reading on both would
+		// mean a listen host reading them twice.
+		if (Replication.IsServer())
+			MrFrost_Features.LoadServerContent();
+	}
 }

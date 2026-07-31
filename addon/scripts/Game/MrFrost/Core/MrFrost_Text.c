@@ -132,6 +132,14 @@ class MrFrost_Text
 	//! Installs a server's own wording. Overrides survive a language change, which
 	//! is the point: a server writing German rules wants German buttons next to
 	//! them whatever the client is set to.
+	//! Client side: forget the wording the last server sent.
+	static void ClearOverrides()
+	{
+		if (s_mOverrides)
+			s_mOverrides.Clear();
+	}
+
+	//------------------------------------------------------------------------------
 	static void SetOverrides(notnull map<string, string> overrides)
 	{
 		// Merged, not replaced. Each feature's file brings its own map, and the

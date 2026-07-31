@@ -219,12 +219,17 @@ modded class SCR_PlayerController
 			foreach (MrFrost_ServerContentChannel channel : MrFrost_ServerContent.GetChannels())
 			{
 				string raw = MrFrost_ServerContent.Read(channel);
-				if (!raw.IsEmpty())
-					channel.Apply(raw);
+				if (!raw.IsEmpty() && !channel.Apply(raw))
+					MrFrost_Log.Error("This server's " + channel.GetId() + " content did not parse - using the content bundled with the addon.");
 			}
 
 			return;
 		}
+
+		// Cleared before asking, not as each answer arrives: a server that ships
+		// no file for a feature sends nothing at all for it, so there is no
+		// arrival to hang the reset on.
+		MrFrost_Features.ForgetServerContent();
 
 		Rpc(MrFrost_RpcAsk_ServerContent);
 	}
@@ -375,7 +380,12 @@ modded class SCR_PlayerController
 
 		MrFrost_ServerContentChannel channel = channels[channelIndex];
 		MrFrost_Log.Debug("Received this server's " + channel.GetId() + " content (" + json.Length() + " bytes).");
-		channel.Apply(json);
+
+		// Answered rather than discarded. A channel returns false when the text
+		// it was handed did not parse, and that is the one case where a player
+		// sees the bundled content while the server believes it sent its own.
+		if (!channel.Apply(json))
+			MrFrost_Log.Error("This server's " + channel.GetId() + " content did not parse - using the content bundled with the addon.");
 	}
 
 	//------------------------------------------------------------------------------

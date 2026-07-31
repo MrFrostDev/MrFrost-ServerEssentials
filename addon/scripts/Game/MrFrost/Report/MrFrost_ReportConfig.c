@@ -58,7 +58,7 @@ class MrFrost_ReportConfig
 	[Attribute(defvalue: "0", desc: "Tell the reporter when nobody was within the radius. Off keeps the report menu from doubling as a radar.")]
 	bool m_bRevealNobodyNearby;
 
-	[Attribute(defvalue: "1000", desc: "Longest description a player can send, in characters")]
+	[Attribute(defvalue: "1000", desc: "Longest description a player can send, in bytes - an umlaut counts two")]
 	int m_iMaxDescription;
 
 	//------------------------------------------------------------------------------
@@ -144,6 +144,13 @@ class MrFrost_ReportConfigLoader
 	static void SetServerConfig(MrFrost_ReportConfig config)
 	{
 		s_ServerConfig = config;
+	}
+
+	//------------------------------------------------------------------------------
+	//! Client side: forget whatever the last server sent.
+	static void ClearServerConfig()
+	{
+		s_ServerConfig = null;
 	}
 
 	//------------------------------------------------------------------------------
