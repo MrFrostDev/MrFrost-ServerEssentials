@@ -26,9 +26,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `nearbyRadius` set to zero selected nobody and printed a bare `%1` in the
   dropdown. It falls back to 300, the way `maxDescription` falls back to 1000.
 - Several translations said the wrong thing: German called a bug report an error
-  message, Portuguese and Chinese used the verb for denouncing a person, and
-  Spanish said players *at* the radius rather than within it. Four more drifted
-  from the word their own language uses everywhere else.
+  message, Portuguese and Chinese used the verb for denouncing a person on the
+  bug tab specifically, and Spanish said players *at* the radius rather than
+  within it. Three more drifted from the word their own language uses
+  everywhere else.
 - The website button was labelled in English for every player.
 
 ## [1.0.6] - 2026-08-01
