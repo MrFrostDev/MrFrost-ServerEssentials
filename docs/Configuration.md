@@ -151,7 +151,7 @@ The report menu's fallback settings. Same idea: a server's `MrFrost/report.json`
 | `m_bEnabled` | `0` / `1` | `0` hides the menu and its pause entry. The key stays bound and does nothing |
 | `m_bAllowBugReports` | `0` / `1` | Offer the "report a bug" tab |
 | `m_bAllowPlayerReports` | `0` / `1` | Offer the "report a player" tab |
-| `m_fNearbyRadius` | metres | Range for the "everyone nearby" option |
+| `m_fNearbyRadius` | metres | Range for the "everyone nearby" option. Zero or less falls back to 300 |
 | `m_iCooldownSeconds` | seconds | Wait between two accepted reports from one player. A half-second floor applies to every request on top of this |
 | `m_bRevealNobodyNearby` | `0` / `1` | Whether to tell a reporter nobody was in range. Off by default |
 | `m_iMaxDescription` | bytes | Longest description accepted, up to 8191. Zero or less is read as unset and falls back to 1000. An umlaut counts two, a Japanese character three |

@@ -13,6 +13,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Player limits, whitelists and a balance rule as one system, with a queue that
   catches everyone they turn away. Design notes live on that branch.
 
+### Changed
+
+- `report.nobody_nearby` now means the report was filed and nobody was named.
+  It used to mean the report was refused. **If you replaced that string through
+  a `strings` block, re-read it before upgrading** — your wording will still win
+  over the built-in one, and it now describes the opposite of what happened.
+
 ### Fixed
 
 - With `revealNobodyNearby` on, a nearby report with nobody in range was thrown
@@ -23,13 +30,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   prefix. A second mod picking one of those names collides in the same chain,
   and for the method that is a compile error — which takes down every mod on
   the server.
-- `nearbyRadius` set to zero selected nobody and printed a bare `%1` in the
-  dropdown. It falls back to 300, the way `maxDescription` falls back to 1000.
+- `nearbyRadius` at zero or below now falls back to 300, the way
+  `maxDescription` falls back to 1000. No shipped configuration could reach
+  that state; the guard closes the path rather than a symptom.
 - Several translations said the wrong thing: German called a bug report an error
   message, Portuguese and Chinese used the verb for denouncing a person on the
   bug tab specifically, and Spanish said players *at* the radius rather than
-  within it. Three more drifted from the word their own language uses
-  everywhere else.
+  within it. Four more drifted from the word their own language uses everywhere
+  else, and the German player-picker label was half again as long as any
+  sibling in a slot that cannot grow.
 - The website button was labelled in English for every player.
 
 ## [1.0.6] - 2026-08-01

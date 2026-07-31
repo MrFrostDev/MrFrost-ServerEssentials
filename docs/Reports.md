@@ -85,7 +85,7 @@ Once a report is in, the menu says so and closes itself a moment later. If the s
 | `enabled` | `false` hides the menu and its pause entry. The key stays bound and does nothing |
 | `allowBugReports` | Offer "Report a bug" |
 | `allowPlayerReports` | Offer "Report a player" |
-| `nearbyRadius` | Metres for the "everyone nearby" option |
+| `nearbyRadius` | Metres for the "everyone nearby" option. Zero or less falls back to 300 |
 | `revealNobodyNearby` | Tell the reporter when nobody was in range. Off by default — see below |
 | `cooldownSeconds` | How long a player waits between two reports |
 | `maxDescription` | Longest description accepted, in bytes, up to 8191. A plain letter is one, an umlaut two, a Japanese character three. Zero or less falls back to 1000 |

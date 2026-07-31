@@ -137,7 +137,7 @@ Menu, pause entry and key all disappear. `report.json` takes the same key.
 | `enabled` | bool | `true` | `false` hides the report menu and its pause entry. The key stays bound and does nothing |
 | `allowBugReports` | bool | `true` | The "report a bug" tab. Free text plus the reporter's position |
 | `allowPlayerReports` | bool | `true` | The "report a player" tab, with the four ways of naming a target |
-| `nearbyRadius` | number | `300` | Metres for the "everyone within X" option. The menu label is written with a placeholder and follows this number |
+| `nearbyRadius` | number | `300` | Metres for the "everyone within X" option. The menu label is written with a placeholder and follows this number. Zero or less falls back to 300 |
 | `revealNobodyNearby` | bool | `false` | Whether to tell a reporter nobody was in range — see below |
 | `cooldownSeconds` | number | `10` | Wait between two accepted reports from one player. Enforced on the server. A half-second floor applies to every request on top of this, and cannot be switched off |
 | `maxDescription` | number | `1000` | Longest description accepted. Longer text is trimmed, not rejected. Zero or less falls back to 1000 |
@@ -231,7 +231,7 @@ The addon asks the game which language it is running in and picks the matching t
 With `verboseLogging` on, the log says which one it settled on:
 
 ```
-[MrFrost] Text table loaded for language 'de_de' (30 strings).
+[MrFrost] Text table loaded for language 'de_de' (31 strings).
 ```
 
 ## Rules of the files
