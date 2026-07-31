@@ -34,20 +34,60 @@ modded class SCR_BaseGameMode
 	}
 
 	//------------------------------------------------------------------------------
-	override protected void OnControllableSpawned(IEntity entity)
+	//! Everything the server has to do once, when the world is up.
+	//!
+	//! Subscribed to the invoker rather than overriding the engine's
+	//! OnPlayerSpawned event. The event is declared on BaseGameMode, but nothing
+	//! in the vanilla tree overrides it, so there is no evidence it is raised on
+	//! a dedicated server - and this feature failing there would fail silently.
+	//! GetOnPlayerSpawned() is what vanilla itself subscribes to, raised from
+	//! OnPlayerSpawnFinalize_S, which is authority-side by its own naming.
+	override protected void OnGameStart()
 	{
-		super.OnControllableSpawned(entity);
+		super.OnGameStart();
 
-		// Only the server watches damage; a client seeing its own hits would add
-		// nothing the server cannot see itself.
-		if (!Replication.IsServer() || !entity)
+		// Only the server does either of these. A client has no files to read and
+		// seeing its own hits would add nothing the server cannot see itself.
+		if (!Replication.IsServer())
 			return;
 
-		SCR_DamageManagerComponent damageManager = SCR_DamageManagerComponent.Cast(entity.FindComponent(SCR_DamageManagerComponent));
+		GetOnPlayerSpawned().Insert(MrFrost_OnPlayerSpawned);
+
+		// Read here rather than when the first client asks for them. Until this
+		// moved, a dedicated server ran on the addon's bundled settings until
+		// somebody connected - so a server that had switched reporting off still
+		// accepted reports, and a broken file was only reported at that same late
+		// moment instead of at startup, where an owner is watching.
+		MrFrost_Features.LoadServerContent();
+	}
+
+	//------------------------------------------------------------------------------
+	//! Watches damage on player bodies, and only those.
+	//!
+	//! Not on every controllable the world creates. Subscribing to all of them
+	//! was not merely wasteful, it changed what vanilla does: GetOnDamage() is
+	//! not a getter, it allocates the pooled damage-manager data on first call,
+	//! which vanilla otherwise never creates for an AI. With that data present,
+	//! SCR_DamageManagerComponent.OnDamage stops returning on its index check
+	//! and dispatches into script instead - for every bullet, every fragment and
+	//! every damage-over-time tick on the whole server, only to look the victim
+	//! up and find it was not a player.
+	protected void MrFrost_OnPlayerSpawned(int playerId, IEntity controlledEntity)
+	{
+		if (!controlledEntity)
+			return;
+
+		SCR_DamageManagerComponent damageManager = SCR_DamageManagerComponent.Cast(controlledEntity.FindComponent(SCR_DamageManagerComponent));
 		if (!damageManager)
 			return;
 
-		damageManager.GetOnDamage().Insert(MrFrost_OnDamage);
+		// Removed before inserting. The same handler twice would fire twice, and a
+		// body handed back to a respawning player is the component it already was.
+		// Remove is a no-op when nothing is subscribed, and ScriptInvoker offers no
+		// way to ask.
+		ScriptInvoker onDamage = damageManager.GetOnDamage();
+		onDamage.Remove(MrFrost_OnDamage);
+		onDamage.Insert(MrFrost_OnDamage);
 	}
 
 	//------------------------------------------------------------------------------
