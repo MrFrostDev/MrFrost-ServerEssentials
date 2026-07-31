@@ -103,6 +103,15 @@ modded class SCR_PlayerController
 		if (this != GetGame().GetPlayerController())
 			return;
 
+		// Released here, and not in a constructor. One controller is built per
+		// connection - but on a machine hosting its own game that means one per
+		// *connected player*, in the same process whose statics the host's own
+		// welcome reads, so every join wiped the host's latch and the menu came
+		// back over their screen on the next respawn. Vanilla calls this once, for
+		// the controller that is actually ours, which is the granularity wanted.
+		s_bAutoOpened = false;
+		s_fAutoOpenedAt = 0;
+
 		MrFrost_Features.Init();
 
 		InputManager inputManager = GetGame().GetInputManager();
@@ -499,20 +508,6 @@ modded class SCR_PlayerController
 	//!
 	//! Removing a timer that was never armed is harmless, so all four come off
 	//! regardless of how far this controller got.
-	//! Releases the once-per-mission welcome latch.
-	//!
-	//! One controller is built per connection, which is exactly the granularity
-	//! the latch wants. Leaving it to the world clock alone was not enough: a
-	//! second connection in the same session starts a world at zero that climbs
-	//! past the old stamp before anyone spawns, so the restart went unnoticed and
-	//! the player was never welcomed.
-	void SCR_PlayerController()
-	{
-		s_bAutoOpened = false;
-		s_fAutoOpenedAt = 0;
-	}
-
-	//------------------------------------------------------------------------------
 	void ~SCR_PlayerController()
 	{
 		ReleaseSendSlot();
