@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Faction rules and a queue for a full faction, on a branch and not yet released.
   Player limits, whitelists and a balance rule as one system, with a queue that
-  catches everyone they turn away. See [docs/FactionQueue.md](docs/FactionQueue.md).
+  catches everyone they turn away. Design notes live on that branch.
 
 ## [1.0.3] - 2026-07-30
 

@@ -192,6 +192,10 @@ modded class PauseMenuUI
 		// it and the player would have to back out twice.
 		Close();
 
-		GetGame().GetMenuManager().OpenMenu(entry.m_Preset);
+		MenuManager menuManager = GetGame().GetMenuManager();
+		if (!menuManager)
+			return;
+
+		menuManager.OpenMenu(entry.m_Preset);
 	}
 }

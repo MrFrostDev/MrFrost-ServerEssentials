@@ -40,7 +40,7 @@ A ready-made folder is in the repository:
 addon/server/MrFrost/
 ```
 
-Copy it into your profile directory and replace the text. Both files carry every key in use, with real content behind each one rather than placeholders.
+Copy it into your profile directory and replace the text. The files carry the keys a server usually sets, with real content behind each one rather than placeholders. Optional keys documented here and absent from them keep the defaults listed above.
 
 JSON has no comments, so the files stay clean and everything is documented here instead. A key you leave out keeps its default — you never have to write one you do not care about.
 
@@ -48,16 +48,14 @@ JSON has no comments, so the files stay clean and everything is documented here 
 
 ### Top level
 
-| Key | Type | Meaning |
-|---|---|---|
 | Key | Type | Default | Meaning |
 |---|---|---|---|
 | `enabled` | bool | `true` | `false` hides the menu, its pause entry **and** its key. Nothing is left behind to click |
 | `title` | string | — | Headline above the category list. Usually the server or unit name |
 | `pauseMenuEntry` | string | — | Label of the entry added next to the vanilla Field Manual |
 | `openOnJoin` | bool | `true` | Show the menu once, the first time a player spawns in. Not on respawn, and once per session |
-| `accentColor` | string | Reforger gold | `"226,167,79"` — ordinary sRGB, the numbers a colour picker shows. Drives the selected row and the lines |
-| `menuIcon` | string | `field-manual` | Sprite next to the title and on the pause menu entry — see [Icons](Icons.md) |
+| `accentColor` | string | white | `"226,167,79"` — ordinary sRGB, the numbers a colour picker shows. Drives the selected row and the lines |
+| `menuIcon` | string | — | Sprite next to the title and on the pause menu entry — see [Icons](Icons.md) |
 | `menuIconImageset` | string | the shared set | Only if you ship your own artwork |
 | `discordUrl` | string | — | Invite link for the footer button. Empty hides the button entirely |
 | `discordLabel` | string | `Discord` | Label of that button |
@@ -70,8 +68,6 @@ JSON has no comments, so the files stay clean and everything is documented here 
 
 ### A category
 
-| Key | Type | Meaning |
-|---|---|---|
 | Key | Type | Default | Meaning |
 |---|---|---|---|
 | `name` | string | — | What the row on the left says. Keep it short; the column is 380 px wide |
@@ -141,11 +137,13 @@ Menu, pause entry and key all disappear. `report.json` takes the same key.
 | `enabled` | bool | `true` | `false` hides the report menu, its pause entry and its key |
 | `allowBugReports` | bool | `true` | The "report a bug" tab. Free text plus the reporter's position |
 | `allowPlayerReports` | bool | `true` | The "report a player" tab, with the four ways of naming a target |
-| `nearbyRadius` | number | `300` | Metres for the "everyone within X" option. The menu label follows this number |
+| `nearbyRadius` | number | `300` | Metres for the "everyone within X" option. The menu label is written with a placeholder and follows this number |
 | `revealNobodyNearby` | bool | `false` | Whether to tell a reporter nobody was in range — see below |
 | `cooldownSeconds` | number | `10` | Wait between two reports from one player. Enforced on the server |
 | `maxDescription` | number | `1000` | Longest description accepted. Longer text is trimmed, not rejected |
 | `menuIcon` | string | `feedback` | Sprite for the menu title and its pause entry |
+| `menuIconImageset` | string | the shared set | Only if you ship your own artwork |
+| `verboseLogging` | bool | `false` | Writes the addon's diagnostic lines to the server log. On only while you are chasing something |
 | `delivery` | object | — | Where reports go. **Server-only** — see below |
 | `strings` | array | — | Override individual UI strings |
 
@@ -233,7 +231,7 @@ The addon asks the game which language it is running in and picks the matching t
 The log says which one it settled on:
 
 ```
-[MrFrost] Text table loaded for language 'de_de' (21 strings).
+[MrFrost] Text table loaded for language 'de_de' (28 strings).
 ```
 
 ## Rules of the files

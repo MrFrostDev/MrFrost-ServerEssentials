@@ -134,7 +134,17 @@ class MrFrost_Text
 	//! them whatever the client is set to.
 	static void SetOverrides(notnull map<string, string> overrides)
 	{
-		s_mOverrides = overrides;
+		// Merged, not replaced. Each feature's file brings its own map, and the
+		// last one read would otherwise discard what the others set - a server
+		// using "strings" in both files lost the first file's wording, and it
+		// presented as a mistyped key.
+		if (!s_mOverrides)
+			s_mOverrides = new map<string, string>();
+
+		foreach (string key, string text : overrides)
+		{
+			s_mOverrides.Set(key, text);
+		}
 
 		if (!overrides.IsEmpty())
 			MrFrost_Log.Info("This server overrides " + overrides.Count() + " UI string(s).");

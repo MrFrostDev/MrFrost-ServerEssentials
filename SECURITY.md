@@ -36,7 +36,7 @@ by players and end up in a webhook payload and an appended log line. Anything
 that lets a player break out of the JSON body, forge fields, ping a whole
 Discord, or write a crafted line into the log file is in scope.
 
-**Faction and target resolution happens on the authority.** The client says
+**Target resolution happens on the authority.** The client says
 *which option* was chosen, not *who* — the server answers from the kills and
 hits it recorded. A path that lets a modified client name its own target, or
 report a player who was never there, is in scope.
@@ -59,8 +59,9 @@ Never put the URL in the addon config: that ships to every subscriber.
 If it leaks, regenerate the webhook in the Discord channel settings; the old URL
 stops working immediately.
 
-## Whitelists and admin lists
+## Server-only configuration
 
-Where these exist in server configuration, they carry player identity IDs and
-stay on the authority. They are stripped before the configuration reaches a
-client. A build that sends them to clients is a vulnerability, not a feature.
+The `delivery` block never reaches a client: the report channel repacks the file
+without it before the transfer, and checks the result before sending. Any future
+setting holding a secret belongs in that block, and a build that sends one to a
+client is a vulnerability rather than a feature.

@@ -311,16 +311,26 @@ class MrFrost_ReportUI : MrFrost_MenuBase
 		AddTargetMode(MrFrost_EReportTarget.SELECTED, "report.target_select");
 		AddTargetMode(MrFrost_EReportTarget.KILLER,   "report.target_killer");
 		AddTargetMode(MrFrost_EReportTarget.ATTACKER, "report.target_attacker");
-		AddTargetMode(MrFrost_EReportTarget.NEARBY,   "report.target_nearby");
+		AddTargetMode(MrFrost_EReportTarget.NEARBY,   "report.target_nearby", config.m_fNearbyRadius);
 
 		m_TargetCombo.SetCurrentItem(0);
 		m_TargetCombo.m_OnChanged.Insert(OnTargetChanged);
 	}
 
 	//------------------------------------------------------------------------------
-	protected void AddTargetMode(MrFrost_EReportTarget mode, string key)
+	//! Adds one way of naming a target.
+	//!
+	//! "%1" in the label is the nearby radius. It is a placeholder rather than a
+	//! number in the text because nearbyRadius is a server setting: a server
+	//! running 500 m had every translation telling its players 300.
+	protected void AddTargetMode(MrFrost_EReportTarget mode, string key, float radius = 0)
 	{
-		m_TargetCombo.AddItem(MrFrost_Text.Get(key));
+		string label = MrFrost_Text.Get(key);
+
+		if (radius > 0)
+			label.Replace("%1", Math.Round(radius).ToString());
+
+		m_TargetCombo.AddItem(label);
 		m_aTargetModes.Insert(mode);
 	}
 

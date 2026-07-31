@@ -19,7 +19,7 @@ class MrFrost_MenuBase : ChimeraMenuBase
 	//! The exact button layout SCR_SuperMenuComponent hands to every stock menu's
 	//! footer, so ours is the same widget the group menu and the settings menu
 	//! use — same size, same spacing, same controller glyphs.
-	protected static const ResourceName NAVIGATION_BUTTON_LAYOUT = "{08CF3B69CB1ACBC4}UI/layouts/WidgetLibrary/WLib_NavigationButton.layout";
+	protected static const ResourceName NAVIGATION_BUTTON_LAYOUT = "{08CF3B69CB1ACBC4}UI/layouts/WidgetLibrary/Buttons/WLib_NavigationButton.layout";
 
 	//! The stock back action, used plainly: the player's own Escape and gamepad
 	//! bindings apply, and the prompt behaves like every other menu's.

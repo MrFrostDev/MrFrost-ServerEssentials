@@ -98,6 +98,15 @@ class MrFrost_ReportSubmit
 	}
 
 	//------------------------------------------------------------------------------
+	//! Drops a player's cooldown when they leave, so the next holder of that id
+	//! does not inherit it.
+	static void Forget(int playerId)
+	{
+		if (s_mLastReport)
+			s_mLastReport.Remove(playerId);
+	}
+
+	//------------------------------------------------------------------------------
 	protected static void Stamp(int reporterId)
 	{
 		if (!s_mLastReport)

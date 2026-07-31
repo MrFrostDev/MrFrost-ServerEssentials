@@ -242,6 +242,18 @@ class MrFrost_ReportChannel : MrFrost_ServerContentChannel
 	//! they are read here and never put anywhere a client could reach.
 	override bool Validate(string json)
 	{
+		// ExpandFromRAW returns void, so a broken file parses into an object full
+		// of defaults and looks indistinguishable from a deliberate one. Without
+		// this check a typo silently replaced the server's settings with the
+		// addon's, and the console said "no webhook configured" rather than
+		// "your JSON is broken".
+		if (!json.Contains("\"enabled\"") && !json.Contains("\"delivery\"")
+			&& !json.Contains("\"cooldownSeconds\"") && !json.Contains("\"maxDescription\""))
+		{
+			MrFrost_Log.Error("report.json carries none of the keys this addon reads - treating it as broken.");
+			return false;
+		}
+
 		MrFrost_ReportJson parsed = new MrFrost_ReportJson();
 		parsed.ExpandFromRAW(json);
 

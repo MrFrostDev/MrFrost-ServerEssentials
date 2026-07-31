@@ -104,13 +104,21 @@ class MrFrost_ReportEntryDescriptor : MrFrost_MenuEntry
 	//------------------------------------------------------------------------------
 	override ResourceName GetIconImageset()
 	{
-		return MrFrost_ReportConfigLoader.Get().m_MenuIconImageset;
+		MrFrost_ReportConfig config = MrFrost_ReportConfigLoader.Get();
+		if (!config)
+			return string.Empty;
+
+		return config.m_MenuIconImageset;
 	}
 
 	//------------------------------------------------------------------------------
 	override string GetIconName()
 	{
-		return MrFrost_ReportConfigLoader.Get().m_sMenuIconName;
+		MrFrost_ReportConfig config = MrFrost_ReportConfigLoader.Get();
+		if (!config)
+			return string.Empty;
+
+		return config.m_sMenuIconName;
 	}
 
 	//------------------------------------------------------------------------------

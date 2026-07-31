@@ -12,13 +12,15 @@ Everything below is relative to `addon/`, the folder the engine mounts. Document
 Configs/
   MrFrost/
     InfoMenu.conf              fallback content for the info menu
-    Presets/                   alternative configs, never auto-loaded
+    Report.conf                fallback settings for the report menu
+    Language.conf              every string the addon itself shows
   System/
     chimeraMenus.conf          registers every menu preset
     chimeraInputCommon.conf    declares the input actions and contexts
     keyBindingMenu.conf        adds the controls-settings category
 UI/layouts/MrFrost/
     MrFrostMenuFrame.layout    the panel every MrFrost menu is drawn in
+    MrFrostEmpty.layout        an empty body, used as tab content
     InfoMenu/                  the info menu's body and its row
     Report/                    the report menu's body
 scripts/Game/MrFrost/
@@ -119,7 +121,7 @@ A new menu is six small edits and no new plumbing:
 3. **A body layout** under `addon/UI/layouts/MrFrost/<Feature>/`. Its root needs an `OverlayWidgetSlot`, because `ContentRoot` is an overlay.
 4. **A class extending `MrFrost_MenuBase`** — override `GetContentLayout()` and `OnMenuBuilt()`. Panel, header, footer, fade and input context are already there.
 5. **`MrFrost_Features.c`** — add a `MrFrost_MenuEntry` for the pause menu entry, and a `MrFrost_ServerContentChannel` if the feature has server-side content.
-6. **`chimeraInputCommon.conf`** — if it needs a key, add the action to `MrFrostContext` (in-game) or `MrFrostMenuContext` (menu-only), plus a line in `keyBindingMenu.conf`.
+6. **`chimeraInputCommon.conf`** — if it needs a key, add the action to `MrFrostContext` (in-game) or the stock `MenuContext` (menu-only), plus a line in `keyBindingMenu.conf`.
 
 Nothing else has to know the feature exists. The transfer, the pause menu and the controls category all read from the list in step 5.
 
@@ -199,12 +201,12 @@ This is why the input actions are documented here rather than in the file they d
 
 | Action | Key | Notes |
 |---|---|---|
-| `MrFrost_OpenInfoMenu` | F11 | In `MrFrostContext`, which the player controller renews on a timer |
-| `MrFrost_OpenReportMenu` | F10 | Same context |
+| `MrFrost_OpenInfoMenu` | F11 | In `MrFrostContext`, which the player controller renews on a timer, and in `CharacterGeneralContext` |
+| `MrFrost_OpenReportMenu` | F10 | Same two contexts |
 | `MrFrost_ReportSubmit` | Enter / right trigger | `MenuContext`. Carries `InputFilterHoldOnce` |
 | `MrFrost_MenuDiscord` | D / gamepad Y | `MenuContext` |
 | `MrFrost_MenuWebsite` | W / gamepad X | `MenuContext` |
-| `MrFrost_MenuCustom` | L / gamepad D-pad up | `MenuContext` |
+| `MrFrost_MenuCustom` | L / gamepad right stick click | `MenuContext` |
 
 The three link actions exist whether or not a server fills the matching slot. An action with no button behind it fires nothing, which costs less than making the keybinding category change shape per server.
 
@@ -253,6 +255,6 @@ The engine can be run headless to compile-check scripts without opening the Work
 ArmaReforgerSteam.exe -profile <temp> -addonsDir "<mods>" -addons 69F71634BA1052A0 -noSound -maxFPS 10
 ```
 
-Diagnostics land in `<temp>/logs/logs_*/error.log`. Grep for `SCRIPT\s+\(E\)`. The engine then fails on the missing world, which is expected — script compilation happens first.
+Diagnostics land in `<temp>/logs/logs_*/console.log`. Three things fail independently and all three matter: `SCRIPT\s+\(E\)` for a script that does not compile, `DEFAULT\s+\(E\)` for a `.conf` that does not parse, and `ENGINE\s+\(F\)` for a crash. The engine then fails on the missing world, which is expected — script compilation happens first.
 
 This does not validate layouts or configs, only script.

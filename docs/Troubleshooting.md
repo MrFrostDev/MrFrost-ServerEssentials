@@ -2,6 +2,13 @@
 
 [← Back to index](Home.md)
 
+> [!IMPORTANT]
+> Several lines below are diagnostics and are **off by default**. Set
+> `"verboseLogging": true` in your `report.json` and restart the server before
+> looking for them — without it the log carries only what a server owner needs
+> to see day to day.
+
+
 ## Reading the log
 
 Every message the addon prints carries the prefix `[MrFrost]`:

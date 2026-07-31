@@ -234,6 +234,16 @@ modded class SCR_PlayerController
 	[RplRpc(RplChannel.Reliable, RplRcver.Server)]
 	protected void MrFrost_RpcAsk_ServerContent()
 	{
+		// A client asks once. Without this a modified one could ask in a loop:
+		// every call rebuilt the queue, reset the counter and re-armed the 10 Hz
+		// sender, so a request smaller than a packet produced an unbounded
+		// reliable-channel stream out of the server.
+		if (m_aOutgoingData && !m_aOutgoingData.IsEmpty())
+		{
+			MrFrost_Log.Debug("Ignoring a content request while one is still being answered.");
+			return;
+		}
+
 		MrFrost_Features.Init();
 
 		m_aOutgoingChannel = {};
@@ -373,6 +383,28 @@ modded class SCR_PlayerController
 	protected bool MrFrost_IsTransferPending()
 	{
 		return m_aPendingChannels && !m_aPendingChannels.IsEmpty();
+	}
+
+	//------------------------------------------------------------------------------
+	//! Repeating timers outlive the controller that armed them.
+	//!
+	//! MrFrost_SendChunks in particular runs at 10 Hz and touches this object's
+	//! own arrays; a client disconnecting mid-transfer left it firing against a
+	//! controller that was already gone, once per player for the rest of the
+	//! session. The context pump is the same shape at 4 Hz.
+	//!
+	//! Removing a timer that was never armed is harmless, so all four come off
+	//! regardless of how far this controller got.
+	void ~SCR_PlayerController()
+	{
+		ScriptCallQueue queue = GetGame().GetCallqueue();
+		if (!queue)
+			return;
+
+		queue.Remove(MrFrost_KeepContextAlive);
+		queue.Remove(MrFrost_SendChunks);
+		queue.Remove(MrFrost_ReportContext);
+		queue.Remove(MrFrost_AutoOpenInfoMenu);
 	}
 
 	//------------------------------------------------------------------------------

@@ -23,7 +23,7 @@ Only the info menu ships a preset. `Report.conf` and `Language.conf` are single 
 Copy the one you want over the active config:
 
 ```
-addon/addon/Configs/MrFrost/Presets/MyServer-Live.conf  →  addon/Configs/MrFrost/InfoMenu.conf
+addon/Configs/MrFrost/Presets/MyServer-Live.conf  →  addon/Configs/MrFrost/InfoMenu.conf
 ```
 
 Restart the game.
