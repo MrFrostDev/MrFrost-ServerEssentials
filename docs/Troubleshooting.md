@@ -58,6 +58,11 @@ Search for `MrFrost` and you have its whole story for that session. On a server,
 | `The Discord webhook timed out` | Server | No reply in time. It is still in the log |
 | `webhookUrl in report.json is not an https:// address` | Server | Missing or wrong scheme. The webhook is ignored entirely |
 | `<key> in infomenu.json is not an https:// address` | Server | That footer button will not be drawn |
+| `infomenu.json asks for N rows` | Server | More than 512 categories and entries together. The rest is left out |
+| `A page in infomenu.json is longer than 20000 characters` | Server | That page is left empty. Split it into entries |
+| `accentColor '...' is not 'r,g,b'` | Server | Colour must be three numbers, e.g. `226,167,79` |
+| `Could not repack report.json without its delivery block` | Server | The safety check refused to send. Reports still work; players see the bundled menu settings |
+| `webhookAvatarUrl is not a URL and was ignored` | Server | Must be an `http` address, or left empty |
 | `The Discord queue is full` | Server | More reports arriving than Discord accepts. The newest are dropped |
 | `logFile must be a file name, not a path` | Server | `logFile` may not contain `/`, `\`, `:` or `..` |
 | `Could not write to ...` | Server | The `MrFrost` folder is not writable |
@@ -128,7 +133,9 @@ No error is produced; the row just has no icon. Check the imageset path includin
 
 ### The info menu does not open on join
 
-It waits while another menu is up — the deploy screen counts — and while the server's content is still arriving. It retries for about a minute and then gives up, which shows as `Gave up on the welcome info menu`.
+It waits while another menu is up — the deploy screen counts — and while the server's content is still arriving. It retries for about two and a half minutes and then gives up, which shows as `Gave up on the welcome info menu`.
+
+It also asks your `infomenu.json` again once that has arrived. A server whose categories are all switched off, or which set `openOnJoin` to false, gets no welcome menu and logs `This server does not want a welcome info menu` instead.
 
 It also opens **once per mission** by design, so it will not reappear after a respawn — but it does after a mission restart.
 

@@ -144,7 +144,7 @@ The same reasoning applies to the `+` / `-` expand markers.
 
 ### Colours come from the game
 
-`MrFrost_MenuBase.ApplyChrome()` and each menu's own `ApplyPalette()` set colours from named `UIColors` constants at runtime. The values in the layout are placeholders that get overwritten — they exist so the Workbench preview looks right, since the preview renders layouts without running script.
+`MrFrost_MenuBase.ApplyChrome()` and each menu's own `ApplyPalette()` set colours from named `UIColors` constants at runtime. The line under the header is the exception: it takes the server's accent colour, so `MrFrost_InfoMenuUI` sets it through `MrFrost_MenuBase.SetHeaderSeparatorColor()` once the config is loaded, which `ApplyPalette()` runs too early to do. The values in the layout are placeholders that get overwritten — they exist so the Workbench preview looks right, since the preview renders layouts without running script.
 
 Panel tone, size and blur are taken verbatim from the vanilla group menu.
 

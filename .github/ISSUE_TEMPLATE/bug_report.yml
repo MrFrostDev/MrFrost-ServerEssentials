@@ -17,7 +17,7 @@ body:
     attributes:
       label: Addon version
       description: From the Workshop entry, or the tag you built from.
-      placeholder: "1.0.4"
+      placeholder: "1.0.5"
     validations:
       required: true
 

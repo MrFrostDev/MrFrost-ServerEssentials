@@ -88,7 +88,7 @@ MrFrost_InfoMenuConfig {
 
 The same as a category, minus `m_bExpandedByDefault` and `m_aEntries`.
 
-An entry with no `m_sText` shows an empty page — useful as a placeholder while you write.
+An entry with no `m_sText` shows "This page is empty." — useful as a placeholder while you write.
 
 ## Colours
 
@@ -154,7 +154,7 @@ The report menu's fallback settings. Same idea: a server's `MrFrost/report.json`
 | `m_fNearbyRadius` | metres | Range for the "everyone nearby" option |
 | `m_iCooldownSeconds` | seconds | Wait between two accepted reports from one player. A half-second floor applies to every request on top of this |
 | `m_bRevealNobodyNearby` | `0` / `1` | Whether to tell a reporter nobody was in range. Off by default |
-| `m_iMaxDescription` | bytes | Longest description accepted, up to 8191. An umlaut counts two, a Japanese character three |
+| `m_iMaxDescription` | bytes | Longest description accepted, up to 8191. Zero or less is read as unset and falls back to 1000. An umlaut counts two, a Japanese character three |
 | `m_MenuIconImageset` | imageset | Icon for the menu and its pause entry |
 | `m_sMenuIconName` | text | Sprite name inside it |
 

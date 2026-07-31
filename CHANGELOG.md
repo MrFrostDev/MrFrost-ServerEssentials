@@ -17,10 +17,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- The check that keeps the `delivery` block out of a transfer could be walked
-  past by a line break between a key and its colon.
-- Every warning about a malformed `report.json` value appeared twice, because
-  the delivery settings were built from the file twice.
 - Each footer link listened for its key twice, so one press opened the browser
   twice - and the second listener ran outside every guard the prompt applies,
   so with the report menu open on top of the info menu, typing a `d` into a
@@ -46,6 +42,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   and ignored in the server's own Discord embed.
 - "No other players" was written into the dropdown but never selected, so the
   closed box showed nothing at all.
+- The welcome menu gave up after about a minute of waiting, which the server's
+  own content can outlast when several players join at once. It waits about
+  two and a half minutes now.
 - The row icon column was two pixels narrower than the icon it holds.
 - The player dropdown was filled without being emptied first, so anything the
   layout shipped with would have shifted every index behind it.
@@ -179,6 +178,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `reports.log` disagreed about what happened first.
 - A `webhookUsername` longer than Discord accepts cost every report, with a
   rejection message that named three settings and not the length of any of them.
+- The check that keeps the `delivery` block out of a transfer could be walked
+  past by a line break between a key and its colon.
+- Every warning about a malformed `report.json` value appeared twice, because
+  the delivery settings were built from the file twice.
 - A dedicated server enforced the addon's bundled report settings while every
   client honoured the server's file, because the server-side path never
   installed them. A server that had switched reporting off still accepted

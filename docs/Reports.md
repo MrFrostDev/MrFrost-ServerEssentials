@@ -88,7 +88,7 @@ Once a report is in, the menu says so and closes itself a moment later. If the s
 | `nearbyRadius` | Metres for the "everyone nearby" option |
 | `revealNobodyNearby` | Tell the reporter when nobody was in range. Off by default — see below |
 | `cooldownSeconds` | How long a player waits between two reports |
-| `maxDescription` | Longest description accepted, in bytes, up to 8191. A plain letter is one, an umlaut two, a Japanese character three |
+| `maxDescription` | Longest description accepted, in bytes, up to 8191. A plain letter is one, an umlaut two, a Japanese character three. Zero or less falls back to 1000 |
 | `menuIcon` | Sprite for the menu and pause entry |
 
 ### delivery

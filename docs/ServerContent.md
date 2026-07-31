@@ -50,7 +50,7 @@ JSON has no comments, so the files stay clean and everything is documented here 
 
 | Key | Type | Default | Meaning |
 |---|---|---|---|
-| `enabled` | bool | `true` | `false` hides the menu **and** its pause entry. The key stays bound and does nothing |
+| `enabled` | bool | `true` | `false` hides the menu **and** its pause entry. The key stays bound and does nothing. The same happens when every category is switched off — unless a footer link is still drawable, since those live nowhere else |
 | `title` | string | — | Headline above the category list. Usually the server or unit name |
 | `pauseMenuEntry` | string | — | Label of the entry added next to the vanilla Field Manual |
 | `openOnJoin` | bool | `true` | Show the menu once, the first time a player spawns in. Not on respawn; again after a mission restart |
@@ -64,7 +64,7 @@ JSON has no comments, so the files stay clean and everything is documented here 
 | `customUrl` | string | — | A third link of your choosing — a ruleset, a ban appeal form, a forum thread. Must be `https://` |
 | `customLabel` | string | — | Label of that button. **Required** — an unlabelled third slot stays hidden even with a URL set |
 | `strings` | array | — | Override individual UI strings — see [Text and languages](#text-and-languages) |
-| `categories` | array | — | The list on the left. Leave it out to keep the bundled content and change only the settings around it |
+| `categories` | array | — | The list on the left, up to 512 rows counting categories and entries together. Leave it out to keep the bundled content and change only the settings around it |
 
 ### A category
 
@@ -72,7 +72,7 @@ JSON has no comments, so the files stay clean and everything is documented here 
 |---|---|---|---|
 | `name` | string | — | What the row on the left says. Keep it short; the column is 380 px wide |
 | `title` | string | `name` | Headline above the text on the right |
-| `text` | string | — | The body. Rich text — see [Text formatting](Formatting.md) |
+| `text` | string | — | The body, up to 20000 characters. Rich text — see [Text formatting](Formatting.md) |
 | `icon` | string | — | Sprite in front of the row. Rows without one close the gap, so a mixed list still lines up |
 | `iconImageset` | string | the shared set | Only if you ship your own artwork |
 | `expanded` | bool | `false` | Start the category open |
@@ -140,7 +140,7 @@ Menu, pause entry and key all disappear. `report.json` takes the same key.
 | `nearbyRadius` | number | `300` | Metres for the "everyone within X" option. The menu label is written with a placeholder and follows this number |
 | `revealNobodyNearby` | bool | `false` | Whether to tell a reporter nobody was in range — see below |
 | `cooldownSeconds` | number | `10` | Wait between two accepted reports from one player. Enforced on the server. A half-second floor applies to every request on top of this, and cannot be switched off |
-| `maxDescription` | number | `1000` | Longest description accepted. Longer text is trimmed, not rejected |
+| `maxDescription` | number | `1000` | Longest description accepted. Longer text is trimmed, not rejected. Zero or less falls back to 1000 |
 | `menuIcon` | string | `feedback` | Sprite for the menu title and its pause entry |
 | `menuIconImageset` | string | the shared set | Only if you ship your own artwork |
 | `verboseLogging` | bool | `false` | Writes the addon's diagnostic lines to the server log. On only while you are chasing something |
@@ -231,7 +231,7 @@ The addon asks the game which language it is running in and picks the matching t
 With `verboseLogging` on, the log says which one it settled on:
 
 ```
-[MrFrost] Text table loaded for language 'de_de' (29 strings).
+[MrFrost] Text table loaded for language 'de_de' (30 strings).
 ```
 
 ## Rules of the files
@@ -255,7 +255,7 @@ The server console at startup:
 The client, once it has everything (the first line needs `verboseLogging`):
 
 ```
-[MrFrost] Received this server's infomenu content (23934 bytes).
+[MrFrost] Server content complete.
 [MrFrost] Using this server's info menu (7 categories).
 [MrFrost] Using this server's report settings.
 ```

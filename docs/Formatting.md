@@ -2,7 +2,7 @@
 
 [← Back to index](Home.md)
 
-Body text understands rich text — `m_sText` in the addon config, `text` in a server's JSON. The two are identical; nothing in the markup changes between them. Long texts scroll, and there is no length limit.
+Body text understands rich text — `m_sText` in the addon config, `text` in a server's JSON. The two are identical; nothing in the markup changes between them. Long texts scroll. One page holds up to 20000 characters; a longer one is left out entirely rather than cut, because a cut cannot leave markup whole, and both consoles name the page. Split it into entries instead.
 
 ## Markup
 
