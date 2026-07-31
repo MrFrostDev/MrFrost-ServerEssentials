@@ -265,6 +265,16 @@ class MrFrost_InfoMenuChannel : MrFrost_ServerContentChannel
 		MrFrost_InfoMenuJson probe = new MrFrost_InfoMenuJson();
 		probe.ExpandFromRAW(json);
 
-		return !probe.categories.IsEmpty();
+		// Structure, not content. Requiring a category rejected the one file a
+		// server writes to switch the menu off - "{"enabled": false}" has none -
+		// and the documentation promises that file works. It also rejected a
+		// file carrying only a title or only string overrides.
+		if (!MrFrost_ServerContent.IsJsonObject(json))
+		{
+			MrFrost_Log.Error("infomenu.json is not sound JSON - falling back to the bundled content. Check it for a stray or missing comma.");
+			return false;
+		}
+
+		return true;
 	}
 }

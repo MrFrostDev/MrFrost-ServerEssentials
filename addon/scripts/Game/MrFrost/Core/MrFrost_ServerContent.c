@@ -66,6 +66,10 @@ class MrFrost_ServerContent
 	//! silently dropped packet to lose.
 	static const int CHUNK_SIZE = 900;
 
+	//! The engine's ceiling on a single Substring() result, documented in the
+	//! vanilla string type. Everything here that cuts text has to stay under it.
+	static const int MAX_SUBSTRING = 8191;
+
 	protected static ref array<ref MrFrost_ServerContentChannel> s_aChannels;
 
 	//! Server side: file text by channel id, read once and kept.
@@ -184,6 +188,198 @@ class MrFrost_ServerContent
 		return raw;
 	}
 
+
+	// Parser states for IsJsonObject().
+	protected static const int JSON_VALUE = 0;
+	protected static const int JSON_KEY   = 1;
+	protected static const int JSON_COLON = 2;
+	protected static const int JSON_NEXT  = 3;
+
+	//------------------------------------------------------------------------------
+	//! Whether text is a structurally sound JSON object.
+	//!
+	//! ExpandFromRAW() returns void, so a file the JSON layer could not read is
+	//! indistinguishable from one deliberately full of defaults. A single stray
+	//! comma in a server's file therefore came back as every setting at its
+	//! default - inverting whatever the owner had switched off - and no console
+	//! anywhere said a word. Testing the braces at each end was not enough,
+	//! because the damage is almost always in the middle.
+	//!
+	//! This is a shape check, not a parser and not a substitute for one. It walks
+	//! the text once and rejects what cannot be JSON whatever the values mean:
+	//! unbalanced or crossed brackets, an unterminated string, a missing or
+	//! doubled comma, a trailing one, a key with no colon. Text that passes is
+	//! not guaranteed to say anything useful - it is guaranteed to have the shape
+	//! the layer behind it expects, which is the part that was failing silently.
+	static bool IsJsonObject(string text)
+	{
+		int len = text.Length();
+
+		// An array or a bare number is sound JSON and still not a settings file.
+		// Both callers want an object, so the top level is settled here rather
+		// than tested again at each of them.
+		string head = text;
+		head.TrimInPlace();
+		if (!head.StartsWith("{"))
+			return false;
+
+		// Container types, innermost last. True for an object, false for an array.
+		array<bool> stack = {};
+
+		int state = JSON_VALUE;
+
+		// Whether the container we are in is still empty, which is the only place
+		// a closing bracket may follow an opening one. Guards against "[1,]".
+		bool empty = false;
+
+		int i = 0;
+		while (i < len)
+		{
+			int c = text.ToAscii(i);
+
+			// Whitespace between tokens.
+			if (c == 32 || c == 9 || c == 10 || c == 13)
+			{
+				i++;
+				continue;
+			}
+
+			if (c == 123 || c == 91)	// { or [
+			{
+				if (state != JSON_VALUE)
+					return false;
+
+				stack.Insert(c == 123);
+				empty = true;
+
+				if (c == 123)
+					state = JSON_KEY;
+				else
+					state = JSON_VALUE;
+
+				i++;
+				continue;
+			}
+
+			if (c == 125 || c == 93)	// } or ]
+			{
+				if (stack.IsEmpty())
+					return false;
+
+				bool isObject = stack[stack.Count() - 1];
+				if (isObject != (c == 125))
+					return false;
+
+				// Either the container never held anything, or it just finished a
+				// value. Anything else means a dangling comma or colon.
+				bool afterOpen = empty && ((isObject && state == JSON_KEY) || (!isObject && state == JSON_VALUE));
+				if (!afterOpen && state != JSON_NEXT)
+					return false;
+
+				stack.Remove(stack.Count() - 1);
+				state = JSON_NEXT;
+				empty = false;
+				i++;
+				continue;
+			}
+
+			if (c == 34)	// "
+			{
+				if (state != JSON_VALUE && state != JSON_KEY)
+					return false;
+
+				// Walk to the closing quote, stepping over an escaped one. Every
+				// byte of a multi-byte character is above 127 and none of them can
+				// be mistaken for a quote or a backslash, so this is byte-safe.
+				i++;
+				bool closed = false;
+				while (i < len)
+				{
+					int s = text.ToAscii(i);
+					if (s == 92)	// backslash
+					{
+						i += 2;
+						continue;
+					}
+
+					if (s == 34)
+					{
+						closed = true;
+						i++;
+						break;
+					}
+
+					i++;
+				}
+
+				if (!closed)
+					return false;
+
+				if (state == JSON_KEY)
+					state = JSON_COLON;
+				else
+					state = JSON_NEXT;
+
+				empty = false;
+				continue;
+			}
+
+			if (c == 58)	// :
+			{
+				if (state != JSON_COLON)
+					return false;
+
+				state = JSON_VALUE;
+				i++;
+				continue;
+			}
+
+			if (c == 44)	// ,
+			{
+				if (state != JSON_NEXT || stack.IsEmpty())
+					return false;
+
+				if (stack[stack.Count() - 1])
+					state = JSON_KEY;
+				else
+					state = JSON_VALUE;
+
+				empty = false;
+				i++;
+				continue;
+			}
+
+			// Anything else starts a bare literal: a number, true, false or null.
+			// Its contents are the JSON layer's business; all that matters here is
+			// that one is allowed at this point and that it ends where it should.
+			if (state != JSON_VALUE)
+				return false;
+
+			// A literal ends at any structural byte, not merely at a comma or a
+			// closing bracket. Stopping only at those let a literal swallow the
+			// token after it, so a file missing one comma between a number and
+			// the next key read as a single clean value - and the reader joins
+			// lines without a separator, which is exactly how that file arrives.
+			while (i < len)
+			{
+				int l = text.ToAscii(i);
+				if (l == 44 || l == 125 || l == 93 || l == 32 || l == 9 || l == 10 || l == 13)
+					break;
+
+				if (l == 34 || l == 58 || l == 123 || l == 91)
+					break;
+
+				i++;
+			}
+
+			state = JSON_NEXT;
+			empty = false;
+		}
+
+		// A document that ended mid-container, or never opened one at all.
+		return stack.IsEmpty() && state == JSON_NEXT;
+	}
+
 	//------------------------------------------------------------------------------
 	//! Shortens text to a byte limit without slicing a character in half.
 	//!
@@ -197,19 +393,44 @@ class MrFrost_ServerContent
 	//! ends on a word rather than mid-syllable.
 	static string Truncate(string value, int limit)
 	{
+		// Substring() will not return more than this however much is asked of it,
+		// and its own cut is not character-aware. A server setting a limit above
+		// it therefore got the engine's blind cut instead of this function's, so
+		// the limit is brought down to what can actually be honoured.
+		if (limit > MAX_SUBSTRING)
+			limit = MAX_SUBSTRING;
+
 		if (limit <= 0 || value.Length() <= limit)
 			return value;
 
 		string cut = value.Substring(0, limit);
 
-		// LastIndexOf answers -1 when there is no space at all, and a limit below
-		// 63 makes -1 pass the proximity test - which would call Substring with a
-		// negative length. Both conditions have to hold.
+		// A space is always a single byte, so cutting there is always on a
+		// character boundary. LastIndexOf answers -1 with no space present, and a
+		// limit below 63 would let that -1 through into Substring as a negative
+		// length, so both conditions have to hold.
 		int lastSpace = cut.LastIndexOf(" ");
 		if (lastSpace > 0 && lastSpace > limit - 64)
-			cut = cut.Substring(0, lastSpace);
+			return value.Substring(0, lastSpace);
 
-		return cut;
+		// No usable space. Japanese and Chinese carry none at all, which is the
+		// very case the limit was written for, so the raw cut has to be walked
+		// back off any continuation byte by hand: 10xxxxxx marks the middle of a
+		// UTF-8 sequence, and stopping there leaves half a character behind.
+		int end = limit;
+		while (end > 0 && IsContinuationByte(value.ToAscii(end)))
+		{
+			end--;
+		}
+
+		return value.Substring(0, end);
+	}
+
+	//------------------------------------------------------------------------------
+	//! Whether this byte is the middle of a UTF-8 sequence rather than its start.
+	protected static bool IsContinuationByte(int value)
+	{
+		return (value & 0xC0) == 0x80;
 	}
 
 	//------------------------------------------------------------------------------

@@ -216,8 +216,13 @@ class MrFrost_ReportChannel : MrFrost_ServerContentChannel
 		parsed.UnregV("delivery");
 		parsed.Pack();
 
+		// "{}" as well as "": AsString() answers an empty object when it has no
+		// data, which is not a file worth sending and not what the check below
+		// was written to catch.
 		string safe = parsed.AsString();
-		if (safe.IsEmpty())
+		safe.TrimInPlace();
+
+		if (safe.Length() <= 2)
 		{
 			MrFrost_Log.Error("Could not repack report.json without its delivery block - sending nothing rather than risking the webhook URL.");
 			return string.Empty;
@@ -228,7 +233,22 @@ class MrFrost_ReportChannel : MrFrost_ServerContentChannel
 		// treats an unregistered member - which is not something the addon can
 		// prove at build time. If the block survived the round trip, nothing
 		// goes out and the server says why.
-		if (safe.Contains("webhookUrl") || safe.Contains("delivery"))
+		// Matched as keys, not as words. An earlier version tested the whole
+		// document for the bare strings, so a server whose own wording contained
+		// "delivery" sent its players nothing at all.
+		//
+		// Whitespace removed first. Today this text comes from the serializer,
+		// whose spacing is fixed, so the removal changes nothing - it is here
+		// because the guard's whole premise is that the serializer might not have
+		// done what it was asked. If what comes back is ever the original file
+		// instead of a repack, it carries a server owner's own formatting, and a
+		// space before a colon would have walked the webhook URL straight past a
+		// test that only knew one spelling.
+		string probe = safe;
+		probe.Replace(" ", "");
+		probe.Replace("	", "");
+
+		if (probe.Contains("\"delivery\":") || probe.Contains("\"webhookUrl\":"))
 		{
 			MrFrost_Log.Error("report.json still carried its delivery block after repacking - refusing to send it. Reports still work; the menu falls back to the bundled settings.");
 			return string.Empty;
@@ -242,15 +262,23 @@ class MrFrost_ReportChannel : MrFrost_ServerContentChannel
 	//! they are read here and never put anywhere a client could reach.
 	override bool Validate(string json)
 	{
-		// ExpandFromRAW returns void, so a broken file parses into an object full
-		// of defaults and looks indistinguishable from a deliberate one. Without
-		// this check a typo silently replaced the server's settings with the
-		// addon's, and the console said "no webhook configured" rather than
-		// "your JSON is broken".
-		if (!json.Contains("\"enabled\"") && !json.Contains("\"delivery\"")
-			&& !json.Contains("\"cooldownSeconds\"") && !json.Contains("\"maxDescription\""))
+		// ExpandFromRAW returns void, so a file that reads as nothing is
+		// indistinguishable from a deliberate one full of defaults.
+		//
+		// The test is that the text is a JSON object at all, not that it carries
+		// particular keys: every key this file reads is optional, so requiring
+		// any of them would reject "{"allowPlayerReports": false}" - a perfectly
+		// ordinary file - and rejection is not soft. It costs the server its
+		// whole report configuration, webhook included, for the life of the
+		// process.
+		// Testing the braces at each end was not enough: the damage in a
+		// hand-edited file is almost always in the middle, and ExpandFromRAW
+		// answers a stray comma with a struct full of defaults rather than an
+		// error. A server that had switched reporting off had it switched back on
+		// and was told nothing.
+		if (!MrFrost_ServerContent.IsJsonObject(json))
 		{
-			MrFrost_Log.Error("report.json carries none of the keys this addon reads - treating it as broken.");
+			MrFrost_Log.Error("report.json is not sound JSON - falling back to the bundled settings. Check it for a stray or missing comma.");
 			return false;
 		}
 
