@@ -46,6 +46,34 @@ class MrFrost_ReportDelivery
 	protected static const int MAX_DESCRIPTION = 4000;
 	protected static const int MAX_FIELD = 1000;
 
+	//! Discord counts a field's name against its own, much shorter limit. Sharing
+	//! the value limit here meant a long label - a translated one, or one a server
+	//! renamed - passed our check and was rejected by Discord, taking the whole
+	//! report with it.
+	protected static const int MAX_FIELD_NAME = 256;
+
+	//! The title above the embed and the footer under it. Both are server text -
+	//! a label a server renamed, its own name - so both are as capable of
+	//! exceeding a limit as anything a player types, and neither was bounded.
+	//! Held well under Discord's own 256 and 2048 so that the whole embed, whose
+	//! parts share a 6000-character ceiling, cannot be pushed over it by them.
+	protected static const int MAX_TITLE = 256;
+	protected static const int MAX_FOOTER = 256;
+
+	//! Discord counts every part of an embed against one ceiling of its own and
+	//! rejects the whole message over it, and the per-slot limits above add up to
+	//! far more than that. Held under the real 6000 so the assembled JSON has
+	//! room the count does not see.
+	protected static const int MAX_EMBED = 5600;
+
+	//! Discord's limit on the name a webhook message signs itself with. Long
+	//! enough for any server name; past it, every report was rejected.
+	protected static const int MAX_USERNAME = 80;
+
+	//! Nothing this long is a working image URL, and a truncated one is worse
+	//! than none, so an over-long value is dropped rather than cut.
+	protected static const int MAX_AVATAR_URL = 2000;
+
 	//! Used when a server names no log file, or names something that is a path.
 	protected static const string DEFAULT_LOG_FILE = "reports.log";
 
@@ -186,7 +214,11 @@ class MrFrost_ReportDelivery
 		}
 
 		MrFrost_Report report = s_aQueue[0];
-		s_aQueue.Remove(0);
+		// RemoveOrdered, not Remove: Remove() fills the hole with the last element,
+		// so three reports inside one rate-limit window reached Discord as first,
+		// third, second - out of step with reports.log, which is the one thing
+		// the channel is meant to line up with.
+		s_aQueue.RemoveOrdered(0);
 
 		Post(report);
 	}
@@ -204,7 +236,9 @@ class MrFrost_ReportDelivery
 		string path;
 		if (!SplitUrl(config.m_sWebhookUrl, host, path))
 		{
-			MrFrost_Log.Error("The webhook URL is not a URL: " + config.m_sWebhookUrl);
+			// Named, never printed. This is the file a server owner pastes into a
+			// support channel when something is wrong.
+			MrFrost_Log.Error("webhookUrl in report.json is not a URL. Reports go to the log file only.");
 			return;
 		}
 
@@ -281,14 +315,35 @@ class MrFrost_ReportDelivery
 
 		fields += "," + Field(MrFrost_Text.Get("report.embed.time"), report.m_sTime);
 
+		string heading = Clamp(title, MAX_TITLE);
+		string footer;
+		if (!config.m_sServerName.IsEmpty())
+			footer = Clamp(config.m_sServerName, MAX_FOOTER);
+
+		// The description takes what the fixed parts left behind. Every slot is
+		// capped on its own above, but four fields at their maximum plus a title
+		// and a footer already exceed what Discord accepts in one embed - and it
+		// answers that with a rejection of the whole message, so the report would
+		// be lost rather than shortened. The description is the one part with
+		// room to give; the log file keeps what a player wrote either way.
+		int budget = MAX_EMBED - heading.Length() - footer.Length() - fields.Length();
+		if (budget > MAX_DESCRIPTION)
+			budget = MAX_DESCRIPTION;
+
+		string description;
+		if (budget > 0)
+			description = Clamp(report.m_sDescription, budget);
+		else
+			MrFrost_Log.Warn("The embed labels on this server leave no room for a description. Shorten the report.embed.* overrides.");
+
 		string embed = "{";
-		embed += "\"title\":\"" + Escape(title) + "\",";
-		embed += "\"description\":\"" + Escape(Clamp(report.m_sDescription, MAX_DESCRIPTION)) + "\",";
+		embed += "\"title\":\"" + Escape(heading) + "\",";
+		embed += "\"description\":\"" + Escape(description) + "\",";
 		embed += "\"color\":" + colour.ToString() + ",";
 		embed += "\"fields\":[" + fields + "]";
 
-		if (!config.m_sServerName.IsEmpty())
-			embed += ",\"footer\":{\"text\":\"" + Escape(config.m_sServerName) + "\"}";
+		if (!footer.IsEmpty())
+			embed += ",\"footer\":{\"text\":\"" + Escape(footer) + "\"}";
 
 		// Discord renders this in each reader's own timezone, next to the footer.
 		// The "Time" field above stays the server's clock, because that is the one
@@ -304,14 +359,16 @@ class MrFrost_ReportDelivery
 		// name and picture when these are absent, which is what a server that
 		// says nothing gets.
 		if (!config.m_sWebhookUsername.IsEmpty())
-			payload += ",\"username\":\"" + Escape(config.m_sWebhookUsername) + "\"";
+			payload += ",\"username\":\"" + Escape(Clamp(config.m_sWebhookUsername, MAX_USERNAME)) + "\"";
 
 		// Discord rejects the whole message over a malformed avatar_url, which
 		// would silently cost every report. A value that cannot be a URL is
 		// dropped and named in the log instead.
 		if (!config.m_sWebhookAvatarUrl.IsEmpty())
 		{
-			if (config.m_sWebhookAvatarUrl.StartsWith("http"))
+			if (config.m_sWebhookAvatarUrl.Length() > MAX_AVATAR_URL)
+				MrFrost_Log.Warn("webhookAvatarUrl is too long to be a URL and was ignored.");
+			else if (config.m_sWebhookAvatarUrl.StartsWith("http"))
 				payload += ",\"avatar_url\":\"" + Escape(config.m_sWebhookAvatarUrl) + "\"";
 			else
 				MrFrost_Log.Warn("webhookAvatarUrl is not a URL and was ignored: " + config.m_sWebhookAvatarUrl);
@@ -332,7 +389,13 @@ class MrFrost_ReportDelivery
 	//! break the JSON and cost the whole embed.
 	protected static string Field(string name, string value)
 	{
-		return "{\"name\":\"" + Escape(Clamp(name, MAX_FIELD)) + "\",\"value\":\"" + Escape(Clamp(value, MAX_FIELD)) + "\"}";
+		// Discord rejects an embed whose field has no name, so a server that
+		// overrode a label with an empty string would lose every report rather
+		// than an ornament. A dash is the smallest thing that still renders.
+		if (name.IsEmpty())
+			name = "-";
+
+		return "{\"name\":\"" + Escape(Clamp(name, MAX_FIELD_NAME)) + "\",\"value\":\"" + Escape(Clamp(value, MAX_FIELD)) + "\"}";
 	}
 
 	//------------------------------------------------------------------------------
@@ -352,6 +415,17 @@ class MrFrost_ReportDelivery
 	{
 		if (value.Length() <= limit)
 			return value;
+
+		// Truncate reads a limit of zero or less as no limit at all, so the two
+		// lines below would have handed back the whole value with three dots on
+		// the end - longer than the input, and past the ceiling this exists to
+		// hold. Only the description can reach a limit this small, and only when
+		// the labels around it have taken almost everything.
+		if (limit <= 0)
+			return string.Empty;
+
+		if (limit <= 3)
+			return MrFrost_ServerContent.Truncate(value, limit);
 
 		return MrFrost_ServerContent.Truncate(value, limit - 3) + "...";
 	}
