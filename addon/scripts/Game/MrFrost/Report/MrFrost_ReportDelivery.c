@@ -117,10 +117,11 @@ class MrFrost_ReportDelivery
 		}
 
 		if (!delivered)
-			// Says only what it knows. Both sinks report their own failure on the line
-			// above this one, so claiming "neither is configured" contradicted a true
-			// statement the owner had just read - a full disk was reported as a
-			// missing setting.
+			// Says only what it knows. A sink that was configured and failed has
+			// already said so on its own line, and the old wording - "neither is
+			// configured" - contradicted it, reporting a full disk as a missing
+			// setting. A server with both switched off gets this line alone, which
+			// is still the whole truth for it.
 			MrFrost_Log.Warn("A report reached neither the log file nor Discord.");
 
 		return delivered;

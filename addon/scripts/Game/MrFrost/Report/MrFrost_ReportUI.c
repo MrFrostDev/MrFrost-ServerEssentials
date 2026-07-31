@@ -72,6 +72,15 @@ class MrFrost_ReportUI : MrFrost_MenuBase
 	//! Player ids in dropdown order, same idea.
 	protected ref array<int> m_aPlayerIds = {};
 
+	//! The name each id carried when the list was built.
+	//!
+	//! Kept rather than looked up again at submit time. The whole point of
+	//! sending it is to catch an id that changed hands while the report was
+	//! written, and asking the player manager a second time would just return
+	//! whoever holds it now - which is the answer that needs checking, not the
+	//! one to check it against.
+	protected ref array<string> m_aPlayerNames = {};
+
 	//------------------------------------------------------------------------------
 	override protected ResourceName GetContentLayout()
 	{
@@ -377,6 +386,7 @@ class MrFrost_ReportUI : MrFrost_MenuBase
 
 			m_PlayerCombo.AddItem(name);
 			m_aPlayerIds.Insert(playerId);
+			m_aPlayerNames.Insert(name);
 		}
 
 		if (m_aPlayerIds.IsEmpty())
@@ -584,15 +594,14 @@ class MrFrost_ReportUI : MrFrost_MenuBase
 	//! have drifted apart.
 	protected string GetSelectedPlayerName()
 	{
-		int id = GetSelectedPlayerId();
-		if (id <= 0)
+		if (!m_TargetCombo || !m_PlayerCombo)
 			return string.Empty;
 
-		PlayerManager playerManager = GetGame().GetPlayerManager();
-		if (!playerManager)
+		int index = m_PlayerCombo.GetCurrentIndex();
+		if (index < 0 || index >= m_aPlayerNames.Count())
 			return string.Empty;
 
-		return playerManager.GetPlayerName(id);
+		return m_aPlayerNames[index];
 	}
 
 	//------------------------------------------------------------------------------

@@ -211,9 +211,14 @@ class MrFrost_ReportTargets
 		{
 			case MrFrost_EReportTarget.SELECTED:
 			{
-				// Still checked against the live player list: an id from a menu the
-				// player opened a minute ago may have left in the meantime.
-				if (selectedId > 0 && selectedId != reporterId && IsConnected(selectedId))
+				// Two questions, not one. "Is somebody holding this id" is what
+				// IsConnected answers; "is it still the person who was picked" is
+				// what NameStillMatches answers. The list is built when the menu
+				// opens, ids are handed back out when somebody leaves, and a report
+				// written over half a minute could otherwise land on whoever
+				// inherited the one that was picked.
+				if (selectedId > 0 && selectedId != reporterId
+					&& IsConnected(selectedId) && NameStillMatches(selectedId, selectedName))
 					targets.Insert(selectedId);
 
 				break;
