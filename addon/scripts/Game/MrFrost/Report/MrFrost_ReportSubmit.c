@@ -15,7 +15,7 @@ class MrFrost_ReportSubmit
 	//! Accepts a report from a player. Returns a key from the text table for the
 	//! client to show, so the reason a report bounced is worded in the player's
 	//! own language.
-	static string Accept(int reporterId, MrFrost_EReportKind kind, MrFrost_EReportTarget mode, int selectedId, string description)
+	static string Accept(int reporterId, MrFrost_EReportKind kind, MrFrost_EReportTarget mode, int selectedId, string selectedName, string description)
 	{
 		// Throttled before anything else is touched. The cooldown below only
 		// stamps an *accepted* report, so every path that bounces one - no
@@ -72,7 +72,7 @@ class MrFrost_ReportSubmit
 		array<int> targets = {};
 		if (kind == MrFrost_EReportKind.PLAYER)
 		{
-			MrFrost_ReportTargets.Resolve(reporterId, mode, selectedId, targets);
+			MrFrost_ReportTargets.Resolve(reporterId, mode, selectedId, selectedName, targets);
 
 			if (targets.IsEmpty())
 			{

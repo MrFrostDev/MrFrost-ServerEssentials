@@ -13,6 +13,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Player limits, whitelists and a balance rule as one system, with a queue that
   catches everyone they turn away. Design notes live on that branch.
 
+### Fixed
+
+- A report against a player picked from the list could name whoever inherited
+  that player's id if they left while the report was being written. The pick now
+  carries the name the reporter was looking at, and the server refuses it when
+  the two no longer agree.
+- Content arriving over the network was installed without being checked, so a
+  payload a client could not read came back as the addon's defaults while the
+  console said the server's settings were in use. Both features check it now,
+  the same way the server checks its own files.
+- A report that reached neither the log file nor Discord was reported to the
+  owner as "neither is configured", contradicting the line above it that had
+  just named the real reason — a full disk, or a queue that was full.
+
 ## [1.0.5] - 2026-07-31
 
 ### Fixed

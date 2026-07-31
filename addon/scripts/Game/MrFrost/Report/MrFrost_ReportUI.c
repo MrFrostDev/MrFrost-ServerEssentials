@@ -570,8 +570,29 @@ class MrFrost_ReportUI : MrFrost_MenuBase
 			return;
 
 		// The target is named by mode, not by identity, for everything except an
-		// explicit pick — which the server checks against the live player list.
-		controller.MrFrost_SendReport(m_eKind, mode, GetSelectedPlayerId(), description);
+		// explicit pick. That one carries the name the player was looking at when
+		// they picked it, so the server can tell "still connected" apart from
+		// "still the same person" - the list is built once and ids are reused.
+		controller.MrFrost_SendReport(m_eKind, mode, GetSelectedPlayerId(), GetSelectedPlayerName(), description);
+	}
+
+	//------------------------------------------------------------------------------
+	//! The name shown beside the currently picked player, or nothing.
+	//!
+	//! Read from the same list the player is looking at rather than resolved
+	//! again, because the point of sending it is to catch the case where the two
+	//! have drifted apart.
+	protected string GetSelectedPlayerName()
+	{
+		int id = GetSelectedPlayerId();
+		if (id <= 0)
+			return string.Empty;
+
+		PlayerManager playerManager = GetGame().GetPlayerManager();
+		if (!playerManager)
+			return string.Empty;
+
+		return playerManager.GetPlayerName(id);
 	}
 
 	//------------------------------------------------------------------------------

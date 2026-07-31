@@ -199,28 +199,28 @@ modded class SCR_PlayerController
 	//! Note what is *not* sent: who the accused are. The client names the option
 	//! it picked, and the server resolves it from what the server itself saw —
 	//! otherwise a modified client could pin a report on anybody.
-	void MrFrost_SendReport(MrFrost_EReportKind kind, MrFrost_EReportTarget target, int selectedId, string description)
+	void MrFrost_SendReport(MrFrost_EReportKind kind, MrFrost_EReportTarget target, int selectedId, string selectedName, string description)
 	{
 		if (Replication.IsServer())
 		{
 			// Hosting our own game: no round trip, but the menu still needs the
 			// verdict - otherwise a report vanishes without a word, which is what
 			// it looked like locally.
-			MrFrost_RpcDo_ReportAnswer(MrFrost_ReportSubmit.Accept(GetPlayerId(), kind, target, selectedId, description));
+			MrFrost_RpcDo_ReportAnswer(MrFrost_ReportSubmit.Accept(GetPlayerId(), kind, target, selectedId, selectedName, description));
 			return;
 		}
 
-		Rpc(MrFrost_RpcAsk_Report, kind, target, selectedId, description);
+		Rpc(MrFrost_RpcAsk_Report, kind, target, selectedId, selectedName, description);
 	}
 
 	//------------------------------------------------------------------------------
 	//! Server: rules on a report and tells the reporter what happened.
 	[RplRpc(RplChannel.Reliable, RplRcver.Server)]
-	protected void MrFrost_RpcAsk_Report(MrFrost_EReportKind kind, MrFrost_EReportTarget target, int selectedId, string description)
+	protected void MrFrost_RpcAsk_Report(MrFrost_EReportKind kind, MrFrost_EReportTarget target, int selectedId, string selectedName, string description)
 	{
 		// The reporter is whoever owns this controller, never whoever the message
 		// claims to be.
-		string answer = MrFrost_ReportSubmit.Accept(GetPlayerId(), kind, target, selectedId, description);
+		string answer = MrFrost_ReportSubmit.Accept(GetPlayerId(), kind, target, selectedId, selectedName, description);
 
 		Rpc(MrFrost_RpcDo_ReportAnswer, answer);
 	}

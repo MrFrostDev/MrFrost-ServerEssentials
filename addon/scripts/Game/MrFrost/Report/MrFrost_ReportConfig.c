@@ -34,7 +34,7 @@ enum MrFrost_EReportTarget
 [BaseContainerProps(configRoot: true)]
 class MrFrost_ReportConfig
 {
-	[Attribute(defvalue: "1", desc: "Off hides the menu, its pause entry and its key")]
+	[Attribute(defvalue: "1", desc: "Off hides the menu and its pause entry. The key stays bound and does nothing")]
 	bool m_bEnabled;
 
 	[Attribute(defvalue: "{3262679C50EF4F01}UI/Textures/Icons/icons_wrapperUI.imageset", uiwidget: UIWidgets.ResourceNamePicker, params: "imageset", desc: "Imageset for the menu icon")]
@@ -62,7 +62,7 @@ class MrFrost_ReportConfig
 	//! otherwise mean no limit rather than the small one it looks like.
 	static const int DEFAULT_MAX_DESCRIPTION = 1000;
 
-	[Attribute(defvalue: "1000", desc: "Longest description a player can send, in bytes - an umlaut counts two")]
+	[Attribute(defvalue: "1000", desc: "Longest description a player can send, in bytes, up to 8191 - an umlaut counts two. Zero or less falls back to 1000")]
 	int m_iMaxDescription;
 
 	//------------------------------------------------------------------------------

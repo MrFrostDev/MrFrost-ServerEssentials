@@ -203,7 +203,7 @@ class MrFrost_ReportTargets
 	//! Empty means the option produced nobody — the reporter died to the world, or
 	//! is standing alone in a field. The caller turns that into a message rather
 	//! than sending a report accusing no one.
-	static void Resolve(int reporterId, MrFrost_EReportTarget mode, int selectedId, notnull out array<int> targets)
+	static void Resolve(int reporterId, MrFrost_EReportTarget mode, int selectedId, string selectedName, notnull out array<int> targets)
 	{
 		SCR_BaseGameMode gameMode = SCR_BaseGameMode.Cast(GetGame().GetGameMode());
 
@@ -287,6 +287,27 @@ class MrFrost_ReportTargets
 			if (vector.DistanceSq(origin, entity.GetOrigin()) <= radiusSq)
 				targets.Insert(playerId);
 		}
+	}
+
+	//------------------------------------------------------------------------------
+	//! Whether the id still belongs to the player the reporter picked.
+	//!
+	//! An empty name means a pick made before the name was known; that falls back
+	//! to the connection test alone rather than refusing a report somebody meant.
+	protected static bool NameStillMatches(int selectedId, string selectedName)
+	{
+		if (selectedName.IsEmpty())
+			return true;
+
+		PlayerManager playerManager = GetGame().GetPlayerManager();
+		if (!playerManager)
+			return true;
+
+		if (playerManager.GetPlayerName(selectedId) == selectedName)
+			return true;
+
+		MrFrost_Log.Info("A report picked player " + selectedId + " as \"" + selectedName + "\", but that id belongs to somebody else now. Nobody was named.");
+		return false;
 	}
 
 	//------------------------------------------------------------------------------

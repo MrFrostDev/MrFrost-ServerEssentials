@@ -202,6 +202,14 @@ class MrFrost_ReportChannel : MrFrost_ServerContentChannel
 	//! Runs on the client, and on the server when it hosts its own game.
 	override bool Apply(string json)
 	{
+		// Checked here as well as on the server. The server guards its own file
+		// this way because a stray comma comes back as a struct full of defaults
+		// rather than an error - and what arrives here is a payload reassembled
+		// from the network, which has more ways to be wrong than a file does.
+		// Without it a client installed those defaults and logged success.
+		if (!MrFrost_ServerContent.IsJsonObject(json))
+			return false;
+
 		MrFrost_ReportJson parsed = new MrFrost_ReportJson();
 		parsed.ExpandFromRAW(json);
 

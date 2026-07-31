@@ -117,7 +117,11 @@ class MrFrost_ReportDelivery
 		}
 
 		if (!delivered)
-			MrFrost_Log.Warn("A report was made but this server has neither a log file nor a webhook configured.");
+			// Says only what it knows. Both sinks report their own failure on the line
+			// above this one, so claiming "neither is configured" contradicted a true
+			// statement the owner had just read - a full disk was reported as a
+			// missing setting.
+			MrFrost_Log.Warn("A report reached neither the log file nor Discord.");
 
 		return delivered;
 	}

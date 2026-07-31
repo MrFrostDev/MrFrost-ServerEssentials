@@ -234,6 +234,14 @@ class MrFrost_InfoMenuConfigLoader
 		if (json.IsEmpty())
 			return false;
 
+		// Same reasoning as the report channel: a payload that is not sound JSON
+		// comes back as constructor defaults, not as an error.
+		if (!MrFrost_ServerContent.IsJsonObject(json))
+		{
+			MrFrost_Log.Error("The info menu content sent by this server is not sound JSON - keeping the bundled content.");
+			return false;
+		}
+
 		MrFrost_InfoMenuJson parsed = new MrFrost_InfoMenuJson();
 		parsed.ExpandFromRAW(json);
 
