@@ -124,7 +124,6 @@ class MrFrost_InfoMenuConfig
 	}
 
 	//------------------------------------------------------------------------------
-	//! grey design is built around.
 	//! Whether this config has anything a player could actually read.
 	//!
 	//! Not the same question as "are there categories". A file may carry a dozen
@@ -144,13 +143,35 @@ class MrFrost_InfoMenuConfig
 		}
 
 		// The footer counts too. A server may switch every category off and still
-		// have three working links, and those live nowhere else - closing the menu
-		// on them would take away the only way to reach them.
-		return !m_sDiscordUrl.IsEmpty() || !m_sWebsiteUrl.IsEmpty() || !m_sCustomUrl.IsEmpty();
+		// have working links, and those live nowhere else - closing the menu on
+		// them would take away the only way to reach them.
+		//
+		// Asked exactly as BuildLinkButton asks it. Testing the URL for emptiness
+		// was looser than the thing it was standing in for, so a URL with the wrong
+		// scheme, or a custom slot with no label, opened a menu with nothing in it
+		// at all - no rows and no buttons.
+		return DrawsLink(m_sDiscordUrl, m_sDiscordLabel, "Discord")
+			|| DrawsLink(m_sWebsiteUrl, m_sWebsiteLabel, "Website")
+			|| DrawsLink(m_sCustomUrl, m_sCustomLabel, string.Empty);
+	}
+
+	//------------------------------------------------------------------------------
+	//! Whether a footer slot would actually produce a button.
+	//!
+	//! Same three tests BuildLinkButton applies, in the same order: a URL, an
+	//! https:// one, and a label to put on it. The custom slot has no fallback
+	//! label by design, so an unnamed one draws nothing.
+	protected bool DrawsLink(string url, string label, string fallbackLabel)
+	{
+		if (url.IsEmpty() || !url.StartsWith("https://"))
+			return false;
+
+		return !label.IsEmpty() || !fallbackLabel.IsEmpty();
 	}
 
 	//------------------------------------------------------------------------------
 	//! Accent colour, never null — falls back to white, which is what the flat
+	//! grey design is built around.
 	Color GetAccentColor()
 	{
 		if (m_AccentColor)

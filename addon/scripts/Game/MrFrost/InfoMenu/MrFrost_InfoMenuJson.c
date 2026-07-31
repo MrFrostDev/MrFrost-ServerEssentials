@@ -116,13 +116,6 @@ class MrFrost_InfoMenuJson : JsonApiStruct
 	}
 
 	//------------------------------------------------------------------------------
-	//! Translates the parsed file into the config object the menu already knows
-	//! how to render, so nothing downstream has to care where the content came
-	//! from.
-	//! Ceiling on how many rows one menu may ask a client to build. Each row is
-	//! fifteen widgets, created up front, and nothing else bounded this - a
-	//! server could hand every joining player tens of thousands of them, on the
-	//! main thread, in a menu that opens by itself.
 	static const int MAX_ROWS = 512;
 
 	//! Ceiling on one page of text. Far past any rule set anyone writes.
@@ -144,11 +137,18 @@ class MrFrost_InfoMenuJson : JsonApiStruct
 		if (text.Length() <= MAX_PAGE_TEXT)
 			return text;
 
-		MrFrost_Log.Warn("The page '" + name + "'" + " is longer than " + MAX_PAGE_TEXT + " characters and was left empty. Split it into entries.");
+		MrFrost_Log.Warn("A page is longer than " + MAX_PAGE_TEXT + " characters and was left empty. Split it into entries: " + MrFrost_InfoMenuChannel.PageLabel(name));
 		return string.Empty;
 	}
 
 	//------------------------------------------------------------------------------
+	//! Translates the parsed file into the config object the menu already knows
+	//! how to render, so nothing downstream has to care where the content came
+	//! from.
+	//! Ceiling on how many rows one menu may ask a client to build. Each row is
+	//! fifteen widgets, created up front, and nothing else bounded this - a
+	//! server could hand every joining player tens of thousands of them, on the
+	//! main thread, in a menu that opens by itself.
 	MrFrost_InfoMenuConfig ToConfig()
 	{
 		MrFrost_InfoMenuConfig config = new MrFrost_InfoMenuConfig();
@@ -172,6 +172,7 @@ class MrFrost_InfoMenuJson : JsonApiStruct
 			config.m_AccentColor = accent;
 
 		int rows = 0;
+		bool dropped = false;
 
 		foreach (MrFrost_InfoMenuJsonCategory source : categories)
 		{
@@ -179,7 +180,10 @@ class MrFrost_InfoMenuJson : JsonApiStruct
 				continue;
 
 			if (rows >= MAX_ROWS)
+			{
+				dropped = true;
 				break;
+			}
 
 			// Only what will actually be built. A file that keeps archived sections
 			// switched off should not spend its budget on rows nobody draws.
@@ -202,7 +206,10 @@ class MrFrost_InfoMenuJson : JsonApiStruct
 					continue;
 
 				if (rows >= MAX_ROWS)
+				{
+					dropped = true;
 					break;
+				}
 
 				if (source.enabled && sourceEntry.enabled)
 					rows++;
@@ -224,7 +231,10 @@ class MrFrost_InfoMenuJson : JsonApiStruct
 		// Said once, after the loops, not inside them. Reporting it from the outer
 		// loop meant a file whose budget ran out inside its last category - or its
 		// only one - was cut without a word.
-		if (rows >= MAX_ROWS)
+		// Only when something was actually left behind. Testing the counter meant
+		// a file landing on exactly the limit was reported as cut when nothing was,
+		// and disagreed with the server, which tests the same file with >.
+		if (dropped)
 			MrFrost_Log.Warn("This info menu has more than " + MAX_ROWS + " rows. The rest was left out.");
 
 		return config;
@@ -310,9 +320,6 @@ class MrFrost_InfoMenuChannel : MrFrost_ServerContentChannel
 	}
 
 	//------------------------------------------------------------------------------
-	//! Parsed on the server purely so a broken file is reported on the server
-	//! console, where the owner will see it.
-	//! Names a menu the client will have to cut down.
 	protected void WarnOversizedMenu(notnull MrFrost_InfoMenuJson probe)
 	{
 		if (!probe.categories)
@@ -335,6 +342,40 @@ class MrFrost_InfoMenuChannel : MrFrost_ServerContentChannel
 
 		if (rows > MrFrost_InfoMenuJson.MAX_ROWS)
 			MrFrost_Log.Warn("infomenu.json asks for " + rows + " rows; only the first " + MrFrost_InfoMenuJson.MAX_ROWS + " will be shown.");
+
+		foreach (MrFrost_InfoMenuJsonCategory category : probe.categories)
+		{
+			if (!category)
+				continue;
+
+			WarnOversizedPage(category.text, category.name);
+
+			foreach (MrFrost_InfoMenuJsonEntry entry : category.entries)
+			{
+				if (entry)
+					WarnOversizedPage(entry.text, entry.name);
+			}
+		}
+	}
+
+	//------------------------------------------------------------------------------
+	//! Names a page the client will leave empty.
+	protected void WarnOversizedPage(string text, string name)
+	{
+		if (text.Length() <= MrFrost_InfoMenuJson.MAX_PAGE_TEXT)
+			return;
+
+		MrFrost_Log.Warn("A page in infomenu.json is longer than " + MrFrost_InfoMenuJson.MAX_PAGE_TEXT + " characters and will be left empty: " + PageLabel(name));
+	}
+
+	//------------------------------------------------------------------------------
+	//! A page name a reader can search their file for.
+	static string PageLabel(string name)
+	{
+		if (name.IsEmpty())
+			return "(a page with no name set)";
+
+		return "\"" + name + "\"";
 	}
 
 	//------------------------------------------------------------------------------
@@ -348,6 +389,9 @@ class MrFrost_InfoMenuChannel : MrFrost_ServerContentChannel
 	}
 
 	//------------------------------------------------------------------------------
+	//! Parsed on the server purely so a broken file is reported on the server
+	//! console, where the owner will see it.
+	//! Names a menu the client will have to cut down.
 	override bool Validate(string json)
 	{
 		MrFrost_InfoMenuJson probe = new MrFrost_InfoMenuJson();

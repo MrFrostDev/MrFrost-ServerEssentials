@@ -47,6 +47,9 @@ modded class SCR_PlayerController
 	//! Server side: whether this client has already been sent the server files.
 	protected bool m_bContentServed;
 
+	//! Client: the server has said it sent everything.
+	protected bool m_bContentComplete;
+
 	//! How many controllers are sending content right now.
 	//!
 	//! The per-tick budget below is divided by this. Without it the pacing was
@@ -250,6 +253,7 @@ modded class SCR_PlayerController
 		// Cleared before asking, not as each answer arrives: a server that ships
 		// no file for a feature sends nothing at all for it, so there is no
 		// arrival to hang the reset on.
+		m_bContentComplete = false;
 		MrFrost_Features.ForgetServerContent();
 
 		Rpc(MrFrost_RpcAsk_ServerContent);
@@ -460,6 +464,7 @@ modded class SCR_PlayerController
 	[RplRpc(RplChannel.Reliable, RplRcver.Owner)]
 	protected void MrFrost_RpcDo_ServerContentDone()
 	{
+		m_bContentComplete = true;
 		MrFrost_Log.Debug("Server content complete.");
 	}
 
@@ -542,7 +547,13 @@ modded class SCR_PlayerController
 		// what swallowed the welcome screen entirely — keep looking until the
 		// display is free, and stop after a while so this never becomes a
 		// permanent timer.
-		if (MrFrost_IsTransferPending() || menuManager.IsAnyMenuOpen())
+		// Both halves. "Nothing half-finished" is not "nothing more coming" - the
+		// queue drains channel by channel, so the client looked done every time a
+		// channel completed, and the menu could open on bundled content that the
+		// next channel was still on its way to replace. The server says when it is
+		// finished; the pending set catches the case where that word overtakes the
+		// last chunk, which reliable delivery does not rule out.
+		if (!m_bContentComplete || MrFrost_IsTransferPending() || menuManager.IsAnyMenuOpen())
 		{
 			m_iAutoOpenAttempts++;
 

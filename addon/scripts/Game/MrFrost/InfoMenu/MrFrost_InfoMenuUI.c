@@ -473,6 +473,12 @@ class MrFrost_InfoMenuUI : MrFrost_MenuBase
 		if (m_wEntryTitle)
 			m_wEntryTitle.SetText(title);
 
+		// A page with nothing in it says so rather than showing a blank panel. It
+		// happens to a server that left an entry's text out, and to one whose page
+		// was too long to send - which reads as broken unless it is named.
+		if (text.IsEmpty())
+			text = MrFrost_Text.Get("infomenu.empty");
+
 		m_wText.SetText(text);
 
 		// Every page starts at the top; otherwise the reader lands mid-way down
