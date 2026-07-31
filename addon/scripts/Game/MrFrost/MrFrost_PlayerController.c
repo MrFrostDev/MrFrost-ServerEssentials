@@ -38,6 +38,27 @@ modded class SCR_PlayerController
 	protected static const int MRFROST_CHUNKS_PER_TICK = 4;
 	protected static const int MRFROST_CHUNK_TICK_MS = 100;
 
+	//! Ceiling on how many chunks one channel may claim to have. At 900 bytes a
+	//! chunk this allows a file of about 3.6 MB, far past anything a server has
+	//! reason to send, and it stops a hostile one from having every client
+	//! allocate an array sized by a number it made up.
+	protected static const int MRFROST_MAX_CHUNKS = 4096;
+
+	//! Server side: whether this client has already been sent the server files.
+	protected bool m_bContentServed;
+
+	//! How many controllers are sending content right now.
+	//!
+	//! The per-tick budget below is divided by this. Without it the pacing was
+	//! per player, so it held for a trickle join and not at all for the case it
+	//! exists for: sixty-four clients asking within seconds of a restart ran
+	//! sixty-four independent 10 Hz senders at once, which is the burst the
+	//! pacing was meant to prevent.
+	protected static int s_iActiveSenders;
+
+	//! Whether this controller currently holds a share of that budget.
+	protected bool m_bSending;
+
 	protected int m_iAutoOpenAttempts;
 
 	//! Static, so the info menu greets the player once per session rather than on
@@ -239,15 +260,23 @@ modded class SCR_PlayerController
 	[RplRpc(RplChannel.Reliable, RplRcver.Server)]
 	protected void MrFrost_RpcAsk_ServerContent()
 	{
-		// A client asks once. Without this a modified one could ask in a loop:
-		// every call rebuilt the queue, reset the counter and re-armed the 10 Hz
-		// sender, so a request smaller than a packet produced an unbounded
-		// reliable-channel stream out of the server.
-		if (m_aOutgoingData && !m_aOutgoingData.IsEmpty())
+		// A client asks once, and this enforces it. Testing whether a transfer is
+		// still running only stopped overlapping ones: the queue is cleared the
+		// moment it drains, so a modified client could wait for that and ask
+		// again, forever. Each round cost the server a full parse, repack and
+		// split of every server file - unbounded work and unbounded bandwidth
+		// out of one empty packet in.
+		//
+		// It is also the answer for a server whose files produce no chunks at
+		// all. That path returned without arming the sender, leaving the old
+		// test false and the whole rebuild reachable at packet rate.
+		if (m_bContentServed)
 		{
-			MrFrost_Log.Debug("Ignoring a content request while one is still being answered.");
+			MrFrost_Log.Debug("Ignoring a repeated content request.");
 			return;
 		}
+
+		m_bContentServed = true;
 
 		MrFrost_Features.Init();
 
@@ -261,18 +290,12 @@ modded class SCR_PlayerController
 
 		for (int c = 0, count = channels.Count(); c < count; c++)
 		{
-			string raw = MrFrost_ServerContent.Read(channels[c]);
-			if (raw.IsEmpty())
-				continue;	// No file for this feature. The client keeps its bundled content.
-
-			// What leaves the server is the channel's client-safe version, never
-			// the file as it sits on disk.
-			raw = channels[c].ForClient(raw);
-			if (raw.IsEmpty())
+			// Built once for the whole server, not once per player. An empty list
+			// means this feature has no file, or the channel refused to hand its
+			// file out - either way the client keeps its bundled content.
+			array<string> chunks = MrFrost_ServerContent.ChunksForClient(channels[c]);
+			if (chunks.IsEmpty())
 				continue;
-
-			array<string> chunks = {};
-			MrFrost_ServerContent.Split(raw, MrFrost_ServerContent.CHUNK_SIZE, chunks);
 
 			for (int i = 0, chunkCount = chunks.Count(); i < chunkCount; i++)
 			{
@@ -288,6 +311,8 @@ modded class SCR_PlayerController
 
 		GetGame().GetCallqueue().Remove(MrFrost_SendChunks);
 		GetGame().GetCallqueue().CallLater(MrFrost_SendChunks, MRFROST_CHUNK_TICK_MS, true);
+		s_iActiveSenders++;
+		m_bSending = true;
 	}
 
 	//------------------------------------------------------------------------------
@@ -302,7 +327,17 @@ modded class SCR_PlayerController
 
 		int total = m_aOutgoingData.Count();
 
-		for (int i = 0; i < MRFROST_CHUNKS_PER_TICK && m_iOutgoingSent < total; i++)
+		// Shared budget: the more transfers are running, the fewer packets each
+		// gets per tick. One is the floor, so a busy restart takes longer rather
+		// than stalling.
+		int budget = MRFROST_CHUNKS_PER_TICK;
+		if (s_iActiveSenders > 1)
+			budget = MRFROST_CHUNKS_PER_TICK / s_iActiveSenders;
+
+		if (budget < 1)
+			budget = 1;
+
+		for (int i = 0; i < budget && m_iOutgoingSent < total; i++)
 		{
 			Rpc(MrFrost_RpcDo_ServerContentChunk,
 				m_aOutgoingChannel[m_iOutgoingSent],
@@ -317,10 +352,27 @@ modded class SCR_PlayerController
 			return;
 
 		GetGame().GetCallqueue().Remove(MrFrost_SendChunks);
+		ReleaseSendSlot();
 		m_aOutgoingChannel = null;
 		m_aOutgoingIndex = null;
 		m_aOutgoingTotal = null;
 		m_aOutgoingData = null;
+	}
+
+	//------------------------------------------------------------------------------
+	//! Gives this controller's share of the send budget back.
+	protected void ReleaseSendSlot()
+	{
+		// Flag rather than a look at the queue. The queue is non-null but empty
+		// on the path that never took a slot, so testing it would have released
+		// one that was never held.
+		if (!m_bSending)
+			return;
+
+		m_bSending = false;
+
+		if (s_iActiveSenders > 0)
+			s_iActiveSenders--;
 	}
 
 	//------------------------------------------------------------------------------
@@ -339,7 +391,10 @@ modded class SCR_PlayerController
 		if (channelIndex < 0 || channelIndex >= channels.Count())
 			return;
 
-		if (total <= 0 || index < 0 || index >= total)
+		// Bounded above as well as below. A hostile server sending total = 2e9
+		// would have the client allocate a two-billion-entry array on the main
+		// thread before a single byte of content arrived.
+		if (total <= 0 || total > MRFROST_MAX_CHUNKS || index < 0 || index >= total)
 			return;
 
 		if (!m_mIncoming)
@@ -407,6 +462,8 @@ modded class SCR_PlayerController
 	//! regardless of how far this controller got.
 	void ~SCR_PlayerController()
 	{
+		ReleaseSendSlot();
+
 		ScriptCallQueue queue = GetGame().GetCallqueue();
 		if (!queue)
 			return;

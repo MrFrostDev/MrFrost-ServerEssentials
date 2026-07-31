@@ -75,6 +75,9 @@ class MrFrost_ServerContent
 	//! Server side: file text by channel id, read once and kept.
 	protected static ref map<string, string> s_mFiles;
 
+	//! Server side: the split, client-safe form of each file, built once.
+	protected static ref map<string, ref array<string>> s_mChunks;
+
 	//------------------------------------------------------------------------------
 	//! Adds a channel. Registering the same id twice is a no-op, so callers do not
 	//! have to coordinate who registers first.
@@ -143,6 +146,41 @@ class MrFrost_ServerContent
 	}
 
 	//------------------------------------------------------------------------------
+	//! Server side: this channel's file, made client-safe and already split.
+	//!
+	//! Cached like the file itself. Both steps produce the same bytes for every
+	//! player - the file does not change while the server runs - but they ran
+	//! per joining player, so a server with a large strings block paid a full
+	//! JSON parse, repack and re-split sixty-four times for one identical
+	//! answer.
+	static array<string> ChunksForClient(notnull MrFrost_ServerContentChannel channel)
+	{
+		if (!s_mChunks)
+			s_mChunks = new map<string, ref array<string>>();
+
+		string id = channel.GetId();
+
+		array<string> cached;
+		if (s_mChunks.Find(id, cached))
+			return cached;
+
+		array<string> chunks = {};
+
+		string raw = Read(channel);
+		if (!raw.IsEmpty())
+		{
+			// What leaves the server is the channel's client-safe version, never
+			// the file as it sits on disk.
+			raw = channel.ForClient(raw);
+			if (!raw.IsEmpty())
+				Split(raw, CHUNK_SIZE, chunks);
+		}
+
+		s_mChunks.Set(id, chunks);
+		return chunks;
+	}
+
+	//------------------------------------------------------------------------------
 	protected static string ReadFile(notnull MrFrost_ServerContentChannel channel)
 	{
 		string path = FOLDER + channel.GetFileName();
@@ -161,12 +199,16 @@ class MrFrost_ServerContent
 		}
 
 		// Line by line rather than in one read: JSON strings cannot contain a raw
-		// newline, so dropping the line breaks is safe and saves carrying them
-		// across the network.
+		// newline, so every line break is outside a string and dropping it is
+		// safe. The same reasoning covers the indentation around it, which is
+		// structural whitespace and nothing else - and it is not free, since
+		// every byte kept here is sent to every player who joins. A pretty-
+		// printed config is easily a tenth indentation.
 		string raw;
 		string line;
 		while (file.ReadLine(line) >= 0)
 		{
+			line.TrimInPlace();
 			raw += line;
 		}
 
@@ -457,17 +499,22 @@ class MrFrost_ServerContent
 			if (take > chunkSize)
 				take = chunkSize;
 
-			// The last chunk keeps whatever is left, so it needs no word boundary.
+			// The last chunk keeps whatever is left, so it needs no boundary work.
+			//
+			// Walked back off UTF-8 continuation bytes rather than to the last
+			// space. Both keep characters whole, but a space is wherever the file
+			// happens to have one - so the chunk size, and with it the number of
+			// packets sent to every joining player, depended on how the server
+			// owner had formatted their JSON. A minified config whose structure is
+			// long unbroken runs - GUIDs, paths, URLs - could multiply the packet
+			// count many times over for a file of the same size. This gives back
+			// at most three bytes.
 			if (offset + take < total)
 			{
-				string head = raw.Substring(offset, take);
-				int lastSpace = head.LastIndexOf(" ");
-
-				// No space in a whole chunk means a very long unbroken token.
-				// Cutting hard is the only option left; it is also the only case
-				// where a character could be split, and JSON structure is ASCII.
-				if (lastSpace > 0)
-					take = lastSpace;
+				while (take > 1 && IsContinuationByte(raw.ToAscii(offset + take)))
+				{
+					take--;
+				}
 			}
 
 			chunks.Insert(raw.Substring(offset, take));
