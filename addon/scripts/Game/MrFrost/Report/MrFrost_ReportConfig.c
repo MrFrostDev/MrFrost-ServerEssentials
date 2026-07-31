@@ -58,6 +58,10 @@ class MrFrost_ReportConfig
 	[Attribute(defvalue: "0", desc: "Tell the reporter when nobody was within the radius. Off keeps the report menu from doubling as a radar.")]
 	bool m_bRevealNobodyNearby;
 
+	//! Used when a config leaves the limit at zero or below, which would
+	//! otherwise mean no limit rather than the small one it looks like.
+	static const int DEFAULT_MAX_DESCRIPTION = 1000;
+
 	[Attribute(defvalue: "1000", desc: "Longest description a player can send, in bytes - an umlaut counts two")]
 	int m_iMaxDescription;
 

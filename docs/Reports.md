@@ -39,7 +39,7 @@ The hold is declared on the input action itself, not in the menu, which is why i
 
 The prompt stays greyed out until something is written, the same way the group menu greys its create button out when there is nothing to create. A disabled prompt refuses its own action, so it is the guard as well as the hint.
 
-Once a report is in, the menu says so and closes itself a moment later.
+Once a report is in, the menu says so and closes itself a moment later. If the server could put it nowhere — no log file and no working webhook — it says that instead and stays open.
 
 **Report a bug** — free text. Where they were standing is attached automatically.
 
@@ -97,7 +97,7 @@ Once a report is in, the menu says so and closes itself a moment later.
 |---|---|
 | `writeLog` | Append every report to a file |
 | `logFile` | File name inside the `MrFrost` folder |
-| `webhookUrl` | Discord webhook. Empty means log only |
+| `webhookUrl` | Discord webhook, `https://`. Anything else is ignored and named in the server log |
 | `serverName` | Shown in the Discord message, for people running several servers |
 | `webhookUsername` | The name the message is signed with |
 | `webhookAvatarUrl` | Picture beside that name |
@@ -155,12 +155,12 @@ The stripe colours are `colorPlayer` and `colorBug`, written the same way as `ac
 
 The time appears twice on purpose. The **Time** field is the server’s clock, so a line in Discord and a line in `reports.log` can be matched character for character. The footer next to `serverName` is Discord’s own timestamp, which every reader sees in *their* timezone — a moderator abroad reads their own clock without converting anything.
 
-Sending is queued at roughly one message every one and a half seconds, which stays clear of Discord's rate limit even when several players report at once.
+Sending is queued at roughly one message every one and a half seconds, which stays clear of Discord's rate limit even when several players report at once. The queue holds 200; past that the newest is dropped rather than the oldest, because the first reports of an incident are the ones worth having.
 
 `@everyone` typed into a description cannot ping anyone — mentions are switched off on every message.
 
 > [!NOTE]
-> A failed webhook is not a lost report. The log file already has it, and the reason appears in the server log.
+> A failed webhook is not a lost report **as long as `writeLog` is on** — the log file already has it, and the reason appears in the server log. With `writeLog` off the webhook is the only copy, and a player whose report reaches neither is told so rather than thanked.
 
 ## Why "nobody nearby" is not reported by default
 
@@ -170,7 +170,7 @@ With `revealNobodyNearby` off, the report is still filed; it simply names nobody
 
 ## Rate limiting
 
-One report per player per `cooldownSeconds`. The check is on the server, so it holds regardless of what the client does. A player who tries earlier is told to wait, in their own language.
+One accepted report per player per `cooldownSeconds`, plus a half-second floor on every request whether it is accepted or not. Both checks are on the server, so they hold regardless of what the client does, and the floor stays even at `cooldownSeconds: 0`. A player who tries earlier is told to wait, in their own language.
 
 ## Turning it off
 
@@ -184,7 +184,7 @@ The menu and its pause entry disappear, and the key stops doing anything. The sa
 
 | Message | Where | Meaning |
 |---|---|---|
-| `Report accepted from ... (PLAYER)` | Server | A report passed every check |
+| `Report accepted from ... (PLAYER)` | Server | A report passed every check and reached a log file or Discord |
 | `Report written to ...` | Server | It reached the log file |
 | `Report delivered to Discord` | Server | The webhook accepted it. Diagnostic — needs `verboseLogging` |
 | `Discord rejected a report (HTTP ...)` | Server | Wrong URL, or Discord said no. It is still in the log |

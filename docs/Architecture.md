@@ -31,7 +31,7 @@ scripts/Game/MrFrost/
     MrFrost_MenuPresets.c      the menu preset enum
     MrFrost_PauseMenu.c        pause menu entries
     MrFrost_PlayerController.c keys, input contexts, content transfer
-server/MrFrost/                example server files, not part of the addon
+server/MrFrost/                example server files, shipped for owners to copy
 ```
 
 ## What is shared, and why
@@ -70,7 +70,7 @@ The transfer is a request from the client, not a push from the server. Only the 
 
 ### Why it is chunked
 
-`Substring()` counts bytes, and rule texts are full of multi-byte characters. Cutting at a fixed offset would eventually slice one in half and corrupt both chunks around it, so cuts land on spaces — always a single byte, therefore always a character boundary.
+`Substring()` counts bytes, and rule texts are full of multi-byte characters. Cutting at a fixed offset would eventually slice one in half and corrupt both chunks around it, so a cut walks back off UTF-8 continuation bytes until it lands on the start of a character — at most three bytes. Cutting at the last space instead would also keep characters whole, but it would make the packet count depend on how the owner formatted their JSON rather than on how large it is.
 
 Packets are reassembled by index, not arrival order: reliable delivery guarantees everything arrives, not the order it arrives in, and an info menu stitched back together wrongly would be nonsense that still parses.
 
@@ -107,7 +107,7 @@ Everything else is **additive**. The pause menu entry and the key listener use `
 | `MrFrost_PlayerController.c` | `modded class SCR_PlayerController` — keys, contexts, transfer, report submit |
 | `Report/MrFrost_ReportConfig.c` | Data model, and the split between menu settings and secrets |
 | `Report/MrFrost_ReportJson.c` | The server's JSON and its transfer channel |
-| `Report/MrFrost_ReportTracker.c` | `modded class SCR_BaseGameMode` — who killed and injured whom |
+| `Report/MrFrost_ReportTracker.c` | `modded class SCR_BaseGameMode` — who killed and injured whom, and everything the server does once at world start |
 | `Report/MrFrost_ReportSubmit.c` | Rate limiting, target resolution, building the report |
 | `Report/MrFrost_ReportDelivery.c` | Log file and the Discord webhook queue |
 | `Report/MrFrost_ReportUI.c` | The report menu: tabs, dropdowns, hold-to-send |

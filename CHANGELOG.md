@@ -60,13 +60,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   prevent.
 - A control character in a description made Discord reject the whole message,
   with an error naming the webhook settings rather than the cause.
-- Embed titles, footers and the webhook username went to Discord unbounded.
 - `maxDescription` set to zero disabled the length cut entirely instead of
   meaning what it says.
-- Reports left the Discord queue out of order when several arrived close
-  together.
 - A second answer could overwrite the first, telling a player their filed
   report had bounced.
+- The check that keeps the `delivery` block out of a transfer could be walked
+  past by a line break between a key and its colon.
+- Every warning about a malformed `report.json` value appeared twice, because
+  the delivery settings were built from the file twice.
+- Each footer link listened for its key twice, so one press opened the browser
+  twice - and the second listener ran outside every guard the prompt applies,
+  so with the report menu open on top of the info menu, typing a `d` into a
+  description opened Discord.
+- Nothing bounded how many rows a server could have a client build. Each row is
+  fifteen widgets, created up front, in a menu that opens by itself on join. A
+  page of text far past any rule set is now left out rather than cut, because a
+  cut cannot leave markup whole.
+- The accent colour never reached the line under the header, which kept the
+  built-in gold whatever a server set.
+- A menu whose categories were all switched off still had a pause entry and a
+  key, and opened empty — unless it carries footer links, which live nowhere
+  else and would otherwise become unreachable.
+- The row icon column was two pixels narrower than the icon it holds.
+- The player dropdown was filled without being emptied first, so anything the
+  layout shipped with would have shifted every index behind it.
+- The transfer confirmation could never appear in a client log, because verbose
+  logging is a setting that arrives with the transfer it was meant to confirm.
+  The server now says when it has sent everything, which is the only side that
+  knows.
+- `maxDescription` of zero disabled the length cut on the addon config path,
+  which the JSON path already guarded against.
 - The info menu built every row with two colour animations that ramped from
   transparent to transparent, each costing a scan of a global animation list.
 

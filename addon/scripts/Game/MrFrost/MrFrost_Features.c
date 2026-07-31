@@ -81,7 +81,7 @@ class MrFrost_InfoMenuEntryDescriptor : MrFrost_MenuEntry
 	override bool IsEnabled()
 	{
 		MrFrost_InfoMenuConfig config = MrFrost_InfoMenuConfigLoader.Get();
-		return config && !config.m_aCategories.IsEmpty();
+		return config && config.HasVisibleContent();
 	}
 }
 

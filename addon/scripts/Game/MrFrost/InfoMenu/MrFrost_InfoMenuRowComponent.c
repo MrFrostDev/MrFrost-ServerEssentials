@@ -26,7 +26,7 @@ class MrFrost_InfoMenuRowComponent : ScriptedWidgetComponent
 	protected static const string WIDGET_INDENT    = "RowIndent";
 
 	//! Width the icon column takes when a row actually has an icon.
-	protected static const float ICON_WIDTH = 22.0;
+	protected static const float ICON_WIDTH = 24.0;
 
 	//! Indent applied to entry rows so they read as children of their category.
 	protected static const float ENTRY_INDENT = 13.0;

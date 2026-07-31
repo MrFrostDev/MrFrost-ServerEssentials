@@ -41,7 +41,7 @@ Search for `MrFrost` and you have its whole story for that session. On a server,
 | `No $profile:MrFrost/<file> on this server` | Server | No server file — the bundled content is used |
 | `... is not sound JSON` | Server | A stray or missing comma, an unclosed brace or quote |
 | `Could not open ...` | Server | Permissions, or the file is locked |
-| `Received this server's <feature> content` | Client | The transfer finished |
+| `Server content complete` | Client | Every feature's content arrived. Needs `verboseLogging` |
 | `Using this server's info menu (N categories)` | Client | The server's content is now what players see |
 | `Using this server's report settings` | Client | Same, for the report menu |
 | `The info menu is switched off on this server` | Client | `"enabled": false` in `infomenu.json` |
@@ -51,12 +51,21 @@ Search for `MrFrost` and you have its whole story for that session. On a server,
 
 | Message | Where | Meaning |
 |---|---|---|
-| `Report accepted from ... (BUG\|PLAYER)` | Server | A report passed every check |
+| `Report accepted from ... (BUG\|PLAYER)` | Server | A report passed every check and reached a log file or Discord |
 | `Report written to ...` | Server | It reached the log file |
 | `Report delivered to Discord` | Server | The webhook accepted it |
 | `Discord rejected a report (HTTP ...)` | Server | Wrong URL, or Discord said no. It is still in the log |
 | `The Discord webhook timed out` | Server | No reply in time. It is still in the log |
-| `webhookUrl in report.json is not a URL` | Server | Missing the `https://` part |
+| `webhookUrl in report.json is not an https:// address` | Server | Missing or wrong scheme. The webhook is ignored entirely |
+| `<key> in infomenu.json is not an https:// address` | Server | That footer button will not be drawn |
+| `The Discord queue is full` | Server | More reports arriving than Discord accepts. The newest are dropped |
+| `logFile must be a file name, not a path` | Server | `logFile` may not contain `/`, `\`, `:` or `..` |
+| `Could not write to ...` | Server | The `MrFrost` folder is not writable |
+| `Could not get a REST context for the webhook.` | Server | The host in `webhookUrl` could not be reached |
+| `The embed labels on this server leave no room for a description` | Server | `report.embed.*` overrides are too long |
+| `colorPlayer '...' is not 'r,g,b'` | Server | Colour must be three numbers, e.g. `249,67,67` |
+| `... is empty - falling back to the bundled content` | Server | The file exists but has nothing in it |
+| `report.json still carried its delivery block after repacking` | Server | The safety check that keeps the webhook URL off the wire refused to send. Reports still work; players see the bundled menu settings |
 | `No Discord webhook configured` | Server | Log-only, as configured |
 | `...neither a log file nor a webhook configured` | Server | Nothing is set up — reports go nowhere |
 
@@ -142,7 +151,7 @@ The server's file never made it. The **server** console says which of the three 
 
 The folder belongs in the directory passed to the server with `-profile`, not anywhere inside the addon.
 
-If the server logged the file as loaded but the **client**, with `verboseLogging` on, never logs `Received this server's ... content`, the transfer did not complete. That is worth reporting with both logs attached.
+If the server logged the file as loaded but the **client**, with `verboseLogging` on, never logs `Server content complete`, the transfer did not complete. That is worth reporting with both logs attached.
 
 ## Still stuck
 

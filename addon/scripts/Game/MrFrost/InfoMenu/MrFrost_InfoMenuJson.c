@@ -119,6 +119,36 @@ class MrFrost_InfoMenuJson : JsonApiStruct
 	//! Translates the parsed file into the config object the menu already knows
 	//! how to render, so nothing downstream has to care where the content came
 	//! from.
+	//! Ceiling on how many rows one menu may ask a client to build. Each row is
+	//! fifteen widgets, created up front, and nothing else bounded this - a
+	//! server could hand every joining player tens of thousands of them, on the
+	//! main thread, in a menu that opens by itself.
+	static const int MAX_ROWS = 512;
+
+	//! Ceiling on one page of text. Far past any rule set anyone writes.
+	static const int MAX_PAGE_TEXT = 20000;
+
+	//------------------------------------------------------------------------------
+	//! One page of body text, or nothing when it is absurdly long.
+	//!
+	//! Dropped rather than cut. This text is markup - the bundled pages are full
+	//! of <br/>, <b> and <color rgba=...> - and a cut cannot leave it whole. A
+	//! generic truncator knows about spaces and character boundaries, not about
+	//! tags, and the space rule actively prefers the space inside <color rgba=,
+	//! which ends the page on a bare "<color". Even a lucky cut leaves whatever
+	//! was opened before it unclosed. The limit is only here to stop a server
+	//! handing a client something unreasonable, so refusing the page and saying
+	//! so is both safe and honest.
+	protected string PageText(string text, string name)
+	{
+		if (text.Length() <= MAX_PAGE_TEXT)
+			return text;
+
+		MrFrost_Log.Warn("The page '" + name + "'" + " is longer than " + MAX_PAGE_TEXT + " characters and was left empty. Split it into entries.");
+		return string.Empty;
+	}
+
+	//------------------------------------------------------------------------------
 	MrFrost_InfoMenuConfig ToConfig()
 	{
 		MrFrost_InfoMenuConfig config = new MrFrost_InfoMenuConfig();
@@ -141,17 +171,27 @@ class MrFrost_InfoMenuJson : JsonApiStruct
 		if (accent)
 			config.m_AccentColor = accent;
 
+		int rows = 0;
+
 		foreach (MrFrost_InfoMenuJsonCategory source : categories)
 		{
 			if (!source)
 				continue;
+
+			if (rows >= MAX_ROWS)
+				break;
+
+			// Only what will actually be built. A file that keeps archived sections
+			// switched off should not spend its budget on rows nobody draws.
+			if (source.enabled)
+				rows++;
 
 			MrFrost_InfoMenuCategory category = new MrFrost_InfoMenuCategory();
 			category.m_bEnabled           = source.enabled;
 			category.m_bExpandedByDefault = source.expanded;
 			category.m_sName              = source.name;
 			category.m_sTitle             = source.title;
-			category.m_sText              = source.text;
+			category.m_sText              = PageText(source.text, source.name);
 			category.m_sIconName          = source.icon;
 			category.m_IconImageset       = ResolveImageset(source.iconImageset);
 			category.m_aEntries           = {};
@@ -161,11 +201,17 @@ class MrFrost_InfoMenuJson : JsonApiStruct
 				if (!sourceEntry)
 					continue;
 
+				if (rows >= MAX_ROWS)
+					break;
+
+				if (source.enabled && sourceEntry.enabled)
+					rows++;
+
 				MrFrost_InfoMenuEntry entry = new MrFrost_InfoMenuEntry();
 				entry.m_bEnabled     = sourceEntry.enabled;
 				entry.m_sName        = sourceEntry.name;
 				entry.m_sTitle       = sourceEntry.title;
-				entry.m_sText        = sourceEntry.text;
+				entry.m_sText        = PageText(sourceEntry.text, sourceEntry.name);
 				entry.m_sIconName    = sourceEntry.icon;
 				entry.m_IconImageset = ResolveImageset(sourceEntry.iconImageset);
 
@@ -174,6 +220,12 @@ class MrFrost_InfoMenuJson : JsonApiStruct
 
 			config.m_aCategories.Insert(category);
 		}
+
+		// Said once, after the loops, not inside them. Reporting it from the outer
+		// loop meant a file whose budget ran out inside its last category - or its
+		// only one - was cut without a word.
+		if (rows >= MAX_ROWS)
+			MrFrost_Log.Warn("This info menu has more than " + MAX_ROWS + " rows. The rest was left out.");
 
 		return config;
 	}
@@ -260,6 +312,32 @@ class MrFrost_InfoMenuChannel : MrFrost_ServerContentChannel
 	//------------------------------------------------------------------------------
 	//! Parsed on the server purely so a broken file is reported on the server
 	//! console, where the owner will see it.
+	//! Names a menu the client will have to cut down.
+	protected void WarnOversizedMenu(notnull MrFrost_InfoMenuJson probe)
+	{
+		if (!probe.categories)
+			return;
+
+		int rows = 0;
+		foreach (MrFrost_InfoMenuJsonCategory category : probe.categories)
+		{
+			if (!category || !category.enabled)
+				continue;
+
+			rows++;
+
+			foreach (MrFrost_InfoMenuJsonEntry entry : category.entries)
+			{
+				if (entry && entry.enabled)
+					rows++;
+			}
+		}
+
+		if (rows > MrFrost_InfoMenuJson.MAX_ROWS)
+			MrFrost_Log.Warn("infomenu.json asks for " + rows + " rows; only the first " + MrFrost_InfoMenuJson.MAX_ROWS + " will be shown.");
+	}
+
+	//------------------------------------------------------------------------------
 	//! Names a footer link the client will refuse to open.
 	protected void WarnUnopenableLink(string url, string keyName)
 	{
@@ -289,6 +367,10 @@ class MrFrost_InfoMenuChannel : MrFrost_ServerContentChannel
 		// looking. A link the client will not open draws no button at all, and a
 		// footer slot that silently fails to appear is hard to explain from the
 		// other end. Not a rejection - the rest of the file is fine.
+		// ToConfig() runs on the client, so its warnings land in player logs. The
+		// owner who wrote the file needs to hear this on their own console.
+		WarnOversizedMenu(probe);
+
 		WarnUnopenableLink(probe.discordUrl, "discordUrl");
 		WarnUnopenableLink(probe.websiteUrl, "websiteUrl");
 		WarnUnopenableLink(probe.customUrl, "customUrl");

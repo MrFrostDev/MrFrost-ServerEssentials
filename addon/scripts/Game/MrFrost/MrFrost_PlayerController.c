@@ -306,8 +306,13 @@ modded class SCR_PlayerController
 			}
 		}
 
+		// Nothing to send is still an answer. Without it a client waiting on a
+		// server that ships no files never hears anything at all.
 		if (m_aOutgoingData.IsEmpty())
+		{
+			Rpc(MrFrost_RpcDo_ServerContentDone);
 			return;
+		}
 
 		GetGame().GetCallqueue().Remove(MrFrost_SendChunks);
 		GetGame().GetCallqueue().CallLater(MrFrost_SendChunks, MRFROST_CHUNK_TICK_MS, true);
@@ -353,6 +358,7 @@ modded class SCR_PlayerController
 
 		GetGame().GetCallqueue().Remove(MrFrost_SendChunks);
 		ReleaseSendSlot();
+		Rpc(MrFrost_RpcDo_ServerContentDone);
 		m_aOutgoingChannel = null;
 		m_aOutgoingIndex = null;
 		m_aOutgoingTotal = null;
@@ -434,13 +440,27 @@ modded class SCR_PlayerController
 		m_aPendingChannels.RemoveItem(channelIndex);
 
 		MrFrost_ServerContentChannel channel = channels[channelIndex];
-		MrFrost_Log.Debug("Received this server's " + channel.GetId() + " content (" + json.Length() + " bytes).");
 
 		// Answered rather than discarded. A channel returns false when the text
 		// it was handed did not parse, and that is the one case where a player
 		// sees the bundled content while the server believes it sent its own.
 		if (!channel.Apply(json))
 			MrFrost_Log.Error("This server's " + channel.GetId() + " content did not parse - using the content bundled with the addon.");
+
+	}
+
+	//------------------------------------------------------------------------------
+	//! Client: the server has sent everything it means to send.
+	//!
+	//! Said by the server, because only the server knows how many features have
+	//! a file. The client tracks which channels have started arriving, which
+	//! answers "is one half-finished", not "is there another one coming" - and
+	//! since the queue is drained channel by channel, that looked complete every
+	//! time a channel finished.
+	[RplRpc(RplChannel.Reliable, RplRcver.Owner)]
+	protected void MrFrost_RpcDo_ServerContentDone()
+	{
+		MrFrost_Log.Debug("Server content complete.");
 	}
 
 	//------------------------------------------------------------------------------

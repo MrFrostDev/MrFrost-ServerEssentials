@@ -140,6 +140,20 @@ class MrFrost_MenuBase : ChimeraMenuBase
 	}
 
 	//------------------------------------------------------------------------------
+	//! Tints the line under the header.
+	//!
+	//! The layout carries the Reforger gold as a literal, which is the right
+	//! default and the wrong final word: a server setting an accent colour got a
+	//! green selected row above a gold line. Everything else in the frame already
+	//! traces back to a named constant; this one did not trace anywhere.
+	protected void SetHeaderSeparatorColor(notnull Color color)
+	{
+		ImageWidget separator = ImageWidget.Cast(m_wRoot.FindAnyWidget(WIDGET_HEADER_LINE));
+		if (separator)
+			separator.SetColor(color);
+	}
+
+	//------------------------------------------------------------------------------
 	//! Hides the accent line under the title.
 	//!
 	//! A menu with tabs draws its own line below them instead, which is where

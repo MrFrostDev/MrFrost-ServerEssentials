@@ -62,12 +62,12 @@ MrFrost_InfoMenuConfig {
 | `m_MenuIconImageset` | imageset | Icon shown next to the title **and** on the pause menu entry |
 | `m_sMenuIconName` | text | Sprite name inside that imageset. Empty hides the icon |
 | `m_AccentColor` | colour | Accent colour — see [Colours](#colours) |
-| `m_bOpenOnJoin` | `0` / `1` | Open the info menu once per session after joining |
-| `m_sDiscordUrl` | text | Discord invite. Empty hides the footer button |
+| `m_bOpenOnJoin` | `0` / `1` | Open the info menu once per mission after joining. Not on respawn; again after a mission restart |
+| `m_sDiscordUrl` | text | Discord invite, `https://`. Empty or any other scheme draws no button |
 | `m_sDiscordLabel` | text | Label of the Discord button |
-| `m_sWebsiteUrl` | text | Your website. Empty hides the footer button |
+| `m_sWebsiteUrl` | text | Your website, `https://`. Empty or any other scheme draws no button |
 | `m_sWebsiteLabel` | text | Label of the website button |
-| `m_sCustomUrl` | text | A third link of your choosing. Empty hides the footer button |
+| `m_sCustomUrl` | text | A third link of your choosing, `https://`. Empty or any other scheme draws no button |
 | `m_sCustomLabel` | text | Label of that button. Required — an unlabelled slot stays hidden |
 
 ## Category fields
@@ -152,7 +152,7 @@ The report menu's fallback settings. Same idea: a server's `MrFrost/report.json`
 | `m_bAllowBugReports` | `0` / `1` | Offer the "report a bug" tab |
 | `m_bAllowPlayerReports` | `0` / `1` | Offer the "report a player" tab |
 | `m_fNearbyRadius` | metres | Range for the "everyone nearby" option |
-| `m_iCooldownSeconds` | seconds | Wait between two reports from one player |
+| `m_iCooldownSeconds` | seconds | Wait between two accepted reports from one player. A half-second floor applies to every request on top of this |
 | `m_bRevealNobodyNearby` | `0` / `1` | Whether to tell a reporter nobody was in range. Off by default |
 | `m_iMaxDescription` | bytes | Longest description accepted, up to 8191. An umlaut counts two, a Japanese character three |
 | `m_MenuIconImageset` | imageset | Icon for the menu and its pause entry |

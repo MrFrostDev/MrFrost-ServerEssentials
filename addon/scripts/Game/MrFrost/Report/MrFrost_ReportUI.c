@@ -293,6 +293,13 @@ class MrFrost_ReportUI : MrFrost_MenuBase
 			return null;
 		}
 
+		// Emptied before anything is added. m_aElementNames is an [Attribute], so
+		// whatever the layout was authored with is already in the list - and every
+		// index this menu keeps, for target modes and for player ids, is an index
+		// into it. One stray entry would shift all of them and quietly point a
+		// report at the wrong player.
+		combo.ClearAll();
+
 		// The widget library layouts ship with placeholder labels baked in
 		// ("Combo Box", "Editbox"). They are part of the row, not decoration, so
 		// they are set rather than removed - that is what makes the form read

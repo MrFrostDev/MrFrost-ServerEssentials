@@ -56,7 +56,15 @@ class MrFrost_ReportSubmit
 		// Truncate rather than Substring: the limit counts bytes, and landing
 		// inside a multi-byte character would leave half of one in the JSON and
 		// in the log line.
-		description = MrFrost_ServerContent.Truncate(description, config.m_iMaxDescription);
+		// Floored here as well as when a JSON file is read, because the addon
+		// config reaches this field by another road. Truncate treats a limit of
+		// zero or less as no limit at all, so a build shipping m_iMaxDescription
+		// at 0 would have sent whatever a player typed straight through.
+		int limit = config.m_iMaxDescription;
+		if (limit <= 0)
+			limit = MrFrost_ReportConfig.DEFAULT_MAX_DESCRIPTION;
+
+		description = MrFrost_ServerContent.Truncate(description, limit);
 
 		if (IsOnCooldown(reporterId, config))
 			return "report.cooldown";

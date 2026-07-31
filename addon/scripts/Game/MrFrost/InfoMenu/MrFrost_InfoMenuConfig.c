@@ -124,8 +124,33 @@ class MrFrost_InfoMenuConfig
 	}
 
 	//------------------------------------------------------------------------------
-	//! Accent colour, never null — falls back to white, which is what the flat
 	//! grey design is built around.
+	//! Whether this config has anything a player could actually read.
+	//!
+	//! Not the same question as "are there categories". A file may carry a dozen
+	//! and switch every one of them off, and BuildRows honours that - so the two
+	//! gates that gave the menu its pause entry and its key were answering a
+	//! question nobody had asked, and opening an empty menu on the strength of
+	//! it.
+	bool HasVisibleContent()
+	{
+		if (!m_aCategories)
+			return false;
+
+		foreach (MrFrost_InfoMenuCategory category : m_aCategories)
+		{
+			if (category && category.m_bEnabled)
+				return true;
+		}
+
+		// The footer counts too. A server may switch every category off and still
+		// have three working links, and those live nowhere else - closing the menu
+		// on them would take away the only way to reach them.
+		return !m_sDiscordUrl.IsEmpty() || !m_sWebsiteUrl.IsEmpty() || !m_sCustomUrl.IsEmpty();
+	}
+
+	//------------------------------------------------------------------------------
+	//! Accent colour, never null — falls back to white, which is what the flat
 	Color GetAccentColor()
 	{
 		if (m_AccentColor)

@@ -39,7 +39,7 @@ The content is a JSON file in your server's profile directory. Edit it, restart 
 
 Two levels of hierarchy: categories, each holding entries. The text supports bold, colours and inline icons. Title, accent colour and icons come from your config.
 
-The footer holds up to three link buttons — Discord on <kbd>D</kbd>, your website on <kbd>W</kbd>, and one more on <kbd>L</kbd> that you name yourself: a ruleset, a ban appeal form, a Teamspeak address. The first two appear once their URL is set; the third needs a label as well, because a prompt with no name tells a player nothing. Each opens through the platform, which is what makes them work on console.
+The footer holds up to three link buttons — Discord on <kbd>D</kbd>, your website on <kbd>W</kbd>, and one more on <kbd>L</kbd> that you name yourself: a ruleset, a ban appeal form, a Teamspeak address. Each needs an `https://` address; the third needs a label as well, because a prompt with no name tells a player nothing. A slot with anything else draws no button, and the server says which key it was. Each opens through the platform, which is what makes them work on console.
 
 The menu is built from the game's own widget library, so it matches the vanilla settings and group menus.
 

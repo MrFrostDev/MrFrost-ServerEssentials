@@ -57,11 +57,11 @@ JSON has no comments, so the files stay clean and everything is documented here 
 | `accentColor` | string | white | `"226,167,79"` — ordinary sRGB, the numbers a colour picker shows. Drives the selected row and the lines |
 | `menuIcon` | string | — | Sprite next to the title and on the pause menu entry — see [Icons](Icons.md) |
 | `menuIconImageset` | string | the shared set | Only if you ship your own artwork |
-| `discordUrl` | string | — | Invite link for the footer button. Empty hides the button entirely |
+| `discordUrl` | string | — | Invite link for the footer button. Must be `https://`; empty or anything else draws no button |
 | `discordLabel` | string | `Discord` | Label of that button |
-| `websiteUrl` | string | — | Your website, opened by the same mechanism. Empty hides the button |
+| `websiteUrl` | string | — | Your website, opened by the same mechanism. Must be `https://` |
 | `websiteLabel` | string | `Website` | Label of that button |
-| `customUrl` | string | — | A third link of your choosing — a ruleset, a ban appeal form, a Teamspeak address |
+| `customUrl` | string | — | A third link of your choosing — a ruleset, a ban appeal form, a forum thread. Must be `https://` |
 | `customLabel` | string | — | Label of that button. **Required** — an unlabelled third slot stays hidden even with a URL set |
 | `strings` | array | — | Override individual UI strings — see [Text and languages](#text-and-languages) |
 | `categories` | array | — | The list on the left. Leave it out to keep the bundled content and change only the settings around it |
@@ -139,7 +139,7 @@ Menu, pause entry and key all disappear. `report.json` takes the same key.
 | `allowPlayerReports` | bool | `true` | The "report a player" tab, with the four ways of naming a target |
 | `nearbyRadius` | number | `300` | Metres for the "everyone within X" option. The menu label is written with a placeholder and follows this number |
 | `revealNobodyNearby` | bool | `false` | Whether to tell a reporter nobody was in range — see below |
-| `cooldownSeconds` | number | `10` | Wait between two reports from one player. Enforced on the server |
+| `cooldownSeconds` | number | `10` | Wait between two accepted reports from one player. Enforced on the server. A half-second floor applies to every request on top of this, and cannot be switched off |
 | `maxDescription` | number | `1000` | Longest description accepted. Longer text is trimmed, not rejected |
 | `menuIcon` | string | `feedback` | Sprite for the menu title and its pause entry |
 | `menuIconImageset` | string | the shared set | Only if you ship your own artwork |
@@ -155,7 +155,7 @@ A tab the server switches off is not drawn at all, so a server taking only bug r
 |---|---|---|---|
 | `writeLog` | bool | `true` | Append every report to a file in the same `MrFrost` folder |
 | `logFile` | string | `reports.log` | One line per report, appended, so it can be tailed while the server runs |
-| `webhookUrl` | string | — | Discord: channel settings → Integrations → Webhooks. Empty means log only |
+| `webhookUrl` | string | — | Discord: channel settings → Integrations → Webhooks. Must be `https://`; anything else is ignored and named in the server log |
 | `serverName` | string | — | Shown in the Discord message. Useful when several servers post to one channel |
 | `webhookUsername` | string | — | The name the message is signed with. Empty leaves Discord's own, which is whatever the webhook was called when it was created |
 | `webhookAvatarUrl` | string | — | Picture beside that name. Any public image URL |
@@ -231,7 +231,7 @@ The addon asks the game which language it is running in and picks the matching t
 With `verboseLogging` on, the log says which one it settled on:
 
 ```
-[MrFrost] Text table loaded for language 'de_de' (28 strings).
+[MrFrost] Text table loaded for language 'de_de' (29 strings).
 ```
 
 ## Rules of the files
@@ -249,7 +249,7 @@ With `verboseLogging` on, the log says which one it settled on:
 The server console at startup:
 
 ```
-[MrFrost] Loaded $profile:MrFrost/infomenu.json (23934 bytes).
+[MrFrost] Loaded $profile:MrFrost/infomenu.json (21402 bytes).
 ```
 
 The client, once it has everything (the first line needs `verboseLogging`):

@@ -91,6 +91,12 @@ class MrFrost_InfoMenuUI : MrFrost_MenuBase
 
 		SetHeader(title, m_Config.m_MenuIconImageset, m_Config.m_sMenuIconName);
 
+		// The line under the header belongs to the accent too, not only the
+		// selected row - the layout carries the default gold as a literal. Set
+		// here rather than in ApplyPalette, which runs before the config is
+		// loaded, and not in the shared frame, which the report menu uses as well.
+		SetHeaderSeparatorColor(m_Config.GetAccentColor());
+
 		BuildLinkButtons();
 		BuildRows();
 		SelectFirstRow();
@@ -131,25 +137,28 @@ class MrFrost_InfoMenuUI : MrFrost_MenuBase
 	//! EnforceScript rejects a function reference as a script method parameter
 	//! ("func arguments are not supported in script methods"), so the helper can
 	//! only decide *whether* to draw a button and hand it back.
+	//!
+	//! Only the invoker is attached. The prompt listens for its own action
+	//! already - SCR_DynamicFooterComponent.CreateButton ends in SetAction, which
+	//! reaches SetInputAction and registers the key itself. Adding a second
+	//! listener beside it fired every press twice, and did so through a path with
+	//! none of the button's guards: not hidden, not disabled, parent menu focused,
+	//! no modal in the way. With the report menu stacked on top of this one, a "d"
+	//! typed into the description opened Discord.
 	protected void BuildLinkButtons()
 	{
-		InputManager inputManager = GetGame().GetInputManager();
 		SCR_InputButtonComponent button;
 
 		button = BuildLinkButton(m_Config.m_sDiscordUrl, m_Config.m_sDiscordLabel, "Discord", "MrFrost_Discord", ACTION_DISCORD, "discordUrl");
 		if (button)
 		{
 			button.m_OnActivated.Insert(OnDiscordClicked);
-			if (inputManager)
-				inputManager.AddActionListener(ACTION_DISCORD, EActionTrigger.DOWN, OnDiscordClicked);
 		}
 
 		button = BuildLinkButton(m_Config.m_sWebsiteUrl, m_Config.m_sWebsiteLabel, "Website", "MrFrost_Website", ACTION_WEBSITE, "websiteUrl");
 		if (button)
 		{
 			button.m_OnActivated.Insert(OnWebsiteClicked);
-			if (inputManager)
-				inputManager.AddActionListener(ACTION_WEBSITE, EActionTrigger.DOWN, OnWebsiteClicked);
 		}
 
 		// No fallback label for this one: the other two are named after what they
@@ -159,8 +168,6 @@ class MrFrost_InfoMenuUI : MrFrost_MenuBase
 		if (button)
 		{
 			button.m_OnActivated.Insert(OnCustomClicked);
-			if (inputManager)
-				inputManager.AddActionListener(ACTION_CUSTOM, EActionTrigger.DOWN, OnCustomClicked);
 		}
 	}
 
@@ -191,24 +198,12 @@ class MrFrost_InfoMenuUI : MrFrost_MenuBase
 		if (label.IsEmpty())
 			return null;
 
-		// See MrFrost_ReportUI.BuildSubmit(): a runtime-created prompt never gets
-		// its keybind flag set, so the key half of it is wired by the caller.
 		return AddFooterButton(widgetName, label, action, SCR_EDynamicFooterButtonAlignment.RIGHT);
 	}
 
 	//------------------------------------------------------------------------------
-	//! Removing a listener that was never added is harmless, so all three come off
-	//! regardless of which ones the config put on.
 	override void OnMenuClose()
 	{
-		InputManager inputManager = GetGame().GetInputManager();
-		if (inputManager)
-		{
-			inputManager.RemoveActionListener(ACTION_DISCORD, EActionTrigger.DOWN, OnDiscordClicked);
-			inputManager.RemoveActionListener(ACTION_WEBSITE, EActionTrigger.DOWN, OnWebsiteClicked);
-			inputManager.RemoveActionListener(ACTION_CUSTOM, EActionTrigger.DOWN, OnCustomClicked);
-		}
-
 		super.OnMenuClose();
 	}
 
@@ -528,7 +523,7 @@ class MrFrost_InfoMenuUI : MrFrost_MenuBase
 		// same question; before this, a server that switched the info menu off
 		// lost its pause entry but its key still opened an empty menu.
 		MrFrost_InfoMenuConfig config = MrFrost_InfoMenuConfigLoader.Get();
-		if (!config || config.m_aCategories.IsEmpty())
+		if (!config || !config.HasVisibleContent())
 			return;
 
 		MenuManager menuManager = GetGame().GetMenuManager();
