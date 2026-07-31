@@ -594,7 +594,7 @@ class MrFrost_ReportUI : MrFrost_MenuBase
 	//! have drifted apart.
 	protected string GetSelectedPlayerName()
 	{
-		if (!m_TargetCombo || !m_PlayerCombo)
+		if (!m_PlayerCombo)
 			return string.Empty;
 
 		int index = m_PlayerCombo.GetCurrentIndex();
