@@ -555,8 +555,9 @@ modded class SCR_PlayerController
 		// A world time below the stamp means the clock restarted under it. It does
 		// not catch a *second* connection inside one session, where the new world
 		// starts at zero and climbs past the old stamp before anyone spawns - so
-		// the latch is also released whenever a controller is built, which is once
-		// per connection. MrFrost_ReportSubmit guards its own stamps the same way.
+		// the latch is also released in UpdateLocalPlayerController, which vanilla
+		// calls once for the controller that is actually ours.
+		// MrFrost_ReportSubmit guards its own stamps the same way.
 		return GetGame().GetWorld().GetWorldTime() < s_fAutoOpenedAt;
 	}
 
