@@ -13,15 +13,80 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Player limits, whitelists and a balance rule as one system, with a queue that
   catches everyone they turn away. Design notes live on that branch.
 
-## [1.0.3] - 2026-07-30
+## [1.0.3] - 2026-07-31
+
+### Security
+
+- `report.json` was sent to every client exactly as it sat on disk, `delivery`
+  block included. Any player on a server with a Discord webhook received that
+  webhook's URL, which is enough to post into the channel. The file is now
+  repacked without that block before it is transferred, and the result is
+  checked for the block before it goes out — a repack that cannot be verified
+  sends nothing at all rather than risk it. Any server that ran an earlier build
+  with a webhook configured should treat that URL as exposed and regenerate it.
 
 ### Added
 
 - `verboseLogging` in `report.json` turns the diagnostic log lines back on for a
   server that needs them.
 
+### Changed
+
+- Server files are read when the server starts rather than when the first player
+  asks for them. Until now a dedicated server ran on the addon's bundled
+  settings until somebody connected, and a broken file was only reported at that
+  same late moment instead of at startup where an owner is watching.
+- `report.json` and `infomenu.json` are accepted as long as they are JSON
+  objects. Every key in both is optional, so requiring particular ones rejected
+  ordinary files — and rejection is not soft: it costs a server its entire
+  configuration, webhook included, for the life of the process.
+- A server may now send nothing but string overrides, a title or a link, and
+  keep the bundled info menu content around them. That was previously reported
+  as a broken file.
+- Server files are now checked for structural soundness before they are used,
+  and a file that fails is named on the server console with what to look for.
+
+### Removed
+
+- The bundled `Configs/MrFrost/Presets/` directory. Its one preset duplicated
+  the shipped info menu config and never had a second entry to switch between.
+
 ### Fixed
 
+- A stray comma anywhere in a server file came back as every setting at its
+  default, because the JSON layer reports a parse failure by returning a struct
+  full of them. A server that had switched reporting off had it switched back
+  on, on both sides, and no console said a word.
+- A player who left one server and joined another without restarting the game
+  carried the first server's rules, title, colours and Discord invite with them,
+  because a server that ships no file of its own sends nothing rather than an
+  instruction to go back to the bundled content.
+- An `infomenu.json` with no categories discarded its own title, accent colour
+  and all three footer links along with the content it did not have.
+- The check that keeps the `delivery` block out of a transfer was defeated by a
+  space before a colon, which is how a hand-formatted file is usually written.
+- A report could be lost to Discord over the combined size of the embed rather
+  than any one part of it. The description now takes what the labels around it
+  leave, so the report arrives shortened instead of not at all.
+- Reports reached the Discord channel out of the order they were made when
+  several landed inside the same rate-limit window, so the channel and
+  `reports.log` disagreed about what happened first.
+- A `webhookUsername` longer than Discord accepts cost every report, with a
+  rejection message that named three settings and not the length of any of them.
+- A dedicated server enforced the addon's bundled report settings while every
+  client honoured the server's file, because the server-side path never
+  installed them. A server that had switched reporting off still accepted
+  reports from a modified client.
+- Server files larger than roughly 9 KB lost everything past that point in
+  transfer. `Substring()` caps its result at 8191 characters and the splitter
+  took the tail of the remainder, so the loss was silent — the server logged
+  the full byte count it had read.
+- Reports could name a player who had nothing to do with them. Kill and damage
+  records outlived the players in them, so a report against "whoever last shot
+  me" could resolve to whoever inherited that player id after they left.
+- A modified client could hold the server in a permanent resend by repeating its
+  content request, and a player leaving mid-transfer left repeating timers
+  firing against a freed controller.
 - Verbose logging shipped switched on, burying the lines that matter in every
   server log.
 - `maxDescription` was applied by byte count, so a limit landing inside a
@@ -31,13 +96,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Embed field names went into the JSON unescaped. They stopped being constants
   when the labels became overridable, so a quote in a `report.embed.*` override
   broke the whole embed.
+- Embed titles, field names and the footer were sent to Discord unbounded, so a
+  server that renamed a label past Discord's limit for that slot lost every
+  report to a rejected message.
 - A `webhookAvatarUrl` that is not a URL made Discord reject the entire message,
   costing every report. It is dropped with a warning instead, and the rejection
   message names the settings to check.
 - `logFile` accepted a path, placing the log outside the `MrFrost` folder. It
   falls back to `reports.log` and says so.
+- String overrides from one server file discarded those from another, so
+  whichever arrived second won and the other file's wording vanished.
 - The info menu stopped offering itself after a mission restart, and never
   appeared at all for a player who joined a second server in the same session.
+- The info menu's key opened an empty menu on a server that had switched the
+  feature off, although its pause entry was correctly gone.
+- Content that failed to parse on arrival was replaced by the bundled version
+  without saying so, leaving a server owner to work out why players saw
+  something other than what they had written.
 
 ## [1.0.2] - 2026-07-30
 

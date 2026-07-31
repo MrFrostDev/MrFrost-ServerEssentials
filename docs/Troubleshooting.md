@@ -39,7 +39,7 @@ Search for `MrFrost` and you have its whole story for that session. On a server,
 |---|---|---|
 | `Loaded $profile:MrFrost/<file> (N bytes)` | Server | The server's own file was read |
 | `No $profile:MrFrost/<file> on this server` | Server | No server file — the bundled content is used |
-| `... did not parse into anything usable` | Server | The JSON is broken |
+| `... is not sound JSON` | Server | A stray or missing comma, an unclosed brace or quote |
 | `Could not open ...` | Server | Permissions, or the file is locked |
 | `Received this server's <feature> content` | Client | The transfer finished |
 | `Using this server's info menu (N categories)` | Client | The server's content is now what players see |
@@ -56,7 +56,7 @@ Search for `MrFrost` and you have its whole story for that session. On a server,
 | `Report delivered to Discord` | Server | The webhook accepted it |
 | `Discord rejected a report (HTTP ...)` | Server | Wrong URL, or Discord said no. It is still in the log |
 | `The Discord webhook timed out` | Server | No reply in time. It is still in the log |
-| `The webhook URL is not a URL: ...` | Server | Missing the `https://` part |
+| `webhookUrl in report.json is not a URL` | Server | Missing the `https://` part |
 | `No Discord webhook configured` | Server | Log-only, as configured |
 | `...neither a log file nor a webhook configured` | Server | Nothing is set up — reports go nowhere |
 
@@ -121,7 +121,7 @@ No error is produced; the row just has no icon. Check the imageset path includin
 
 It waits while another menu is up — the deploy screen counts — and while the server's content is still arriving. It retries for about a minute and then gives up, which shows as `Gave up on the welcome info menu`.
 
-It also opens **once per session** by design, so it will not reappear after a respawn.
+It also opens **once per mission** by design, so it will not reappear after a respawn — but it does after a mission restart.
 
 ### Changes do nothing
 
@@ -135,11 +135,14 @@ The server's file never made it. The **server** console says which of the three 
 |---|---|
 | `No $profile:MrFrost/... on this server` | Wrong folder, or wrong file name |
 | `Could not open ...` | Permissions, or the file is locked |
-| `... did not parse into anything usable` | The JSON is broken, or `categories` is empty |
+| `report.json is not sound JSON` | A stray or missing comma, an unclosed brace or quote. The line names the file |
+| `infomenu.json is not sound JSON` | Same, for that file |
+| `This server sent no info menu categories` | Client. The file carried settings but no content, so the bundled categories are kept |
+| `This server's ... content did not parse` | Client. What arrived was not usable; the bundled content is used |
 
 The folder belongs in the directory passed to the server with `-profile`, not anywhere inside the addon.
 
-If the server logged the file as loaded but the **client** never logs `Received this server's ... content`, the transfer did not complete. That is worth reporting with both logs attached.
+If the server logged the file as loaded but the **client**, with `verboseLogging` on, never logs `Received this server's ... content`, the transfer did not complete. That is worth reporting with both logs attached.
 
 ## Still stuck
 

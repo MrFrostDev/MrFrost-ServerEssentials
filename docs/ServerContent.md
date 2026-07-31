@@ -23,7 +23,7 @@ That is the entire setup. There is no key to enable, and no addon rebuild.
 ## What happens on join
 
 1. The client asks the server for its content.
-2. The server reads each file once, on the first request, and keeps it.
+2. The server reads each file once, when it starts, and keeps it.
 3. Each file is sent to that client in packets and reassembled.
 4. Every feature renders the server's version instead of the one bundled with the addon.
 
@@ -50,10 +50,10 @@ JSON has no comments, so the files stay clean and everything is documented here 
 
 | Key | Type | Default | Meaning |
 |---|---|---|---|
-| `enabled` | bool | `true` | `false` hides the menu, its pause entry **and** its key. Nothing is left behind to click |
+| `enabled` | bool | `true` | `false` hides the menu **and** its pause entry. The key stays bound and does nothing |
 | `title` | string | — | Headline above the category list. Usually the server or unit name |
 | `pauseMenuEntry` | string | — | Label of the entry added next to the vanilla Field Manual |
-| `openOnJoin` | bool | `true` | Show the menu once, the first time a player spawns in. Not on respawn, and once per session |
+| `openOnJoin` | bool | `true` | Show the menu once, the first time a player spawns in. Not on respawn; again after a mission restart |
 | `accentColor` | string | white | `"226,167,79"` — ordinary sRGB, the numbers a colour picker shows. Drives the selected row and the lines |
 | `menuIcon` | string | — | Sprite next to the title and on the pause menu entry — see [Icons](Icons.md) |
 | `menuIconImageset` | string | the shared set | Only if you ship your own artwork |
@@ -64,7 +64,7 @@ JSON has no comments, so the files stay clean and everything is documented here 
 | `customUrl` | string | — | A third link of your choosing — a ruleset, a ban appeal form, a Teamspeak address |
 | `customLabel` | string | — | Label of that button. **Required** — an unlabelled third slot stays hidden even with a URL set |
 | `strings` | array | — | Override individual UI strings — see [Text and languages](#text-and-languages) |
-| `categories` | array | — | The list on the left |
+| `categories` | array | — | The list on the left. Leave it out to keep the bundled content and change only the settings around it |
 
 ### A category
 
@@ -134,7 +134,7 @@ Menu, pause entry and key all disappear. `report.json` takes the same key.
 
 | Key | Type | Default | Meaning |
 |---|---|---|---|
-| `enabled` | bool | `true` | `false` hides the report menu, its pause entry and its key |
+| `enabled` | bool | `true` | `false` hides the report menu and its pause entry. The key stays bound and does nothing |
 | `allowBugReports` | bool | `true` | The "report a bug" tab. Free text plus the reporter's position |
 | `allowPlayerReports` | bool | `true` | The "report a player" tab, with the four ways of naming a target |
 | `nearbyRadius` | number | `300` | Metres for the "everyone within X" option. The menu label is written with a placeholder and follows this number |
@@ -228,7 +228,7 @@ English is the base, and every string is translated into all twelve other langua
 
 The addon asks the game which language it is running in and picks the matching text. A language with no translation for a key falls back to English, so nothing is ever blank.
 
-The log says which one it settled on:
+With `verboseLogging` on, the log says which one it settled on:
 
 ```
 [MrFrost] Text table loaded for language 'de_de' (28 strings).
@@ -246,13 +246,13 @@ The log says which one it settled on:
 
 ## Checking it worked
 
-The server console, on the first player's request:
+The server console at startup:
 
 ```
 [MrFrost] Loaded $profile:MrFrost/infomenu.json (23934 bytes).
 ```
 
-The client, once it has everything:
+The client, once it has everything (the first line needs `verboseLogging`):
 
 ```
 [MrFrost] Received this server's infomenu content (23934 bytes).
@@ -260,7 +260,7 @@ The client, once it has everything:
 [MrFrost] Using this server's report settings.
 ```
 
-Neither line means the file was never found, was empty, or did not parse — the message right there says which. See [Troubleshooting](Troubleshooting.md).
+Neither line means the file was never found, was empty, or is not sound JSON — the message right there says which. See [Troubleshooting](Troubleshooting.md).
 
 ## Converting an existing addon config
 

@@ -17,7 +17,6 @@ Running a server? Read [Installation](Installation.md) and then [Server content]
 
 - **[Text formatting](Formatting.md)** — bold, colours, inline images, and how to structure a readable entry
 - **[Icons](Icons.md)** — sprite names that are known to work, plus using your own artwork
-- **[Presets](Presets.md)** — keeping several complete configurations side by side
 
 ### When something is wrong
 

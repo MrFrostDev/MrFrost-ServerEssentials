@@ -2,7 +2,7 @@
 
 [← Back to index](Home.md)
 
-Players report a bug or another player without leaving the game. Every report goes to the server's log file and, if you configure one, to a Discord channel.
+Players report a bug or another player without leaving the game. Every report goes to the server's log file, unless the server switched that off, and to a Discord channel if you configure one.
 
 Opened with <kbd>F10</kbd> or from the pause menu. Sent by **holding <kbd>Enter</kbd>** — or the right trigger on a controller.
 
@@ -33,7 +33,7 @@ Rows that do not apply are hidden, not greyed out — a bug report has no "who",
 
 Controls are the game's own widget library — `WLib_TabViewHorizontal`, `WLib_ComboBox`, `WLib_EditBox` — so the form reads like the settings menu and works on a controller for free.
 
-**Sending is a hold, not a press.** A report cannot be recalled once it reaches a moderator, so it does not sit one stray click away from a text field. There is no send button in the form; the only way to send is holding the footer prompt for a second.
+**Sending is a hold, not a press.** A report cannot be recalled once it reaches a moderator, so it does not sit one stray click away from a text field. There is no send button in the form: the footer prompt is held for a second, or clicked with the mouse.
 
 The hold is declared on the input action itself, not in the menu, which is why it behaves identically on a keyboard and on a controller: the prompt reads the filter off the action, draws the fill, and fires only when it completes. Nothing in the UI is device-specific.
 
@@ -82,13 +82,13 @@ Once a report is in, the menu says so and closes itself a moment later.
 
 | Key | Meaning |
 |---|---|
-| `enabled` | `false` hides the menu, its pause entry and its key |
+| `enabled` | `false` hides the menu and its pause entry. The key stays bound and does nothing |
 | `allowBugReports` | Offer "Report a bug" |
 | `allowPlayerReports` | Offer "Report a player" |
 | `nearbyRadius` | Metres for the "everyone nearby" option |
 | `revealNobodyNearby` | Tell the reporter when nobody was in range. Off by default — see below |
 | `cooldownSeconds` | How long a player waits between two reports |
-| `maxDescription` | Longest description accepted, in characters |
+| `maxDescription` | Longest description accepted, in bytes, up to 8191. A plain letter is one, an umlaut two, a Japanese character three |
 | `menuIcon` | Sprite for the menu and pause entry |
 
 ### delivery
@@ -145,7 +145,7 @@ An embed, with a coloured stripe down the side — red for a player report, ambe
 └
 ```
 
-Every field sits on a row of its own, so a report naming thirty players in "Against" does not squeeze the column beside it. The description sits in the body, which takes 4000 characters against a field's 1000 — a long report stays readable rather than being cut to fit. Anything past those limits is trimmed with `...` rather than dropped, because Discord rejects an oversized embed whole. The log file never truncates, so the full text is always somewhere.
+Every field sits on a row of its own, so a report naming thirty players in "Against" does not squeeze the column beside it. The description sits in the body, which takes 4000 characters against a field's 1000 — a long report stays readable rather than being cut to fit. Anything past those limits is trimmed with `...` rather than dropped, because Discord rejects an oversized embed whole. A description longer than `maxDescription` is cut once, on the server, before either the log line or the embed is built.
 
 `serverName` becomes the footer. Leave it empty and no footer is drawn.
 
@@ -178,7 +178,7 @@ One report per player per `cooldownSeconds`. The check is on the server, so it h
 { "enabled": false }
 ```
 
-Menu, pause entry and key all disappear. The same works for the info menu in `infomenu.json`.
+The menu and its pause entry disappear, and the key stops doing anything. The same works for the info menu in `infomenu.json`.
 
 ## Log lines
 
@@ -186,7 +186,7 @@ Menu, pause entry and key all disappear. The same works for the info menu in `in
 |---|---|---|
 | `Report accepted from ... (PLAYER)` | Server | A report passed every check |
 | `Report written to ...` | Server | It reached the log file |
-| `Report delivered to Discord` | Server | The webhook accepted it |
+| `Report delivered to Discord` | Server | The webhook accepted it. Diagnostic — needs `verboseLogging` |
 | `Discord rejected a report (HTTP ...)` | Server | Wrong URL, or Discord said no. It is still in the log |
 | `No Discord webhook configured` | Server | Log-only, as configured |
 | `...has neither a log file nor a webhook` | Server | Nothing is set up — reports go nowhere |

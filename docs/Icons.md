@@ -82,4 +82,4 @@ The row simply has no icon and the gap closes — there is no error. Check that:
 
 ---
 
-**Next:** [Presets](Presets.md)
+**Next:** [Troubleshooting](Troubleshooting.md)

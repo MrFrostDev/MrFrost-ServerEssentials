@@ -39,7 +39,7 @@ The content is a JSON file in your server's profile directory. Edit it, restart 
 
 Two levels of hierarchy: categories, each holding entries. The text supports bold, colours and inline icons. Title, accent colour and icons come from your config.
 
-The footer holds up to three link buttons — Discord on <kbd>D</kbd>, your website on <kbd>W</kbd>, and one more on <kbd>L</kbd> that you name yourself: a ruleset, a ban appeal form, a Teamspeak address. Each appears once its URL is set, and each opens through the platform, which is what makes them work on console.
+The footer holds up to three link buttons — Discord on <kbd>D</kbd>, your website on <kbd>W</kbd>, and one more on <kbd>L</kbd> that you name yourself: a ruleset, a ban appeal form, a Teamspeak address. The first two appear once their URL is set; the third needs a label as well, because a prompt with no name tells a player nothing. Each opens through the platform, which is what makes them work on console.
 
 The menu is built from the game's own widget library, so it matches the vanilla settings and group menus.
 
@@ -102,7 +102,7 @@ Where those files are absent, the content bundled with the addon is shown, which
 | **Reports** | Bug and player reports, four ways to name a target, server-side resolution, hold-to-send |
 | **Delivery** | Discord embed **and** a log file, each written independently of the other |
 | **Localisation** | Thirteen languages, picked from the player's game language; every string overridable per server |
-| **Per-server config** | Each menu can be switched off; its menu, pause entry and key go together |
+| **Per-server config** | Each menu can be switched off; the menu and its pause entry go, and its key stops doing anything |
 | **Console** | Controller support throughout, and link buttons that open on console |
 | **Anti-radar** | "Everyone within 300 m" files the report without disclosing whether anyone was in range, until you enable it |
 
@@ -131,7 +131,7 @@ Players open the info menu with <kbd>F11</kbd> and the report menu with <kbd>F10
 > Save every file as **UTF-8**. In the addon config, give each category and entry its own **unique GUID** — copying a block while keeping its GUID silently drops one of the two.
 
 > [!TIP]
-> Server files are read once at startup, like the rest of your server configuration. Edited one? Restart the server.
+> Server files are read once, when the server starts, and kept for the life of the process. Edited one? Restart the server.
 
 > [!WARNING]
 > The Discord **webhook URL is a secret** — anyone holding it can post into that channel. It belongs in your server's `report.json`. The addon config ships to every subscriber.
@@ -146,7 +146,6 @@ Players open the info menu with <kbd>F11</kbd> and the report menu with <kbd>F10
 | [Configuration](docs/Configuration.md) | Every field of the addon config, with examples |
 | [Text formatting](docs/Formatting.md) | Rich text markup and layout conventions |
 | [Icons](docs/Icons.md) | Verified sprite names and using your own artwork |
-| [Presets](docs/Presets.md) | Shipping and switching complete configurations |
 | [Troubleshooting](docs/Troubleshooting.md) | Log messages and what they mean |
 | [Architecture](docs/Architecture.md) | How the addon is built, for modders |
 | [Changelog](CHANGELOG.md) | What changed in each release |
