@@ -136,7 +136,7 @@ class MrFrost_InfoMenuUI : MrFrost_MenuBase
 		InputManager inputManager = GetGame().GetInputManager();
 		SCR_InputButtonComponent button;
 
-		button = BuildLinkButton(m_Config.m_sDiscordUrl, m_Config.m_sDiscordLabel, "Discord", "MrFrost_Discord", ACTION_DISCORD);
+		button = BuildLinkButton(m_Config.m_sDiscordUrl, m_Config.m_sDiscordLabel, "Discord", "MrFrost_Discord", ACTION_DISCORD, "discordUrl");
 		if (button)
 		{
 			button.m_OnActivated.Insert(OnDiscordClicked);
@@ -144,7 +144,7 @@ class MrFrost_InfoMenuUI : MrFrost_MenuBase
 				inputManager.AddActionListener(ACTION_DISCORD, EActionTrigger.DOWN, OnDiscordClicked);
 		}
 
-		button = BuildLinkButton(m_Config.m_sWebsiteUrl, m_Config.m_sWebsiteLabel, "Website", "MrFrost_Website", ACTION_WEBSITE);
+		button = BuildLinkButton(m_Config.m_sWebsiteUrl, m_Config.m_sWebsiteLabel, "Website", "MrFrost_Website", ACTION_WEBSITE, "websiteUrl");
 		if (button)
 		{
 			button.m_OnActivated.Insert(OnWebsiteClicked);
@@ -155,7 +155,7 @@ class MrFrost_InfoMenuUI : MrFrost_MenuBase
 		// No fallback label for this one: the other two are named after what they
 		// are, while this slot is whatever the server made it. A prompt reading
 		// "Custom" tells a player nothing, so an unlabelled slot stays hidden.
-		button = BuildLinkButton(m_Config.m_sCustomUrl, m_Config.m_sCustomLabel, string.Empty, "MrFrost_Custom", ACTION_CUSTOM);
+		button = BuildLinkButton(m_Config.m_sCustomUrl, m_Config.m_sCustomLabel, string.Empty, "MrFrost_Custom", ACTION_CUSTOM, "customUrl");
 		if (button)
 		{
 			button.m_OnActivated.Insert(OnCustomClicked);
@@ -167,10 +167,23 @@ class MrFrost_InfoMenuUI : MrFrost_MenuBase
 	//------------------------------------------------------------------------------
 	//! Draws one footer prompt, or nothing when the slot is unused. Returns the
 	//! button so the caller can attach its own handler — see BuildLinkButtons().
-	protected SCR_InputButtonComponent BuildLinkButton(string url, string label, string fallbackLabel, string widgetName, string action)
+	protected SCR_InputButtonComponent BuildLinkButton(string url, string label, string fallbackLabel, string widgetName, string action, string keyName)
 	{
 		if (url.IsEmpty())
 			return null;
+
+		// Judged here, where the button is drawn, and not only where it is
+		// followed. A slot the player cannot be sent to should leave no prompt
+		// behind at all, rather than one that looks live and does nothing.
+		//
+		// Said out loud, because a button that quietly fails to exist is worse
+		// to diagnose than one that does nothing. The server says the same thing
+		// on its own console when it reads the file.
+		if (!url.StartsWith("https://"))
+		{
+			MrFrost_Log.Warn(keyName + " is not an https:// address, so no button was drawn for it.");
+			return null;
+		}
 
 		if (label.IsEmpty())
 			label = fallbackLabel;
@@ -236,6 +249,17 @@ class MrFrost_InfoMenuUI : MrFrost_MenuBase
 	{
 		if (!m_Config || url.IsEmpty())
 			return;
+
+		// The URL comes from the server and the button beside it is labelled by
+		// the server too, so a player pressing one labelled "Discord" has no way
+		// of knowing what it actually opens - the address is never shown. What
+		// gets handed to the platform is therefore restricted to what the button
+		// claims to be. The webhook avatar is checked the same way.
+		if (!url.StartsWith("https://"))
+		{
+			MrFrost_Log.Warn("The " + what + " link is not an https:// address and was not opened.");
+			return;
+		}
 
 		PlatformService platformService = GetGame().GetPlatformService();
 		if (!platformService)

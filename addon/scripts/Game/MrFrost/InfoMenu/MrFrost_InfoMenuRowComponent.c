@@ -85,7 +85,7 @@ class MrFrost_InfoMenuRowComponent : ScriptedWidgetComponent
 		m_wText      = TextWidget.Cast(w.FindAnyWidget(WIDGET_TEXT));
 		m_wIndent    = w.FindAnyWidget(WIDGET_INDENT);
 
-		PaintHighlight();
+		PaintHighlight(false, false);
 	}
 
 	//------------------------------------------------------------------------------
@@ -148,7 +148,7 @@ class MrFrost_InfoMenuRowComponent : ScriptedWidgetComponent
 				indent.SetWidthOverride(0);
 		}
 
-		PaintHighlight();
+		PaintHighlight(false, false);
 	}
 
 	//------------------------------------------------------------------------------
@@ -210,7 +210,13 @@ class MrFrost_InfoMenuRowComponent : ScriptedWidgetComponent
 	//------------------------------------------------------------------------------
 	//! Single place that decides how a row looks: the accent colour fills the
 	//! selected row, a fainter wash marks the hovered one, nothing at rest.
-	protected void PaintHighlight(bool hovered = false)
+	//! Paints the row. animate = false sets the fill outright instead of
+	//! ramping to it, which is what building a row wants: there is no state to
+	//! transition out of, the whole panel is faded in by MrFrost_MenuBase, and
+	//! every registration costs a linear scan of one global animation list that
+	//! vanilla itself warns about. Two per row over a large config is a lot of
+	//! scanning for a ramp from transparent to transparent.
+	protected void PaintHighlight(bool hovered = false, bool animate = true)
 	{
 		if (m_wText)
 		{
@@ -242,18 +248,27 @@ class MrFrost_InfoMenuRowComponent : ScriptedWidgetComponent
 		if (m_bSelected)
 		{
 			if (m_AccentColor)
-				AnimateWidget.Color(m_wHighlight, m_AccentColor, UIConstants.FADE_RATE_FAST);
+				Fill(m_AccentColor, animate);
 
 			return;
 		}
 
 		if (hovered)
 		{
-			AnimateWidget.Color(m_wHighlight, UIColors.CONTRAST_HOVERED, UIConstants.FADE_RATE_FAST);
+			Fill(UIColors.CONTRAST_HOVERED, animate);
 			return;
 		}
 
-		AnimateWidget.Color(m_wHighlight, UIColors.TRANSPARENT, UIConstants.FADE_RATE_FAST);
+		Fill(UIColors.TRANSPARENT, animate);
+	}
+
+	//------------------------------------------------------------------------------
+	protected void Fill(notnull Color color, bool animate)
+	{
+		if (animate)
+			AnimateWidget.Color(m_wHighlight, color, UIConstants.FADE_RATE_FAST);
+		else
+			m_wHighlight.SetColor(color);
 	}
 
 	//------------------------------------------------------------------------------

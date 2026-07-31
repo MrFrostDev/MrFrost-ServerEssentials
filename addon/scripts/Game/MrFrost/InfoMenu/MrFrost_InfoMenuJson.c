@@ -260,6 +260,16 @@ class MrFrost_InfoMenuChannel : MrFrost_ServerContentChannel
 	//------------------------------------------------------------------------------
 	//! Parsed on the server purely so a broken file is reported on the server
 	//! console, where the owner will see it.
+	//! Names a footer link the client will refuse to open.
+	protected void WarnUnopenableLink(string url, string keyName)
+	{
+		if (url.IsEmpty() || url.StartsWith("https://"))
+			return;
+
+		MrFrost_Log.Warn(keyName + " in infomenu.json is not an https:// address, so no button will be drawn for it: " + url);
+	}
+
+	//------------------------------------------------------------------------------
 	override bool Validate(string json)
 	{
 		MrFrost_InfoMenuJson probe = new MrFrost_InfoMenuJson();
@@ -274,6 +284,14 @@ class MrFrost_InfoMenuChannel : MrFrost_ServerContentChannel
 			MrFrost_Log.Error("infomenu.json is not sound JSON - falling back to the bundled content. Check it for a stray or missing comma.");
 			return false;
 		}
+
+		// Said on the server console, where the owner who wrote the file is
+		// looking. A link the client will not open draws no button at all, and a
+		// footer slot that silently fails to appear is hard to explain from the
+		// other end. Not a rejection - the rest of the file is fine.
+		WarnUnopenableLink(probe.discordUrl, "discordUrl");
+		WarnUnopenableLink(probe.websiteUrl, "websiteUrl");
+		WarnUnopenableLink(probe.customUrl, "customUrl");
 
 		return true;
 	}
