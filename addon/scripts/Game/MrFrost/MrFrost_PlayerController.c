@@ -41,10 +41,6 @@ modded class SCR_PlayerController
 	protected static const int MRFROST_CHUNKS_PER_TICK = 4;
 	protected static const int MRFROST_CHUNK_TICK_MS = 100;
 
-	//! Ceiling on how many chunks one channel may claim to have. At 900 bytes a
-	//! chunk this allows a file of about 3.6 MB, far past anything a server has
-	//! reason to send, and it stops a hostile one from having every client
-
 	//! Server side: whether this client has already been sent the server files.
 	protected bool m_bContentServed;
 
@@ -363,7 +359,9 @@ modded class SCR_PlayerController
 
 		// Shared budget: the more transfers are running, the fewer packets each
 		// gets per tick. One is the floor, so a busy restart takes longer rather
-		// than stalling.
+		// than stalling - which also means the division stops dividing past four
+		// senders, so this is a fourfold reduction of the burst rather than a cap
+		// on it.
 		int budget = MRFROST_CHUNKS_PER_TICK;
 		if (s_iActiveSenders > 1)
 			budget = MRFROST_CHUNKS_PER_TICK / s_iActiveSenders;

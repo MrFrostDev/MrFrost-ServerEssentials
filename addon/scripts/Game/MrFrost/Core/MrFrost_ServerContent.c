@@ -187,7 +187,7 @@ class MrFrost_ServerContent
 		// and discarded in total, with nothing said on either machine.
 		if (chunks.Count() > MAX_CHUNKS)
 		{
-			MrFrost_Log.Error(channel.GetFileName() + " is too large to send (" + chunks.Count() + " packets, the limit is " + MAX_CHUNKS + "). Clients will use the content bundled with the addon.");
+			MrFrost_Log.Error(channel.GetFileName() + " is too large to send (" + chunks.Count() + " packets, the limit is " + MAX_CHUNKS + "). Everyone joining will use the content bundled with the addon; a listen host still reads its own copy.");
 			chunks.Clear();
 		}
 

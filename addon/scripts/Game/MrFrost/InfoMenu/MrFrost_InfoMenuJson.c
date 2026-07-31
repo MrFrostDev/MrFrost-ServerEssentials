@@ -209,31 +209,36 @@ class MrFrost_InfoMenuJson : JsonApiStruct
 			category.m_IconImageset       = ResolveImageset(source.iconImageset);
 			category.m_aEntries           = {};
 
-			foreach (MrFrost_InfoMenuJsonEntry sourceEntry : source.entries)
+			// Null, not empty, is what "entries": null parses into - the same trap
+			// categories and strings were guarded against, one level down.
+			if (source.entries)
 			{
-				if (!sourceEntry)
-					continue;
-
-				if (source.enabled && sourceEntry.enabled)
+				foreach (MrFrost_InfoMenuJsonEntry sourceEntry : source.entries)
 				{
-					if (rows >= MAX_ROWS)
+					if (!sourceEntry)
+						continue;
+
+					if (source.enabled && sourceEntry.enabled)
 					{
-						dropped = true;
-						break;
+						if (rows >= MAX_ROWS)
+						{
+							dropped = true;
+							break;
+						}
+
+						rows++;
 					}
 
-					rows++;
+					MrFrost_InfoMenuEntry entry = new MrFrost_InfoMenuEntry();
+					entry.m_bEnabled     = sourceEntry.enabled;
+					entry.m_sName        = sourceEntry.name;
+					entry.m_sTitle       = sourceEntry.title;
+					entry.m_sText        = PageText(sourceEntry.text, sourceEntry.name);
+					entry.m_sIconName    = sourceEntry.icon;
+					entry.m_IconImageset = ResolveImageset(sourceEntry.iconImageset);
+
+					category.m_aEntries.Insert(entry);
 				}
-
-				MrFrost_InfoMenuEntry entry = new MrFrost_InfoMenuEntry();
-				entry.m_bEnabled     = sourceEntry.enabled;
-				entry.m_sName        = sourceEntry.name;
-				entry.m_sTitle       = sourceEntry.title;
-				entry.m_sText        = PageText(sourceEntry.text, sourceEntry.name);
-				entry.m_sIconName    = sourceEntry.icon;
-				entry.m_IconImageset = ResolveImageset(sourceEntry.iconImageset);
-
-				category.m_aEntries.Insert(entry);
 			}
 
 			config.m_aCategories.Insert(category);
@@ -353,6 +358,9 @@ class MrFrost_InfoMenuChannel : MrFrost_ServerContentChannel
 
 			rows++;
 
+			if (!category.entries)
+				continue;
+
 			foreach (MrFrost_InfoMenuJsonEntry entry : category.entries)
 			{
 				if (entry && entry.enabled)
@@ -372,6 +380,9 @@ class MrFrost_InfoMenuChannel : MrFrost_ServerContentChannel
 				continue;
 
 			WarnOversizedPage(category.text, category.name);
+
+			if (!category.entries)
+				continue;
 
 			foreach (MrFrost_InfoMenuJsonEntry entry : category.entries)
 			{
