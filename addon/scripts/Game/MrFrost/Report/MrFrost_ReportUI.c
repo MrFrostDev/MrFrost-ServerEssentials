@@ -382,6 +382,11 @@ class MrFrost_ReportUI : MrFrost_MenuBase
 		if (m_aPlayerIds.IsEmpty())
 		{
 			m_PlayerCombo.AddItem(MrFrost_Text.Get("report.no_players"));
+
+			// Selected, or the closed box paints nothing. ClearAll leaves the index at
+			// -1 and AddItem does not move it, so the one line written to explain an
+			// empty list was only visible to a player who opened the list to look.
+			m_PlayerCombo.SetCurrentItem(0);
 			return;
 		}
 

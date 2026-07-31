@@ -83,6 +83,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   else and would otherwise become unreachable.
 - A page with nothing on it said "this info menu has no entries yet", beside a
   full tree of categories. It has its own wording now.
+- Hosting your own game after playing on a server kept that server's menu,
+  wording and log setting.
+- Whether to show the welcome menu was decided before the server's own content
+  arrived, so a server that had switched it off could still be overridden.
+- A second connection in the same session was not recognised as a fresh start,
+  and the player was never welcomed.
+- String overrides written into `infomenu.json` were honoured by every player
+  and ignored in the server's own Discord embed.
+- "No other players" was written into the dropdown but never selected, so the
+  closed box showed nothing at all.
 - The row icon column was two pixels narrower than the icon it holds.
 - The player dropdown was filled without being emptied first, so anything the
   layout shipped with would have shifted every index behind it.

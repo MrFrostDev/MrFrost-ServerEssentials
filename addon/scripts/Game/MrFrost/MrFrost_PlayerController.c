@@ -243,6 +243,12 @@ modded class SCR_PlayerController
 		// whole transfer is pointless — read them directly.
 		if (Replication.IsServer())
 		{
+			// Forgotten here too, not only on the client path. Someone who played on
+			// a server and then hosted their own kept that server's menu, wording and
+			// verbose flag - and since this branch now marks itself complete, that is
+			// no longer merely stale state, it is what gets shown.
+			MrFrost_Features.ForgetServerContent();
+
 			foreach (MrFrost_ServerContentChannel channel : MrFrost_ServerContent.GetChannels())
 			{
 				string raw = MrFrost_ServerContent.Read(channel);
@@ -493,6 +499,20 @@ modded class SCR_PlayerController
 	//!
 	//! Removing a timer that was never armed is harmless, so all four come off
 	//! regardless of how far this controller got.
+	//! Releases the once-per-mission welcome latch.
+	//!
+	//! One controller is built per connection, which is exactly the granularity
+	//! the latch wants. Leaving it to the world clock alone was not enough: a
+	//! second connection in the same session starts a world at zero that climbs
+	//! past the old stamp before anyone spawns, so the restart went unnoticed and
+	//! the player was never welcomed.
+	void SCR_PlayerController()
+	{
+		s_bAutoOpened = false;
+		s_fAutoOpenedAt = 0;
+	}
+
+	//------------------------------------------------------------------------------
 	void ~SCR_PlayerController()
 	{
 		ReleaseSendSlot();
@@ -537,6 +557,11 @@ modded class SCR_PlayerController
 	//! which only happens when the mission restarted underneath these statics.
 	protected static bool MrFrost_HasMissionRestarted()
 	{
+		// A world time below the stamp means the clock restarted under it. It does
+		// not catch a *second* connection inside one session, where the new world
+		// starts at zero and climbs past the old stamp before anyone spawns - so
+		// the latch is also released whenever a controller is built, which is once
+		// per connection. MrFrost_ReportSubmit guards its own stamps the same way.
 		return GetGame().GetWorld().GetWorldTime() < s_fAutoOpenedAt;
 	}
 
@@ -572,6 +597,18 @@ modded class SCR_PlayerController
 			}
 
 			GetGame().GetCallqueue().CallLater(MrFrost_AutoOpenInfoMenu, MRFROST_AUTO_OPEN_RETRY_MS, false);
+			return;
+		}
+
+		// Asked again, now that the server's own content has arrived. The first
+		// ask happened before the transfer, against whatever this client was
+		// carrying - so a server switching the menu off, or switching the welcome
+		// off, was decided against the wrong file and could be overridden by a
+		// race the longer retry window makes more likely.
+		MrFrost_InfoMenuConfig config = MrFrost_InfoMenuConfigLoader.Get();
+		if (!config || !config.m_bOpenOnJoin || !config.HasVisibleContent())
+		{
+			MrFrost_Log.Debug("This server does not want a welcome info menu.");
 			return;
 		}
 

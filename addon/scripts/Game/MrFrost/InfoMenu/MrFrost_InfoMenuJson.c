@@ -422,6 +422,13 @@ class MrFrost_InfoMenuChannel : MrFrost_ServerContentChannel
 		// other end. Not a rejection - the rest of the file is fine.
 		// ToConfig() runs on the client, so its warnings land in player logs. The
 		// owner who wrote the file needs to hear this on their own console.
+		// Applied on the server too, not only when a client parses the file. The
+		// Discord embed is built here, so its labels are resolved here - a server
+		// overriding report.embed.* from infomenu.json had its wording honoured by
+		// every player and ignored in its own moderation channel. report.json has
+		// done this since it was written; this file had not.
+		ApplyStrings(probe.strings);
+
 		WarnOversizedMenu(probe);
 
 		WarnUnopenableLink(probe.discordUrl, "discordUrl");
