@@ -173,6 +173,13 @@ class MrFrost_InfoMenuConfigLoader
 	}
 
 	//------------------------------------------------------------------------------
+	//! Client side: forget whatever the last server sent.
+	static void ClearServerConfig()
+	{
+		s_ServerConfig = null;
+	}
+
+	//------------------------------------------------------------------------------
 	//! Parses a server's JSON and installs it. Returns false and changes nothing
 	//! when the text does not parse, so a broken file on the server degrades to
 	//! the bundled content instead of an empty menu.
@@ -195,10 +202,78 @@ class MrFrost_InfoMenuConfigLoader
 			return true;
 		}
 
+		// Not an error, and not a failure: a server may send nothing but a title,
+		// a link or string overrides, and mean it. What such a file does not
+		// carry is content, so the bundled categories stay, while everything it
+		// does carry is honoured - which keeping the bundled config wholesale
+		// would have ignored.
+		//
+		// Field by field rather than wholesale the other way, too. ToConfig()
+		// builds a plain instance, and the [Attribute] defaults on this class are
+		// filled in by the config loader, not by the constructor - so every key
+		// the server left out arrives blank rather than at its default, and
+		// taking the result as-is would have cost the bundled accent colour and
+		// the menu icon on a file that never mentioned either.
 		if (parsed.categories.IsEmpty())
 		{
-			MrFrost_Log.Error("The info menu content sent by this server has no categories - keeping the bundled content.");
-			return false;
+			s_ServerConfig = null;
+			MrFrost_InfoMenuConfig bundled = Get();
+
+			MrFrost_InfoMenuConfig merged = parsed.ToConfig();
+			if (bundled)
+			{
+				merged.m_aCategories = bundled.m_aCategories;
+
+				if (!merged.m_AccentColor)
+					merged.m_AccentColor = bundled.m_AccentColor;
+
+				if (merged.m_sTitle.IsEmpty())
+					merged.m_sTitle = bundled.m_sTitle;
+
+				if (merged.m_sPauseMenuEntry.IsEmpty())
+					merged.m_sPauseMenuEntry = bundled.m_sPauseMenuEntry;
+
+				// The imageset travels with the icon: an icon named without one
+				// resolves to the shared set, which is not where a bundled sprite
+				// necessarily lives.
+				if (merged.m_sMenuIconName.IsEmpty())
+				{
+					merged.m_sMenuIconName = bundled.m_sMenuIconName;
+					merged.m_MenuIconImageset = bundled.m_MenuIconImageset;
+				}
+
+				// m_bOpenOnJoin is the one setting that cannot join this list.
+				// ExpandFromRAW gives an absent key the constructor's value, so
+				// "not mentioned" and "set to true" arrive identical and there is
+				// nothing here to test. It defaults to true on both sides, so the
+				// two only diverge for a build that ships it switched off.
+				//
+				// The footer belongs to the menu being kept. A file that says
+				// nothing about the links is keeping the bundled menu whole, not
+				// asking for it with its buttons taken off.
+				if (merged.m_sDiscordUrl.IsEmpty())
+				{
+					merged.m_sDiscordUrl = bundled.m_sDiscordUrl;
+					merged.m_sDiscordLabel = bundled.m_sDiscordLabel;
+				}
+
+				if (merged.m_sWebsiteUrl.IsEmpty())
+				{
+					merged.m_sWebsiteUrl = bundled.m_sWebsiteUrl;
+					merged.m_sWebsiteLabel = bundled.m_sWebsiteLabel;
+				}
+
+				if (merged.m_sCustomUrl.IsEmpty())
+				{
+					merged.m_sCustomUrl = bundled.m_sCustomUrl;
+					merged.m_sCustomLabel = bundled.m_sCustomLabel;
+				}
+			}
+
+			s_ServerConfig = merged;
+
+			MrFrost_Log.Info("This server sent no info menu categories - keeping the content bundled with the addon, and its own settings.");
+			return true;
 		}
 
 		s_ServerConfig = parsed.ToConfig();

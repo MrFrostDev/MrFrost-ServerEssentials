@@ -200,20 +200,31 @@ class MrFrost_InfoMenuUI : MrFrost_MenuBase
 	}
 
 	//------------------------------------------------------------------------------
+	//! The null check that belongs to these three lives in OpenLink, which is one
+	//! dereference too late to help. It is cheap to ask here, where it works.
 	protected void OnDiscordClicked()
 	{
+		if (!m_Config)
+			return;
+
 		OpenLink(m_Config.m_sDiscordUrl, "Discord");
 	}
 
 	//------------------------------------------------------------------------------
 	protected void OnWebsiteClicked()
 	{
+		if (!m_Config)
+			return;
+
 		OpenLink(m_Config.m_sWebsiteUrl, "website");
 	}
 
 	//------------------------------------------------------------------------------
 	protected void OnCustomClicked()
 	{
+		if (!m_Config)
+			return;
+
 		OpenLink(m_Config.m_sCustomUrl, "custom");
 	}
 
@@ -488,6 +499,14 @@ class MrFrost_InfoMenuUI : MrFrost_MenuBase
 	//! can toggle it.
 	static void Toggle()
 	{
+		// A switched-off feature leaves nothing behind to press, the way the
+		// report menu already behaved. The pause entry and the menu now ask the
+		// same question; before this, a server that switched the info menu off
+		// lost its pause entry but its key still opened an empty menu.
+		MrFrost_InfoMenuConfig config = MrFrost_InfoMenuConfigLoader.Get();
+		if (!config || config.m_aCategories.IsEmpty())
+			return;
+
 		MenuManager menuManager = GetGame().GetMenuManager();
 		if (!menuManager)
 			return;
