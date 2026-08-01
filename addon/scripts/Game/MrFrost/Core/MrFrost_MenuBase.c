@@ -57,11 +57,15 @@ class MrFrost_MenuBase : ChimeraMenuBase
 			return;
 		}
 
-		if (!BuildContent())
-			return;
-
+		// The footer first. It carries the only widget in either menu that listens
+		// for MenuBack, and nothing in the vanilla framework closes a menu on its
+		// own - so a content layout that failed to load left the player looking at
+		// an empty panel with no key that would close it.
 		ApplyChrome();
 		BuildFooter();
+
+		if (!BuildContent())
+			return;
 
 		OnMenuBuilt();
 

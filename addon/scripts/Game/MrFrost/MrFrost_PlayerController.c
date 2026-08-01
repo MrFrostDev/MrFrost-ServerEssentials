@@ -75,6 +75,16 @@ modded class SCR_PlayerController
 	protected static bool s_bMrFrostAutoOpened;
 	protected static float s_fMrFrostAutoOpenedAt;
 
+	//! Whether the player has had the info menu in front of them this session
+	//! by any road, including opening it themselves.
+	//!
+	//! The retry chain runs for up to 150 seconds waiting for a free screen. A
+	//! player who reads the rules on their own in that window, closes them, and
+	//! walks off had the same menu opened over their gameplay when the timer
+	//! finally found the display empty. The welcome exists to make sure they see
+	//! it once - once is what this records.
+	protected static bool s_bMrFrostInfoMenuSeen;
+
 	//! Server side: what is left to send to this one client, flattened across all
 	//! channels. Each item carries its own channel, so one queue serves them all.
 	protected ref array<int> m_aMrFrostOutgoingChannel;
@@ -111,6 +121,7 @@ modded class SCR_PlayerController
 		// the controller that is actually ours, which is the granularity wanted.
 		s_bMrFrostAutoOpened = false;
 		s_fMrFrostAutoOpenedAt = 0;
+		s_bMrFrostInfoMenuSeen = false;
 
 		MrFrost_Features.Init();
 
@@ -180,8 +191,44 @@ modded class SCR_PlayerController
 	}
 
 	//------------------------------------------------------------------------------
+	//! Whether a key that opens a menu should be ignored right now.
+	//!
+	//! These two are raw action listeners, not footer prompts. A prompt is an
+	//! SCR_InputButtonComponent, which checks on its own whether it is visible,
+	//! enabled, and whether its menu has focus; a listener checks nothing and
+	//! fires wherever the context is up. Ours is renewed on a timer so the keys
+	//! work during gameplay, which also left them live everywhere else.
+	//!
+	//! Two things that costs, both reachable today. Both actions are rebindable,
+	//! so a player who puts Report on a letter loses a half-written report the
+	//! first time they type that letter into the description box. And the pause
+	//! menu, a dialog, or the other MrFrost menu can all be buried under a second
+	//! one, because each Toggle() only looks for its own preset.
+	protected bool MrFrost_MenuKeysBlocked()
+	{
+		WorkspaceWidget workspace = GetGame().GetWorkspace();
+		if (workspace && EditBoxWidget.Cast(workspace.GetFocusedWidget()))
+			return true;
+
+		MenuManager menuManager = GetGame().GetMenuManager();
+		if (!menuManager)
+			return false;
+
+		MenuBase top = menuManager.GetTopMenu();
+		if (!top)
+			return false;
+
+		// One of ours is allowed through, so the key that opened a menu still
+		// closes it. Anything else owns the screen and we stay out of it.
+		return !MrFrost_MenuBase.Cast(top);
+	}
+
+	//------------------------------------------------------------------------------
 	protected void MrFrost_OnInfoMenuAction()
 	{
+		if (MrFrost_MenuKeysBlocked())
+			return;
+
 		MrFrost_InfoMenuUI.Toggle();
 	}
 
@@ -190,6 +237,9 @@ modded class SCR_PlayerController
 	//! feature keeps its key bound and simply does nothing.
 	protected void MrFrost_OnReportAction()
 	{
+		if (MrFrost_MenuKeysBlocked())
+			return;
+
 		MrFrost_ReportUI.Toggle();
 	}
 
@@ -574,6 +624,13 @@ modded class SCR_PlayerController
 	}
 
 	//------------------------------------------------------------------------------
+	//! Called by the info menu whenever it opens, however it was opened.
+	static void MrFrost_MarkInfoMenuSeen()
+	{
+		s_bMrFrostInfoMenuSeen = true;
+	}
+
+	//------------------------------------------------------------------------------
 	//! True when the world clock has gone backwards since the menu last opened,
 	//! which only happens when the mission restarted underneath these statics.
 	protected static bool MrFrost_HasMissionRestarted()
@@ -610,6 +667,16 @@ modded class SCR_PlayerController
 		// cannot catch one that has not started, since it only learns of a channel
 		// from its first chunk - so the two together are a strong check, not a
 		// proof.
+		// Nothing left to welcome them to. Checked before the retry rather than
+		// after it, because the player opening the menu themselves is exactly what
+		// keeps the screen busy and sends this down the retry road in the first
+		// place.
+		if (s_bMrFrostInfoMenuSeen)
+		{
+			MrFrost_Log.Debug("The player has already seen the info menu - not opening it again.");
+			return;
+		}
+
 		if (!m_bMrFrostContentComplete || MrFrost_IsTransferPending() || menuManager.IsAnyMenuOpen())
 		{
 			m_iMrFrostAutoOpenAttempts++;

@@ -711,6 +711,14 @@ class MrFrost_ReportUI : MrFrost_MenuBase
 			return;
 		}
 
+		// The other MrFrost menu first, if it is up. Each Toggle used to look
+		// only for its own preset, so the second key stacked a menu on top of
+		// the first and buried it - including a half-written report. The pause
+		// entry has closed before opening since it was written; the key had not.
+		MenuBase other = MrFrost_MenuBase.Cast(menuManager.GetTopMenu());
+		if (other)
+			other.Close();
+
 		menuManager.OpenMenu(ChimeraMenuPreset.MrFrost_ReportMenu);
 	}
 }

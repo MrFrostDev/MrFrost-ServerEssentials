@@ -62,6 +62,11 @@ class MrFrost_InfoMenuUI : MrFrost_MenuBase
 	//------------------------------------------------------------------------------
 	override protected void OnMenuBuilt()
 	{
+		// However it was opened - the key, the pause entry, or the welcome timer -
+		// the player has now seen it, and the timer still counting down in the
+		// background has nothing left to do.
+		SCR_PlayerController.MrFrost_MarkInfoMenuSeen();
+
 		m_wTreeList   = VerticalLayoutWidget.Cast(m_wRoot.FindAnyWidget(WIDGET_TREE_LIST));
 		m_wEntryTitle = TextWidget.Cast(m_wRoot.FindAnyWidget(WIDGET_ENTRY_TITLE));
 		m_wText       = RichTextWidget.Cast(m_wRoot.FindAnyWidget(WIDGET_TEXT));
@@ -547,6 +552,14 @@ class MrFrost_InfoMenuUI : MrFrost_MenuBase
 			existing.Close();
 			return;
 		}
+
+		// The other MrFrost menu first, if it is up. Each Toggle used to look
+		// only for its own preset, so the second key stacked a menu on top of
+		// the first and buried it - including a half-written report. The pause
+		// entry has closed before opening since it was written; the key had not.
+		MenuBase other = MrFrost_MenuBase.Cast(menuManager.GetTopMenu());
+		if (other)
+			other.Close();
 
 		menuManager.OpenMenu(ChimeraMenuPreset.MrFrost_InfoMenu);
 	}
