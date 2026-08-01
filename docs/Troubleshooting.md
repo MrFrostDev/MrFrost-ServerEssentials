@@ -45,7 +45,7 @@ Search for `MrFrost` and you have its whole story for that session. On a server,
 | `Using this server's info menu (N categories)` | Client | The server's content is now what players see |
 | `Using this server's report settings` | Client | Same, for the report menu |
 | `The info menu is switched off on this server` | Client | `"enabled": false` in `infomenu.json` |
-| `This server overrides N UI string(s)` | Client | A `strings` block was applied |
+| `This server overrides N UI string(s)` | Both | A `strings` block was applied. The server prints it when it reads the file, each client when it receives it |
 
 ### Reports
 
@@ -60,19 +60,19 @@ Search for `MrFrost` and you have its whole story for that session. On a server,
 | `<key> in infomenu.json is not an https:// address` | Server | That footer button will not be drawn |
 | `infomenu.json asks for N rows` | Server | More than 512 categories and entries together. The rest is left out |
 | `A page in infomenu.json is longer than 20000 characters` | Server | That page is left empty. Split it into entries |
-| `accentColor '...' is not 'r,g,b'` | Server | Colour must be three numbers, e.g. `226,167,79` |
+| `accentColor '...' is not 'r,g,b'` | Both | Colour must be three numbers, e.g. `226,167,79`. Players see the default accent |
 | `Could not repack report.json without its delivery block` | Server | The safety check refused to send. Reports still work; players see the bundled menu settings |
 | `webhookAvatarUrl is not a URL and was ignored` | Server | Must be an `http` address, or left empty |
 | `The Discord queue is full` | Server | More reports arriving than Discord accepts. The newest are dropped |
 | `logFile must be a file name, not a path` | Server | `logFile` may not contain `/`, `\`, `:` or `..` |
 | `Could not write to ...` | Server | The `MrFrost` folder is not writable |
-| `Could not get a REST context for the webhook.` | Server | The host in `webhookUrl` could not be reached |
+| `Could not get a REST context for the webhook.` | Server | The engine would not hand out an HTTP client for that host. Nothing was sent, so this is not a network failure — an unreachable host shows up as a timeout instead |
 | `The embed labels on this server leave no room for a description` | Server | `report.embed.*` overrides are too long |
 | `colorPlayer '...' is not 'r,g,b'` | Server | Colour must be three numbers, e.g. `249,67,67` |
 | `... is empty - falling back to the bundled content` | Server | The file exists but has nothing in it |
 | `report.json still carried its delivery block after repacking` | Server | The safety check that keeps the webhook URL off the wire refused to send. Reports still work; players see the bundled menu settings |
 | `No Discord webhook configured` | Server | Log-only, as configured |
-| `...neither a log file nor a webhook configured` | Server | Nothing is set up — reports go nowhere |
+| `A report reached neither the log file nor Discord.` | Server | The report was accepted and then went nowhere. Nothing configured, or the log file could not be written, or the Discord queue was full |
 
 ### Menus
 

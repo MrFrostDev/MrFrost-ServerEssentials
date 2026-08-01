@@ -54,7 +54,7 @@ JSON has no comments, so the files stay clean and everything is documented here 
 | `title` | string | — | Headline above the category list. Usually the server or unit name |
 | `pauseMenuEntry` | string | — | Label of the entry added next to the vanilla Field Manual |
 | `openOnJoin` | bool | `true` | Show the menu once, the first time a player spawns in. Not on respawn; again after a mission restart |
-| `accentColor` | string | white | `"226,167,79"` — ordinary sRGB, the numbers a colour picker shows. Drives the selected row and the lines |
+| `accentColor` | string | white | `"226,167,79"` — ordinary sRGB, the numbers a colour picker shows. Fills the selected row and draws the line under the header |
 | `menuIcon` | string | — | Sprite next to the title and on the pause menu entry — see [Icons](Icons.md) |
 | `menuIconImageset` | string | the shared set | Only if you ship your own artwork |
 | `discordUrl` | string | — | Invite link for the footer button. Must be `https://`; empty or anything else draws no button |

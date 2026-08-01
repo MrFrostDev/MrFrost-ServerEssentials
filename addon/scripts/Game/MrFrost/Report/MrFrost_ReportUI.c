@@ -2,13 +2,17 @@
 //! The report menu: a form, not a tree.
 //!
 //! The info menu is a reference work, so it gets a tree — you browse it. A report
-//! is a task with three or four answers, so it gets a form: two buttons for what
-//! you are reporting, dropdowns for who, a box for what happened, and a send
-//! button. Nothing to expand, nothing to browse.
+//! is a task with three or four answers, so it gets a form: a tab for what you
+//! are reporting, dropdowns for who, and a box for what happened. Nothing to
+//! expand, nothing to browse.
+//!
+//! There is no send button. Sending is a hold on the footer prompt, the same
+//! gesture the rest of the game uses for something it will not let you do by
+//! accident.
 //!
 //! Every control is a vanilla widget library one, so it looks and behaves like
-//! the settings menu: WLib_ButtonText, WLib_ComboBox, WLib_EditBox. The panel
-//! around it is the shared MrFrost frame.
+//! the settings menu: WLib_TabViewHorizontal, WLib_ComboBox, WLib_EditBox. The
+//! panel around it is the shared MrFrost frame.
 //!
 //! Rows that do not apply are hidden rather than disabled — a bug report has no
 //! "who", and showing a greyed-out dropdown only invites people to click it.

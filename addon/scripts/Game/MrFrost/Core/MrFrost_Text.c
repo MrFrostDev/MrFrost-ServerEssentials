@@ -129,9 +129,6 @@ class MrFrost_Text
 	}
 
 	//------------------------------------------------------------------------------
-	//! Installs a server's own wording. Overrides survive a language change, which
-	//! is the point: a server writing German rules wants German buttons next to
-	//! them whatever the client is set to.
 	//! Client side: forget the wording the last server sent.
 	static void ClearOverrides()
 	{
@@ -140,6 +137,9 @@ class MrFrost_Text
 	}
 
 	//------------------------------------------------------------------------------
+	//! Installs a server's own wording. Overrides survive a language change, which
+	//! is the point: a server writing German rules wants German buttons next to
+	//! them whatever the client is set to.
 	static void SetOverrides(notnull map<string, string> overrides)
 	{
 		// Merged, not replaced. Each feature's file brings its own map, and the

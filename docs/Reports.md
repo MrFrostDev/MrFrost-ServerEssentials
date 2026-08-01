@@ -145,7 +145,7 @@ An embed, with a coloured stripe down the side — red for a player report, ambe
 └
 ```
 
-Every field sits on a row of its own, so a report naming thirty players in "Against" does not squeeze the column beside it. The description sits in the body, which takes 4000 characters against a field's 1000 — a long report stays readable rather than being cut to fit. Anything past those limits is trimmed with `...` rather than dropped, because Discord rejects an oversized embed whole. A description longer than `maxDescription` is cut once, on the server, before either the log line or the embed is built.
+Every field sits on a row of its own, so a report naming thirty players in "Against" does not squeeze the column beside it. The description sits in the body, where the addon allows 4000 characters against a field's 1000 — a long report stays readable rather than being cut to fit. Both sit under Discord's own ceilings, leaving room for the escaping. Anything past those limits is trimmed with `...` rather than dropped, because Discord rejects an oversized embed whole. A description longer than `maxDescription` is cut once, on the server, before either the log line or the embed is built.
 
 `serverName` becomes the footer. Leave it empty and no footer is drawn.
 
@@ -189,7 +189,7 @@ The menu and its pause entry disappear, and the key stops doing anything. The sa
 | `Report delivered to Discord` | Server | The webhook accepted it. Diagnostic — needs `verboseLogging` |
 | `Discord rejected a report (HTTP ...)` | Server | Wrong URL, or Discord said no. It is still in the log |
 | `No Discord webhook configured` | Server | Log-only, as configured |
-| `...has neither a log file nor a webhook` | Server | Nothing is set up — reports go nowhere |
+| `A report reached neither the log file nor Discord.` | Server | The report was accepted and then went nowhere: nothing configured, an unwritable log file, or a full Discord queue |
 
 ---
 

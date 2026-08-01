@@ -13,6 +13,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   it opened, so no button responded until a mouse moved the cursor onto one, and
   the info menu's page text could not be scrolled at all. Both menus now take
   focus on open and answer the stick.
+- One capital letter in a server file could replace the whole menu with the
+  addon's demo content, silently. `"enabled": True`, a misspelt `fasle`, a
+  number written `.5`, and a Windows path in a text value all passed the file
+  check and then failed the parse — which cannot report failure, so every
+  setting fell back to its default while the server console said the file had
+  loaded. Those files are now rejected, by name, on the server console.
+- A file saved from Notepad or `Out-File` was rejected outright: both write a
+  byte order mark, and the message sent the owner looking for a missing comma in
+  a file whose punctuation was perfect. The mark is dropped.
+- `cooldownSeconds` above 2,147,483 wrapped to a negative number and removed the
+  cooldown entirely — the setting that asks for the strictest throttle gave the
+  weakest. It is capped at an hour, and the server says so when it caps.
+- A description at the documented maximum of 8191 could be cut through the
+  middle of a character, which Discord rejects, losing that report.
+- With `verboseLogging` on, a modified client could write to the server log
+  without bound: two paths logged a rejection per packet with no limit and, in
+  one case, whatever text the client chose to put in it.
+- A repeated content packet after a channel had finished put that channel back
+  in the pending set, where nothing would ever complete it. The welcome menu
+  then never opened again for the rest of the session.
+
+### Changed
+
+- A mistyped `accentColor` is now reported on the server console rather than in
+  every player's log, where the owner who wrote the file could not see it.
 
 ### Added
 
