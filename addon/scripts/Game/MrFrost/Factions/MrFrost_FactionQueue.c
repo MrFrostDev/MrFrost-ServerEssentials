@@ -59,7 +59,7 @@ class MrFrost_FactionQueue
 		Leave(playerId);
 
 		queue.Insert(playerId);
-		MrFrost_Log.Debug("Player " + playerId + " queued for '" + factionKey + "' at position " + queue.Count() + ".");
+		MrFrost_Log.Debug("Player " + playerId + " queued for '" + factionKey + "' at position " + (queue.Count() - 1) + ".");
 
 		return MrFrost_EQueueResult.QUEUED;
 	}
@@ -122,8 +122,13 @@ class MrFrost_FactionQueue
 		foreach (string key, array<int> queue : s_mQueues)
 		{
 			int index = queue.Find(playerId);
-			if (index >= 0)
-				queue.Remove(index);
+			if (index < 0)
+				continue;
+
+			// RemoveOrdered, not Remove: Remove fills the hole with the last element,
+			// so one person leaving would move whoever queued last to their place and
+			// past everyone in between. In a queue that is the whole point.
+			queue.RemoveOrdered(index);
 		}
 	}
 
@@ -150,11 +155,12 @@ class MrFrost_FactionQueue
 	}
 
 	//------------------------------------------------------------------------------
-	//! The players at the front of a faction's queue, in order, who may now join.
+	//! The player at the front of a faction's queue, if they may now join.
 	//!
-	//! The rule is asked once per candidate rather than once for the faction: each
-	//! player admitted changes the counts for the next, so admitting the whole
-	//! queue at once would overshoot the limit it was waiting on.
+	//! Returns at most one. Each player admitted changes the counts the next one
+	//! is measured against, and those counts only move once the caller has
+	//! actually assigned them - so handing out more than one per call overshoots
+	//! the very limit the queue was waiting on.
 	static void TakeAdmitted(string factionKey, notnull Faction faction, out notnull array<int> outAdmitted)
 	{
 		outAdmitted.Clear();
@@ -166,19 +172,20 @@ class MrFrost_FactionQueue
 		if (!s_mQueues.Find(factionKey, queue) || queue.IsEmpty())
 			return;
 
-		// Walked front to back, stopping at the first player who still cannot get
-		// in: letting a later one past would take the place the person ahead of
-		// them has been waiting for.
-		while (!queue.IsEmpty())
-		{
-			int playerId = queue[0];
+		// One at a time, and only the player at the front.
+		//
+		// The rule reads live player counts, and those do not move until the
+		// caller actually assigns somebody. Looping here asked the same question
+		// of every waiting player against the same unchanged counts, so one freed
+		// slot admitted the entire queue - ten players onto a cap of one. The
+		// caller assigns this one and calls again; the counts have moved by then.
+		int playerId = queue[0];
 
-			if (MrFrost_FactionRules.Evaluate(playerId, faction) != MrFrost_EFactionVerdict.ALLOWED)
-				break;
+		if (MrFrost_FactionRules.Evaluate(playerId, faction) != MrFrost_EFactionVerdict.ALLOWED)
+			return;
 
-			queue.RemoveOrdered(0);
-			outAdmitted.Insert(playerId);
-		}
+		queue.RemoveOrdered(0);
+		outAdmitted.Insert(playerId);
 	}
 
 	//------------------------------------------------------------------------------

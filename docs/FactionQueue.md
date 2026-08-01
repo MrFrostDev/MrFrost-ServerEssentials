@@ -2,8 +2,8 @@
 
 [← Back to index](Home.md)
 
-> [!NOTE]
-> Design notes for a feature that is not built yet. This page describes what it will do and how, so the decisions are written down before there is code to argue with.
+> [!WARNING]
+> Part built, none of it wired up. The rules, the config, the JSON schema, the queue and the history exist and are tested by nothing; no code calls them, so a server running this branch enforces no faction limits at all. This page describes the design and marks what is real.
 
 Players pick a faction from the deploy menu. When the faction they want has no room, they take a place in a queue for it, watch their position, and are put in the moment a place opens.
 
@@ -93,10 +93,12 @@ One queue per faction. One queue per player — picking a different faction leav
 
 | Key | Type | Default | Meaning |
 |---|---|---|---|
-| `enabled` | bool | `true` | `false` leaves faction selection entirely to the game |
+| `enabled` | bool | `false` | `false` leaves faction selection entirely to the game |
 | `maxImbalance` | number | `3` | How many players one balanced faction may lead by. Clamped to at least 1 |
 | `balanceMode` | string | `ALL` | `ALL`, `INCLUDE` or `EXCLUDE` — which factions the balance rule covers |
 | `balancedFactions` | array | — | Faction keys for `INCLUDE` and `EXCLUDE` |
+| `admins` | array | — | Account identities that may skip the queue, when `adminsSkipQueue` is on. Never sent to a client |
+| `adminsSkipQueue` | bool | `true` | Whether the identities above skip the queue |
 | `queueLimit` | number | `10` | Places per faction queue. `0` switches queueing off and refuses outright |
 | `returningPlayersSkipQueue` | bool | `true` | A player rejoining a faction they held this session goes straight in |
 | `factions[].key` | string | — | Faction key as the mission defines it |
@@ -115,7 +117,7 @@ Reading the outcome rather than overriding `CanRequestFaction_S()` keeps the add
 
 **The menu** gets its queue state from new widgets placed beside the faction rows. The addon does not touch `SetEnabled()` on the vanilla faction buttons: `SCR_FactionButton.UpdatePlayerCount()` re-evaluates the whole lock state on every count refresh, and a second mod writing to the same property wins or loses by load order again.
 
-For a click to reach the server at all, the button has to be live. The addon therefore sets the vanilla `playerLimit` on every faction it manages to `-1` at startup and enforces the real cap itself. Nothing in the game locks a faction button after that, every click produces a request, and the addon answers all of them.
+**Not built.** For a click to reach the server at all, the button has to be live. The addon therefore sets the vanilla `playerLimit` on every faction it manages to `-1` at startup and enforces the real cap itself. Nothing in the game locks a faction button after that, every click produces a request, and the addon answers all of them.
 
 ## Compatibility
 
@@ -145,6 +147,6 @@ GetGame().GetScriptModule().Call(factionManager, "WCS_SetIsTeamBalancerEnabled",
 
 ## Open items
 
-- Whether admins skip the queue, and how the addon recognises one
+- ~~Whether admins skip the queue, and how the addon recognises one~~ — answered: `adminsSkipQueue` plus an `admins` list of account identities
 - What a player sees when the faction they are queued for becomes unplayable
 - Whether the queue survives a mission restart, given that player counts reset with it

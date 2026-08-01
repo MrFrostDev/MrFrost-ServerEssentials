@@ -48,9 +48,16 @@ class MrFrost_FactionSettings
 	//! A faction is gated once its list has a single name in it. An empty list is
 	//! an open faction rather than a closed one — the alternative locks a faction
 	//! out of the game the moment a server owner adds the key and nothing else.
+	//! Set from the whitelist when the file is read, and sent to clients in its
+	//! place. A client must know a faction is gated so the menu can say so, and
+	//! must never hold the list of who is on it.
+	bool m_bGated;
+
+	//------------------------------------------------------------------------------
 	bool IsGated()
 	{
-		return m_aWhitelist && !m_aWhitelist.IsEmpty();
+		// The flag, not the list. On a client the list is deliberately absent.
+		return m_bGated;
 	}
 
 	//------------------------------------------------------------------------------
@@ -178,6 +185,13 @@ class MrFrost_FactionConfigLoader
 			s_Config = new MrFrost_FactionConfig();
 
 		return s_Config;
+	}
+
+	//------------------------------------------------------------------------------
+	//! Client side: forget whatever the last server sent.
+	static void ClearServerConfig()
+	{
+		s_ServerConfig = null;
 	}
 
 	//------------------------------------------------------------------------------

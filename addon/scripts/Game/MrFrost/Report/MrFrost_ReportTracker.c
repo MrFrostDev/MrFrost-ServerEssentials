@@ -58,6 +58,13 @@ modded class SCR_BaseGameMode
 		// somebody connected - so a server that had switched reporting off still
 		// accepted reports, and a broken file was only reported at that same late
 		// moment instead of at startup, where an owner is watching.
+		// Cleared with the mission. Both are statics keyed on a round that no
+		// longer exists: a queue place measured against player counts that reset
+		// to zero, and a record of who held a faction last round that would let
+		// them skip the balance rule for the whole of this one.
+		MrFrost_FactionQueue.Reset();
+		MrFrost_FactionHistory.Reset();
+
 		MrFrost_Features.LoadServerContent();
 	}
 

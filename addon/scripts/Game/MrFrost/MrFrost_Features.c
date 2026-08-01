@@ -181,6 +181,7 @@ class MrFrost_Features
 	{
 		MrFrost_InfoMenuConfigLoader.ClearServerConfig();
 		MrFrost_ReportConfigLoader.ClearServerConfig();
+		MrFrost_FactionConfigLoader.ClearServerConfig();
 		MrFrost_Text.ClearOverrides();
 		MrFrost_Log.SetVerbose(false);
 	}
