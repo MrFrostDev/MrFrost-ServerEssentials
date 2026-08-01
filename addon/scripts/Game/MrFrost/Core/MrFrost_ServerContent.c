@@ -221,9 +221,32 @@ class MrFrost_ServerContent
 		// printed config is easily a tenth indentation.
 		string raw;
 		string line;
+		bool first = true;
 		while (file.ReadLine(line) >= 0)
 		{
 			line.TrimInPlace();
+
+			// The byte order mark, off the first line and nowhere else. Notepad
+			// and PowerShell's Out-File both write one by default, TrimInPlace
+			// does not count EF BB BF as whitespace, and those three bytes in
+			// front of the opening brace make the file read as malformed - so the
+			// owner is told to look for a stray comma in a file whose punctuation
+			// is perfect. Dropped rather than reported: it is not a mistake, it is
+			// what the editor they used does.
+			//
+			// Masked, not compared directly: ToAscii sign-extends anything above
+			// 0x7F, so all three bytes arrive negative and == 0xEF is never true.
+			if (first)
+			{
+				first = false;
+
+				if (line.Length() >= 3
+					&& (line.ToAscii(0) & 0xFF) == 0xEF
+					&& (line.ToAscii(1) & 0xFF) == 0xBB
+					&& (line.ToAscii(2) & 0xFF) == 0xBF)
+					line = DropPrefix(line, 3);
+			}
+
 			raw += line;
 		}
 
@@ -649,6 +672,35 @@ class MrFrost_ServerContent
 	protected static bool IsContinuationByte(int value)
 	{
 		return (value & 0xC0) == 0x80;
+	}
+
+	//------------------------------------------------------------------------------
+	//! Returns everything past the first `count` bytes.
+	//!
+	//! Reassembled in pieces rather than taken in one Substring, which caps its
+	//! result at MAX_SUBSTRING and would silently discard everything past that.
+	//! A minified settings file is one very long line, so "it is only a line" is
+	//! not a bound - this is the same hazard Split() walks an offset to avoid.
+	protected static string DropPrefix(string value, int count)
+	{
+		int len = value.Length();
+		if (count >= len)
+			return string.Empty;
+
+		string result;
+		int offset = count;
+
+		while (offset < len)
+		{
+			int take = len - offset;
+			if (take > MAX_SUBSTRING)
+				take = MAX_SUBSTRING;
+
+			result += value.Substring(offset, take);
+			offset += take;
+		}
+
+		return result;
 	}
 
 	//------------------------------------------------------------------------------
