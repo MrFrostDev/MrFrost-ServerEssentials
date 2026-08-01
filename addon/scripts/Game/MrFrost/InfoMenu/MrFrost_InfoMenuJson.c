@@ -423,6 +423,27 @@ class MrFrost_InfoMenuChannel : MrFrost_ServerContentChannel
 	}
 
 	//------------------------------------------------------------------------------
+	//! Reports a colour the client will not be able to read, on the console of
+	//! the server whose file carries it.
+	//!
+	//! Deliberately duplicates ParseColor's own test rather than calling it:
+	//! ParseColor returns a Color and warns as a side effect, and the side effect
+	//! is the only part wanted here.
+	protected void WarnUnreadableColor(string value)
+	{
+		if (value.IsEmpty())
+			return;
+
+		array<string> parts = {};
+		value.Split(",", parts, true);
+
+		if (parts.Count() >= 3)
+			return;
+
+		MrFrost_Log.Warn("accentColor '" + value + "' in infomenu.json is not 'r,g,b' - players will see the default accent.");
+	}
+
+	//------------------------------------------------------------------------------
 	//! Parsed on the server purely so a broken file is reported on the server
 	//! console, where the owner will see it.
 	override bool Validate(string json)
@@ -454,6 +475,11 @@ class MrFrost_InfoMenuChannel : MrFrost_ServerContentChannel
 		ApplyStrings(probe.strings);
 
 		WarnOversizedMenu(probe);
+
+		// Same reason as the links above. ParseColor also says this, but it runs
+		// inside ToConfig() on the client, so a mistyped colour was reported to
+		// every player and to nobody who could fix it.
+		WarnUnreadableColor(probe.accentColor);
 
 		WarnUnopenableLink(probe.discordUrl, "discordUrl");
 		WarnUnopenableLink(probe.websiteUrl, "websiteUrl");
