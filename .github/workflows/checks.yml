@@ -1,0 +1,184 @@
+# The invariants CONTRIBUTING.md asks a contributor to promise by hand.
+#
+# None of these need the engine, and each of them has cost this project real
+# time at least once. A pull-request template asking someone to tick a box is
+# not a check.
+
+name: Checks
+
+on:
+  pull_request:
+  push:
+    branches: [dev, main]
+
+permissions:
+  contents: read
+
+jobs:
+  addon:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: No // comments in a .conf
+        run: |
+          set -euo pipefail
+
+          # A // comment desynchronises the Enfusion config parser and can take
+          # the engine down. A URL contains // legitimately, so the test is for
+          # one at the start of a line rather than anywhere.
+          HITS=$(grep -rnE '^[[:space:]]*//' addon --include='*.conf' || true)
+
+          if [ -n "$HITS" ]; then
+            echo "A .conf carries a // comment, which the parser cannot survive:"
+            echo "$HITS"
+            exit 1
+          fi
+
+      - name: Configs are UTF-8 without a BOM
+        run: |
+          set -euo pipefail
+          BAD=""
+
+          while IFS= read -r f; do
+            if ! iconv -f UTF-8 -t UTF-8 "$f" >/dev/null 2>&1; then
+              BAD="$BAD$f (not UTF-8)"$'\n'
+            fi
+
+            # A trailing "&& BAD=..." would end the loop body on a failing grep,
+            # and set -e would then take the job down on the first file that is
+            # fine - which is nearly all of them.
+            if head -c 3 "$f" | grep -q $'\xef\xbb\xbf'; then
+              BAD="$BAD$f (has a BOM)"$'\n'
+            fi
+          done < <(find addon \( -name '*.conf' -o -name '*.layout' -o -name '*.meta' \) -type f)
+
+          if [ -n "$BAD" ]; then
+            echo "$BAD"
+            exit 1
+          fi
+
+      - name: No duplicate resource GUIDs
+        run: |
+          set -euo pipefail
+
+          # Two resources declaring the same GUID is a collision the engine
+          # resolves by load order, silently. Only the Name line is read: a
+          # .meta may legitimately mention another resource's GUID, and its own
+          # is the one that has to be unique.
+          DUPES=$(grep -rh --include='*.meta' -oE '^ Name "\{[0-9A-F]{16}\}' addon \
+            | sort | uniq -d || true)
+
+          if [ -n "$DUPES" ]; then
+            echo "These GUIDs are declared more than once:"
+            echo "$DUPES"
+            exit 1
+          fi
+
+      - name: Every language key carries every translation
+        run: |
+          set -euo pipefail
+
+          python3 - <<'PY'
+          import re, sys
+
+          text = open('addon/Configs/MrFrost/Language.conf', encoding='utf-8').read()
+
+          if text.count('{') != text.count('}'):
+              sys.exit('Language.conf braces do not balance')
+
+          # Named rather than inferred from the first entry. Comparing entries
+          # against each other passes happily when a language is dropped from
+          # all of them at once, which is exactly how one would go missing.
+          expected = [
+              'de_de', 'fr_fr', 'it_it', 'es_es', 'cs_cz', 'pl_pl',
+              'ru_ru', 'uk_ua', 'pt_br', 'ja_jp', 'ko_kr', 'zh_cn',
+          ]
+
+          entries = re.split(r'MrFrost_TextEntry ', text)[1:]
+          problems = []
+
+          for entry in entries:
+              key = re.search(r'm_sKey "([^"]+)"', entry)
+              if not key:
+                  continue
+
+              langs = re.findall(r'm_sLanguage "([a-z_]+)"', entry)
+
+              if langs != expected:
+                  missing = sorted(set(expected) - set(langs))
+                  extra = sorted(set(langs) - set(expected))
+
+                  if missing or extra:
+                      problems.append(f'{key.group(1)}: missing {missing}, unexpected {extra}')
+                  else:
+                      problems.append(f'{key.group(1)}: right languages, wrong order: {langs}')
+
+          if problems:
+              sys.exit('\n'.join(problems))
+
+          print(f'{len(entries)} keys, {len(expected)} translations each')
+          PY
+
+      - name: Placeholders survive translation
+        run: |
+          set -euo pipefail
+
+          python3 - <<'PY'
+          import re, sys
+
+          text = open('addon/Configs/MrFrost/Language.conf', encoding='utf-8').read()
+          problems = []
+
+          for entry in re.split(r'MrFrost_TextEntry ', text)[1:]:
+              key = re.search(r'm_sKey "([^"]+)"', entry)
+              if not key:
+                  continue
+
+              strings = re.findall(r'm_sText "([^"]*)"', entry)
+              if not strings:
+                  continue
+
+              wanted = sorted(re.findall(r'%\d', strings[0]))
+
+              for s in strings[1:]:
+                  if sorted(re.findall(r'%\d', s)) != wanted:
+                      problems.append(f'{key.group(1)}: expected {wanted} in "{s}"')
+
+          if problems:
+              sys.exit('\n'.join(problems))
+
+          print('placeholders consistent')
+          PY
+
+      - name: Documentation links resolve
+        run: |
+          set -euo pipefail
+
+          python3 - <<'PY'
+          import os, re, sys
+
+          broken = []
+
+          for root, dirs, files in os.walk('.'):
+              if '.git' in root.split(os.sep):
+                  continue
+
+              for name in files:
+                  if not name.endswith('.md'):
+                      continue
+
+                  path = os.path.join(root, name)
+                  text = open(path, encoding='utf-8').read()
+
+                  for match in re.finditer(r'\]\(([^)#h][^)]*)\)', text):
+                      target = match.group(1).split('#')[0]
+                      if target and not os.path.exists(os.path.normpath(os.path.join(root, target))):
+                          broken.append(f'{path} -> {target}')
+
+          if broken:
+              sys.exit('\n'.join(broken))
+
+          print('all relative links resolve')
+          PY
