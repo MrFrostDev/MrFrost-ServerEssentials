@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Player limits, whitelists and a balance rule as one system, with a queue that
   catches everyone they turn away. Design notes live on that branch.
 
+## [1.0.7] - 2026-08-01
+
 ### Changed
 
 - `report.nobody_nearby` now means the report was filed and nobody was named.
@@ -336,7 +338,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   server's profile directory, so one published mod carries different content on
   every server that runs it.
 
-[Unreleased]: https://github.com/MrFrostDev/MrFrost-ServerEssentials/compare/v1.0.6...HEAD
+[Unreleased]: https://github.com/MrFrostDev/MrFrost-ServerEssentials/compare/v1.0.7...HEAD
+[1.0.7]: https://github.com/MrFrostDev/MrFrost-ServerEssentials/compare/v1.0.6...v1.0.7
 [1.0.6]: https://github.com/MrFrostDev/MrFrost-ServerEssentials/compare/v1.0.5...v1.0.6
 [1.0.5]: https://github.com/MrFrostDev/MrFrost-ServerEssentials/compare/v1.0.4...v1.0.5
 [1.0.4]: https://github.com/MrFrostDev/MrFrost-ServerEssentials/compare/v1.0.3...v1.0.4
