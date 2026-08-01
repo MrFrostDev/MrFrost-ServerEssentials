@@ -27,44 +27,120 @@ jobs:
   addon:
     runs-on: ubuntu-latest
 
+    # One run per tag. Two at once would race each other's upload, and the loser
+    # replaces the winner's asset without either noticing.
+    concurrency:
+      group: release-${{ github.event.inputs.tag || github.ref_name }}
+      cancel-in-progress: false
+
     steps:
+      # The tag never reaches a shell as text. A workflow expression is pasted in
+      # before bash parses the line, and a git ref may legally contain a quote, a
+      # semicolon or a $( - so TAG="${{ ... }}" turns push access into arbitrary
+      # code execution against a contents:write token. Through env: it is data.
+      - name: Resolve the tag
+        id: tag
+        env:
+          RAW_TAG: ${{ github.event.inputs.tag || github.ref_name }}
+        run: |
+          set -euo pipefail
+
+          case "$RAW_TAG" in
+            v[0-9]*.[0-9]*.[0-9]*) ;;
+            *) echo "Not a version tag: $RAW_TAG"; exit 1 ;;
+          esac
+
+          echo "tag=$RAW_TAG" >> "$GITHUB_OUTPUT"
+          echo "version=${RAW_TAG#v}" >> "$GITHUB_OUTPUT"
+
+      # Checked out at the tag, not at whatever branch the dispatch dropdown had.
+      # Without this, building "for v1.0.5" zipped the current dev tree and
+      # uploaded it over the real v1.0.5 asset, under its name.
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.tag.outputs.tag }}
+          fetch-depth: 0
+
+      - name: Refuse a tag that does not exist
+        env:
+          TAG: ${{ steps.tag.outputs.tag }}
+        run: |
+          set -euo pipefail
+
+          # gh release create invents the tag when it is missing, pointing it at
+          # the default branch - so a typo in the dispatch input would mint a tag
+          # and a public release instead of failing.
+          if ! git rev-parse -q --verify "refs/tags/$TAG" >/dev/null; then
+            echo "No such tag: $TAG"
+            exit 1
+          fi
+
+      - name: Check the changelog names this version
+        env:
+          VERSION: ${{ steps.tag.outputs.version }}
+        run: |
+          set -euo pipefail
+
+          # The cheapest guard against a mis-tagged release: the version being
+          # built has to be one the changelog says was released.
+          if ! grep -q "^## \[$VERSION\] - " CHANGELOG.md; then
+            echo "CHANGELOG.md has no released section for $VERSION"
+            exit 1
+          fi
 
       - name: Assemble the addon
         id: build
+        env:
+          VERSION: ${{ steps.tag.outputs.version }}
         run: |
           set -euo pipefail
-          TAG="${{ github.event.inputs.tag || github.ref_name }}"
-          VERSION="${TAG#v}"
           NAME="MrFrost-ServerEssentials"
 
           mkdir -p "build/$NAME"
           cp -r addon/. "build/$NAME/"
 
-          cd build && zip -qr "../$NAME-$VERSION.zip" "$NAME" && cd ..
+          # -X drops timestamps and platform metadata, so the same tag always
+          # produces the same bytes and a published asset can be re-derived.
+          cd build && zip -qrX "../$NAME-$VERSION.zip" "$NAME" && cd ..
 
-          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          sha256sum "$NAME-$VERSION.zip" > "$NAME-$VERSION.zip.sha256"
+
           echo "file=$NAME-$VERSION.zip" >> "$GITHUB_OUTPUT"
 
       - name: Check nothing unwanted got in
+        env:
+          FILE: ${{ steps.build.outputs.file }}
         run: |
           set -euo pipefail
-          LEAKED=$(unzip -Z1 "${{ steps.build.outputs.file }}" | grep -iE '(^|/)(docs|\.github|\.git)/|\.md$|\.png$|\.jpg$' || true)
-          if [ -n "$LEAKED" ]; then
-            echo "Documentation or repository files ended up in the archive:"
-            echo "$LEAKED"
+
+          # An allowlist of what the engine reads, not a list of what to keep
+          # out. A denylist misses the next extension nobody thought of, and it
+          # cannot express "license.txt yes, notes.txt no".
+          UNKNOWN=$(unzip -Z1 "$FILE" \
+            | grep -v '/$' \
+            | grep -vE '\.(c|conf|meta|layout|gproj|rdb|json|edds|emat)$' \
+            | grep -vE '(^|/)license\.txt$' \
+            || true)
+
+          if [ -n "$UNKNOWN" ]; then
+            echo "Files the engine does not read ended up in the archive:"
+            echo "$UNKNOWN"
             exit 1
           fi
+
           echo "Archive contents:"
-          unzip -Z1 "${{ steps.build.outputs.file }}" | head -40
-          echo "Size: $(du -h "${{ steps.build.outputs.file }}" | cut -f1)"
+          unzip -Z1 "$FILE" | head -40
+          echo "Size: $(du -h "$FILE" | cut -f1)"
 
       - name: Attach it to the release
         env:
           GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.tag.outputs.tag }}
+          FILE: ${{ steps.build.outputs.file }}
         run: |
           set -euo pipefail
-          TAG="${{ steps.build.outputs.tag }}"
+
           gh release view "$TAG" >/dev/null 2>&1 \
             || gh release create "$TAG" --title "$TAG" --generate-notes
-          gh release upload "$TAG" "${{ steps.build.outputs.file }}" --clobber
+
+          gh release upload "$TAG" "$FILE" "$FILE.sha256" --clobber
