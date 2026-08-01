@@ -246,10 +246,11 @@ class MrFrost_InfoMenuUI : MrFrost_MenuBase
 			return;
 
 		// The URL comes from the server and the button beside it is labelled by
-		// the server too, so a player pressing one labelled "Discord" has no way
-		// of knowing what it actually opens - the address is never shown. What
-		// gets handed to the platform is therefore restricted to what the button
-		// claims to be. The webhook avatar is checked the same way.
+		// the server too, and the address is never shown to the player. This
+		// constrains the scheme, not the host: a button labelled "Discord" can
+		// still point anywhere, so this is an allowlist of what may be handed to
+		// the platform, not a promise that the destination matches the label. The
+		// webhook avatar is checked the same way.
 		if (!url.StartsWith("https://"))
 		{
 			MrFrost_Log.Warn("The " + what + " link is not an https:// address and was not opened.");

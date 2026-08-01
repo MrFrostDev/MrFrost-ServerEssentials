@@ -7,7 +7,7 @@ body:
       value: |
         Before filing, check the `[MrFrost]` lines in your server and client
         logs — they usually name the cause directly. See
-        [docs/Troubleshooting.md](../blob/main/docs/Troubleshooting.md).
+        [docs/Troubleshooting.md](../blob/dev/docs/Troubleshooting.md).
 
         **Never paste a Discord webhook URL.** Anyone reading the issue could
         post into your channel with it.

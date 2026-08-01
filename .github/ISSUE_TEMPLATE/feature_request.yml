@@ -6,7 +6,7 @@ body:
     attributes:
       value: |
         Most changes to what players read are configuration rather than code —
-        see [docs/ServerContent.md](../blob/main/docs/ServerContent.md) before
+        see [docs/ServerContent.md](../blob/dev/docs/ServerContent.md) before
         filing.
 
   - type: textarea

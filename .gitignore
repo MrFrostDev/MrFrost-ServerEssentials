@@ -9,7 +9,14 @@ profile/
 # Discord webhook URL. These belong in the server's profile directory,
 # never in the repository. server/MrFrost/ holds the examples instead.
 **/profile/MrFrost/
+**/MrFrost/report.json
+**/MrFrost/infomenu.json
+**/MrFrost/factions.json
 reports.log
+
+# The examples under addon/server/ are the exception - they are tracked on
+# purpose and ship empty. Force-add one only after checking it is still empty.
+!addon/server/MrFrost/*.json
 
 # Editors
 .vscode/

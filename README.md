@@ -39,7 +39,7 @@ The content is a JSON file in your server's profile directory. Edit it, restart 
 
 Two levels of hierarchy: categories, each holding entries. The text supports bold, colours and inline icons. Title, accent colour and icons come from your config.
 
-The footer holds up to three link buttons — Discord on <kbd>D</kbd>, your website on <kbd>W</kbd>, and one more on <kbd>L</kbd> that you name yourself: a ruleset, a ban appeal form, a Teamspeak address. Each needs an `https://` address; the third needs a label as well, because a prompt with no name tells a player nothing. A slot with anything else draws no button, and the server says which key it was. Each opens through the platform, which is what makes them work on console.
+The footer holds up to three link buttons — Discord on <kbd>D</kbd>, your website on <kbd>W</kbd>, and one more on <kbd>L</kbd> that you name yourself: a ruleset, a ban appeal form, a Teamspeak address. Each needs an `https://` address; the third needs a label as well, because a prompt with no name tells a player nothing. A slot with anything else draws no button, and the server says which key it was. Each opens through the platform rather than an in-game browser, the same call the main menu's own links use.
 
 The menu is built from the game's own widget library, so it matches the vanilla settings and group menus.
 
@@ -103,7 +103,7 @@ Where those files are absent, the content bundled with the addon is shown, which
 | **Delivery** | Discord embed **and** a log file, each written independently of the other |
 | **Localisation** | Thirteen languages, picked from the player's game language; every string overridable per server |
 | **Per-server config** | Each menu can be switched off; the menu and its pause entry go, and its key stops doing anything |
-| **Console** | Controller support throughout, and link buttons that open on console |
+| **Console** | Both menus are operable on a controller. The keys that open them are bound to F11 and F10 only, so a console player without a keyboard reaches them through the pause menu or a binding of their own in Settings → Controls |
 | **Anti-radar** | "Everyone within 300 m" files the report without disclosing whether anyone was in range, until you enable it |
 
 Both menus share one panel, one input category and one folder of server-side content.

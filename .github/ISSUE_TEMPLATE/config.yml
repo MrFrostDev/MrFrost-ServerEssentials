@@ -1,7 +1,7 @@
 blank_issues_enabled: false
 contact_links:
   - name: Documentation
-    url: https://github.com/MrFrostDev/MrFrost-ServerEssentials/tree/main/docs
+    url: https://github.com/MrFrostDev/MrFrost-ServerEssentials/tree/dev/docs
     about: Setup, the JSON reference, text formatting, icons and troubleshooting.
   - name: Security vulnerability
     url: https://github.com/MrFrostDev/MrFrost-ServerEssentials/security/advisories/new
