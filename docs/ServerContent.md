@@ -139,7 +139,7 @@ Menu, pause entry and key all disappear. `report.json` takes the same key.
 | `allowPlayerReports` | bool | `true` | The "report a player" tab, with the four ways of naming a target |
 | `nearbyRadius` | number | `300` | Metres for the "everyone within X" option. The menu label is written with a placeholder and follows this number. Zero or less falls back to 300 |
 | `revealNobodyNearby` | bool | `false` | Whether to tell a reporter nobody was in range — see below |
-| `cooldownSeconds` | number | `10` | Wait between two accepted reports from one player. Enforced on the server. A half-second floor applies to every request on top of this, and cannot be switched off |
+| `cooldownSeconds` | number | `10` | Wait between two accepted reports from one player, `0` to `3600`. Enforced on the server; a value outside that range is capped and said on the console. A half-second floor applies to every request on top of this, and cannot be switched off |
 | `maxDescription` | number | `1000` | Longest description accepted. Longer text is trimmed, not rejected. Zero or less falls back to 1000 |
 | `menuIcon` | string | `feedback` | Sprite for the menu title and its pause entry |
 | `menuIconImageset` | string | the shared set | Only if you ship your own artwork |

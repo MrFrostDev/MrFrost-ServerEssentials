@@ -79,6 +79,43 @@ class MrFrost_ReportJson : JsonApiStruct
 	}
 
 	//------------------------------------------------------------------------------
+	//! Holds cooldownSeconds inside the range the throttle can actually express.
+	//!
+	//! Above the ceiling, seconds times 1000 overflows a signed 32-bit int and the
+	//! wrapped negative reads as "never on cooldown" - the setting that asks for
+	//! the strictest throttle would give the weakest. Below zero is the same
+	//! outcome by a shorter road, and far likelier to be a typo than a wish.
+	static int ClampCooldown(int seconds)
+	{
+		if (seconds > MrFrost_ReportSubmit.MAX_COOLDOWN_SECONDS)
+			return MrFrost_ReportSubmit.MAX_COOLDOWN_SECONDS;
+
+		if (seconds < 0)
+			return 0;
+
+		return seconds;
+	}
+
+	//------------------------------------------------------------------------------
+	//! Reports a cooldown the throttle had to change, on the console of the server
+	//! whose file carries it. Called from the channel's Validate(), which is the
+	//! server-only road, so this is deliberately not protected.
+	void WarnClampedCooldown(int seconds)
+	{
+		if (ClampCooldown(seconds) == seconds)
+			return;
+
+		if (seconds < 0)
+		{
+			MrFrost_Log.Warn("cooldownSeconds is " + seconds + ". A negative cooldown is no cooldown - players will be able to report as often as the half-second flood floor allows.");
+			return;
+		}
+
+		MrFrost_Log.Warn("cooldownSeconds is " + seconds + ", longer than the ceiling of "
+			+ MrFrost_ReportSubmit.MAX_COOLDOWN_SECONDS + " seconds. Using the ceiling. If you meant milliseconds, this field counts seconds.");
+	}
+
+	//------------------------------------------------------------------------------
 	MrFrost_ReportConfig ToConfig()
 	{
 		MrFrost_ReportConfig config = new MrFrost_ReportConfig();
@@ -86,20 +123,11 @@ class MrFrost_ReportJson : JsonApiStruct
 		config.m_bEnabled            = enabled;
 		config.m_bAllowBugReports    = allowBugReports;
 		config.m_bAllowPlayerReports = allowPlayerReports;
-		// Clamped again where it is used, so a value past the ceiling cannot get
-		// through by another road. Said out loud here because this is the only
-		// place the owner's own number is still visible: silently shortening a
-		// cooldown from what they wrote would look like the setting being
-		// ignored.
-		if (cooldownSeconds > MrFrost_ReportSubmit.MAX_COOLDOWN_SECONDS)
-		{
-			MrFrost_Log.Warn("cooldownSeconds is " + cooldownSeconds + ", which is longer than the ceiling of "
-				+ MrFrost_ReportSubmit.MAX_COOLDOWN_SECONDS + " seconds. Using the ceiling. If you meant milliseconds, this field counts seconds.");
-
-			cooldownSeconds = MrFrost_ReportSubmit.MAX_COOLDOWN_SECONDS;
-		}
-
-		config.m_iCooldownSeconds    = cooldownSeconds;
+		// Clamped without a word here. ToConfig() runs on every client, so a
+		// warning inside it is written into sixty-four player logs and into none
+		// that the owner reads - the mistake WarnUnreadableColor exists to undo.
+		// The server says it once, from Validate().
+		config.m_iCooldownSeconds    = ClampCooldown(cooldownSeconds);
 		config.m_bRevealNobodyNearby = revealNobodyNearby;
 		// Zero or less would not mean "no limit", it would mean the cut is skipped
 		// entirely - the same trap nearbyRadius is guarded against below. An
@@ -325,6 +353,11 @@ class MrFrost_ReportChannel : MrFrost_ServerContentChannel
 		parsed.ExpandFromRAW(json);
 
 		MrFrost_Log.SetVerbose(parsed.verboseLogging);
+
+		// Said on the server console, where the owner who wrote the file is
+		// looking, for the same reason the link and colour warnings are.
+		parsed.WarnClampedCooldown(parsed.cooldownSeconds);
+
 		// Built once. Two calls meant every warning this produces - a colour that
 		// is not "r,g,b", a webhookUrl that is not a URL - appeared twice in the
 		// console for one file.

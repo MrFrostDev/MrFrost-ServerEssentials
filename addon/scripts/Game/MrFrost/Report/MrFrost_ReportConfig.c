@@ -52,7 +52,7 @@ class MrFrost_ReportConfig
 	[Attribute(defvalue: "300", desc: "Radius in metres for the 'everyone nearby' option")]
 	float m_fNearbyRadius;
 
-	[Attribute(defvalue: "10", desc: "Seconds a player has to wait between two reports")]
+	[Attribute(defvalue: "10", desc: "Seconds a player has to wait between two reports. Held between 0 and 3600 - above that, seconds times 1000 overflows and the cooldown stops working", params: "0 3600")]
 	int m_iCooldownSeconds;
 
 	[Attribute(defvalue: "0", desc: "Tell the reporter when nobody was within the radius. Off keeps the report menu from doubling as a radar.")]

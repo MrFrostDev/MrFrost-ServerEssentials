@@ -87,7 +87,7 @@ Once a report is in, the menu says so and closes itself a moment later. If the s
 | `allowPlayerReports` | Offer "Report a player" |
 | `nearbyRadius` | Metres for the "everyone nearby" option. Zero or less falls back to 300 |
 | `revealNobodyNearby` | Tell the reporter when nobody was in range. Off by default — see below |
-| `cooldownSeconds` | How long a player waits between two reports |
+| `cooldownSeconds` | How long a player waits between two reports. `0` to `3600` |
 | `maxDescription` | Longest description accepted, in bytes, up to 8191. A plain letter is one, an umlaut two, a Japanese character three. Zero or less falls back to 1000 |
 | `menuIcon` | Sprite for the menu and pause entry |
 
@@ -170,7 +170,7 @@ The report is filed either way — it simply names nobody. `revealNobodyNearby` 
 
 ## Rate limiting
 
-One accepted report per player per `cooldownSeconds`, plus a half-second floor on every request whether it is accepted or not. Both checks are on the server, so they hold regardless of what the client does, and the floor stays even at `cooldownSeconds: 0`. A player who tries earlier is told to wait, in their own language.
+One accepted report per player per `cooldownSeconds`, plus a half-second floor on every request whether it is accepted or not. Both checks are on the server, so they hold regardless of what the client does, and the floor stays even at `cooldownSeconds: 0`. Anything above 3600 is capped at 3600 and anything below zero is read as zero, with a line on the server console either way — past that ceiling the arithmetic overflows and the cooldown stops working altogether. A player who tries earlier is told to wait, in their own language.
 
 ## Turning it off
 
