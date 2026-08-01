@@ -569,6 +569,16 @@ modded class SCR_PlayerController
 
 	//------------------------------------------------------------------------------
 	//! True while at least one feature's content is still on its way.
+	//! Whether this client is done taking the server's content.
+	//!
+	//! Both halves, the same pair the welcome waits on: the server has said it
+	//! sent everything, and no channel is half-arrived.
+	bool MrFrost_HasServerContent()
+	{
+		return m_bMrFrostContentComplete && !MrFrost_IsTransferPending();
+	}
+
+	//------------------------------------------------------------------------------
 	protected bool MrFrost_IsTransferPending()
 	{
 		return m_aMrFrostPendingChannels && !m_aMrFrostPendingChannels.IsEmpty();
@@ -618,6 +628,13 @@ modded class SCR_PlayerController
 		if (!config || !config.m_bOpenOnJoin)
 			return;
 
+		// Cleared here as well as in UpdateLocalPlayerController, because this is
+		// the road a mission restart takes with the client still connected -
+		// UpdateLocalPlayerController does not run for it, which is the whole
+		// reason HasMissionRestarted exists. Without this, a player who had seen
+		// the old mission's menu never got the new one's welcome.
+		s_bMrFrostInfoMenuSeen = false;
+
 		s_bMrFrostAutoOpened = true;
 		s_fMrFrostAutoOpenedAt = GetGame().GetWorld().GetWorldTime();
 		GetGame().GetCallqueue().CallLater(MrFrost_AutoOpenInfoMenu, MRFROST_AUTO_OPEN_DELAY_MS, false);
@@ -625,8 +642,19 @@ modded class SCR_PlayerController
 
 	//------------------------------------------------------------------------------
 	//! Called by the info menu whenever it opens, however it was opened.
+	//!
+	//! Only counts once this server's own content is in. Before that the menu is
+	//! showing the demo pages bundled with the addon - "Replace this with your own
+	//! text." - so a player who opened it from the pause menu during the deploy
+	//! screen read those, latched the flag, and never got the welcome carrying the
+	//! server's actual rules. A menu full of placeholder text is not a welcome
+	//! anybody has seen.
 	static void MrFrost_MarkInfoMenuSeen()
 	{
+		SCR_PlayerController controller = SCR_PlayerController.Cast(GetGame().GetPlayerController());
+		if (controller && !controller.MrFrost_HasServerContent())
+			return;
+
 		s_bMrFrostInfoMenuSeen = true;
 	}
 
