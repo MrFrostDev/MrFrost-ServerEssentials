@@ -56,7 +56,7 @@ jobs:
       # Checked out at the tag, not at whatever branch the dispatch dropdown had.
       # Without this, building "for v1.0.5" zipped the current dev tree and
       # uploaded it over the real v1.0.5 asset, under its name.
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ steps.tag.outputs.tag }}
           fetch-depth: 0
