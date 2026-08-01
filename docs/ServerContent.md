@@ -64,7 +64,7 @@ JSON has no comments, so the files stay clean and everything is documented here 
 | `customUrl` | string | — | A third link of your choosing — a ruleset, a ban appeal form, a forum thread. Must be `https://` |
 | `customLabel` | string | — | Label of that button. **Required** — an unlabelled third slot stays hidden even with a URL set |
 | `strings` | array | — | Override individual UI strings — see [Text and languages](#text-and-languages) |
-| `categories` | array | — | The list on the left, up to 512 rows counting categories and entries together. Leave it out to keep the bundled content and change only the settings around it |
+| `categories` | array | — | The list on the left, up to 512 rows counting categories and entries together. Leave it out to keep the bundled pages and change only the settings around them. The footer links are **not** inherited that way — a file that names no `discordUrl` gets no Discord button |
 
 ### A category
 

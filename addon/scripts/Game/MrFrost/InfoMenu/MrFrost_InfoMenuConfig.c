@@ -77,10 +77,10 @@ class MrFrost_InfoMenuConfig
 	//! names a sprite without naming an imageset, which is the common case.
 	static const ResourceName DEFAULT_IMAGESET = "{3262679C50EF4F01}UI/Textures/Icons/icons_wrapperUI.imageset";
 
-	[Attribute(defvalue: "MrFrost", uiwidget: UIWidgets.LocaleEditBox, desc: "Title shown above the category list")]
+	[Attribute(uiwidget: UIWidgets.LocaleEditBox, desc: "Title shown above the category list. Left empty, it reads 'Info' in the player's own language")]
 	string m_sTitle;
 
-	[Attribute(defvalue: "Info", uiwidget: UIWidgets.LocaleEditBox, desc: "Label of the entry added to the in-game pause menu")]
+	[Attribute(uiwidget: UIWidgets.LocaleEditBox, desc: "Label of the entry added to the in-game pause menu. Left empty, it reads 'Info' in the player's own language")]
 	string m_sPauseMenuEntry;
 
 	[Attribute(defvalue: "0.76052 0.38643 0.07819 1", uiwidget: UIWidgets.ColorPicker, desc: "Accent colour: selected row and the line under the header. Defaults to the Reforger gold.")]
@@ -293,7 +293,14 @@ class MrFrost_InfoMenuConfigLoader
 				if (merged.m_sMenuIconName.IsEmpty())
 				{
 					merged.m_sMenuIconName = bundled.m_sMenuIconName;
-					merged.m_MenuIconImageset = bundled.m_MenuIconImageset;
+
+					// Only when the server named no imageset either. ToConfig puts
+					// the shared set in when the key is absent, so anything else is
+					// a server that ships its own artwork - and taking the bundled
+					// set here discarded the one thing that file did say, to
+					// resolve a sprite it never asked for.
+					if (merged.m_MenuIconImageset == MrFrost_InfoMenuConfig.DEFAULT_IMAGESET)
+						merged.m_MenuIconImageset = bundled.m_MenuIconImageset;
 				}
 
 				// m_bOpenOnJoin is the one setting that cannot join this list.
@@ -302,26 +309,19 @@ class MrFrost_InfoMenuConfigLoader
 				// nothing here to test. It defaults to true on both sides, so the
 				// two only diverge for a build that ships it switched off.
 				//
-				// The footer belongs to the menu being kept. A file that says
-				// nothing about the links is keeping the bundled menu whole, not
-				// asking for it with its buttons taken off.
-				if (merged.m_sDiscordUrl.IsEmpty())
-				{
-					merged.m_sDiscordUrl = bundled.m_sDiscordUrl;
-					merged.m_sDiscordLabel = bundled.m_sDiscordLabel;
-				}
-
-				if (merged.m_sWebsiteUrl.IsEmpty())
-				{
-					merged.m_sWebsiteUrl = bundled.m_sWebsiteUrl;
-					merged.m_sWebsiteLabel = bundled.m_sWebsiteLabel;
-				}
-
-				if (merged.m_sCustomUrl.IsEmpty())
-				{
-					merged.m_sCustomUrl = bundled.m_sCustomUrl;
-					merged.m_sCustomLabel = bundled.m_sCustomLabel;
-				}
+				// The footer links are deliberately NOT inherited. They used to
+				// be, on the reading that a file keeping the bundled content is
+				// keeping the bundled menu whole - but the bundled links are the
+				// addon author's, so a server that dropped in a file naming only
+				// its own title handed its players a Discord button pointing at
+				// somebody else's server, with no value it could write to stop it:
+				// an absent key and "" arrive identical, so the empty string the
+				// documentation offers as "draws no button" was the same input as
+				// saying nothing.
+				//
+				// A server that ships a file owns its own footer. Three lines of
+				// JSON get the buttons back, and this is what ServerContent.md has
+				// promised all along.
 			}
 
 			s_ServerConfig = merged;

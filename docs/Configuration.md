@@ -107,7 +107,7 @@ Rather than converting, take one of these:
 m_AccentColor 0.76052 0.38643 0.07819 1
 ```
 
-The accent colour fills the selected row and draws the line under the header. Nothing else takes it — the expand markers and the tree lines are fixed tones.
+The accent colour fills the selected row and draws the line under the header. Leave `m_sTitle` and `m_sPauseMenuEntry` empty and both read "Info" in each player's own language; type something and that exact text is shown to everyone. Nothing else takes it — the expand markers and the tree lines are fixed tones.
 
 > [!TIP]
 > Colours **inside text** are unrelated to this and use ordinary 0–255 values. See [Text formatting](Formatting.md).
