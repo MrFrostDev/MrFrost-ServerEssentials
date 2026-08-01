@@ -86,6 +86,19 @@ class MrFrost_ReportJson : JsonApiStruct
 		config.m_bEnabled            = enabled;
 		config.m_bAllowBugReports    = allowBugReports;
 		config.m_bAllowPlayerReports = allowPlayerReports;
+		// Clamped again where it is used, so a value past the ceiling cannot get
+		// through by another road. Said out loud here because this is the only
+		// place the owner's own number is still visible: silently shortening a
+		// cooldown from what they wrote would look like the setting being
+		// ignored.
+		if (cooldownSeconds > MrFrost_ReportSubmit.MAX_COOLDOWN_SECONDS)
+		{
+			MrFrost_Log.Warn("cooldownSeconds is " + cooldownSeconds + ", which is longer than the ceiling of "
+				+ MrFrost_ReportSubmit.MAX_COOLDOWN_SECONDS + " seconds. Using the ceiling. If you meant milliseconds, this field counts seconds.");
+
+			cooldownSeconds = MrFrost_ReportSubmit.MAX_COOLDOWN_SECONDS;
+		}
+
 		config.m_iCooldownSeconds    = cooldownSeconds;
 		config.m_bRevealNobodyNearby = revealNobodyNearby;
 		// Zero or less would not mean "no limit", it would mean the cut is skipped

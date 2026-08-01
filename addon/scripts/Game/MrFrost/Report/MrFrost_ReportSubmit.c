@@ -11,6 +11,19 @@ class MrFrost_ReportSubmit
 	//! Player id -> world time in milliseconds of their last accepted report.
 	protected static ref map<int, float> s_mLastReport;
 
+	//! Bound on the name a client claims it picked, in bytes. A Reforger name is
+	//! far shorter than this even written entirely in three-byte characters; the
+	//! number exists to stop a modified client, not to fit a real player.
+	protected static const int MAX_NAME = 128;
+
+	//! Ceiling on cooldownSeconds. Seconds times 1000 overflows a signed 32-bit
+	//! int above 2,147,483, and the wrapped negative compares as "never on
+	//! cooldown" - so the operator who asked for the strictest throttle in the
+	//! system would have got the weakest one. An hour is longer than any server
+	//! has reason to set, and it also catches the likelier mistake: milliseconds
+	//! typed into a field that counts seconds.
+	static const int MAX_COOLDOWN_SECONDS = 3600;
+
 	//------------------------------------------------------------------------------
 	//! Accepts a report from a player. Returns a key from the text table for the
 	//! client to show, so the reason a report bounced is worded in the player's
@@ -45,9 +58,23 @@ class MrFrost_ReportSubmit
 		if (kind == MrFrost_EReportKind.PLAYER && !config.m_bAllowPlayerReports)
 			return "report.disabled";
 
-		description = description.Trim();
+		// TrimInPlace rather than Trim: Trim() returns a copy capped at 8191
+		// bytes, and the cut is blind to characters. With maxDescription at its
+		// documented maximum of 8191 the cut below would then measure a string
+		// already at the limit, leave it alone, and pass half a character into
+		// the embed JSON - which Discord answers with a 400, losing the report.
+		description.TrimInPlace();
 		if (description.IsEmpty())
 			return "report.need_description";
+
+		// The one client string that used to reach the server unbounded. It is
+		// never stored and never shown - it exists only to be compared against
+		// the live name - but the mismatch is logged, and the rejection it comes
+		// from happens before the cooldown is stamped. That left a modified
+		// client writing two log lines a second, each as long as it liked, with
+		// newlines in them to make each look like several. Bounded and stripped
+		// here, once, before anything reads it.
+		selectedName = MrFrost_ServerContent.ForLog(selectedName, MAX_NAME);
 
 		// Trimmed rather than rejected: a player who wrote too much should not
 		// lose what they wrote, and the cut is on the server so no client can
@@ -165,7 +192,16 @@ class MrFrost_ReportSubmit
 		if (now < last)
 			return false;
 
-		return (now - last) < (config.m_iCooldownSeconds * 1000);
+		// Clamped here rather than where the value is read, because it arrives by
+		// two roads - the JSON file and the addon config - and this is the only
+		// place either one is used.
+		int seconds = config.m_iCooldownSeconds;
+		if (seconds > MAX_COOLDOWN_SECONDS)
+			seconds = MAX_COOLDOWN_SECONDS;
+
+		// 1000.0, not 1000: an int multiplication would still wrap for anything
+		// the clamp let through if that ceiling is ever raised.
+		return (now - last) < (seconds * 1000.0);
 	}
 
 	//------------------------------------------------------------------------------
