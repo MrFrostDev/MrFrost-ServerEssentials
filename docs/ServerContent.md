@@ -60,7 +60,7 @@ JSON has no comments, so the files stay clean and everything is documented here 
 | `discordUrl` | string | — | Invite link for the footer button. Must be `https://`; empty or anything else draws no button |
 | `discordLabel` | string | `Discord` | Label of that button |
 | `websiteUrl` | string | — | Your website, opened by the same mechanism. Must be `https://` |
-| `websiteLabel` | string | `Website` | Label of that button |
+| `websiteLabel` | string | — | Label of that button. Left out, it reads "Website" in the player's own language |
 | `customUrl` | string | — | A third link of your choosing — a ruleset, a ban appeal form, a forum thread. Must be `https://` |
 | `customLabel` | string | — | Label of that button. **Required** — an unlabelled third slot stays hidden even with a URL set |
 | `strings` | array | — | Override individual UI strings — see [Text and languages](#text-and-languages) |

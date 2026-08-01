@@ -39,7 +39,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   within it. Four more drifted from the word their own language uses everywhere
   else, and the German player-picker label was half again as long as any
   sibling in a slot that cannot grow.
-- The website button was labelled in English for every player.
+- The website button was labelled in English for every player. The example
+  `infomenu.json` no longer fills that label in, so copying it as documented
+  leaves the translation in place.
 
 ## [1.0.6] - 2026-08-01
 
