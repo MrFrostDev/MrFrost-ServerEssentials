@@ -44,6 +44,10 @@ modded class SCR_PlayerController
 	//! Server side: whether this client has already been sent the server files.
 	protected bool m_bMrFrostContentServed;
 
+	//! Server side: whether a repeated request from this client has been logged.
+	//! One line per player, however many packets they send.
+	protected bool m_bMrFrostRepeatLogged;
+
 	//! Client: the server has said it sent everything.
 	protected bool m_bMrFrostContentComplete;
 
@@ -61,8 +65,6 @@ modded class SCR_PlayerController
 
 	protected int m_iMrFrostAutoOpenAttempts;
 
-	//! Static, so the info menu greets the player once per session rather than on
-	//! every respawn.
 	//! Whether the info menu has already opened itself this session, and the
 	//! world time at which that happened.
 	//!
@@ -86,6 +88,10 @@ modded class SCR_PlayerController
 
 	//! Channels still expected to arrive. Empty means the transfer is done.
 	protected ref set<int> m_aMrFrostPendingChannels;
+
+	//! Channels already reassembled and applied, so a late or repeated packet for
+	//! one of them cannot put it back into the set above.
+	protected ref set<int> m_aMrFrostDoneChannels;
 
 	//------------------------------------------------------------------------------
 	protected override void UpdateLocalPlayerController()
@@ -293,7 +299,17 @@ modded class SCR_PlayerController
 		// test false and the whole rebuild reachable at packet rate.
 		if (m_bMrFrostContentServed)
 		{
-			MrFrost_Log.Debug("Ignoring a repeated content request.");
+			// Said once per player, not once per packet. Debug is a real write to
+			// script.log on any server running with verboseLogging on, so the
+			// cheap path out was still a line on disk a modified client could ask
+			// for at packet rate - a slow way to fill a disk with the diagnostic
+			// switch the owner turned on to find the problem.
+			if (!m_bMrFrostRepeatLogged)
+			{
+				m_bMrFrostRepeatLogged = true;
+				MrFrost_Log.Debug("Ignoring a repeated content request. Further ones from this player are not logged.");
+			}
+
 			return;
 		}
 
@@ -434,7 +450,16 @@ modded class SCR_PlayerController
 		{
 			m_mMrFrostIncoming = new map<int, ref array<string>>();
 			m_aMrFrostPendingChannels = new set<int>();
+			m_aMrFrostDoneChannels = new set<int>();
 		}
+
+		// A channel is finished once. Without this, a chunk arriving for one that
+		// already completed found no partial array, built a fresh one of empty
+		// slots and put the channel back into the pending set - where nothing
+		// would ever fill it again. MrFrost_IsTransferPending() then stayed true
+		// for the rest of the session and the welcome menu never opened.
+		if (m_aMrFrostDoneChannels.Contains(channelIndex))
+			return;
 
 		array<string> parts = m_mMrFrostIncoming.Get(channelIndex);
 		if (!parts || parts.Count() != total)
@@ -465,6 +490,7 @@ modded class SCR_PlayerController
 
 		m_mMrFrostIncoming.Remove(channelIndex);
 		m_aMrFrostPendingChannels.RemoveItem(channelIndex);
+		m_aMrFrostDoneChannels.Insert(channelIndex);
 
 		MrFrost_ServerContentChannel channel = channels[channelIndex];
 
