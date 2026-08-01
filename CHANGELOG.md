@@ -33,6 +33,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - A repeated content packet after a channel had finished put that channel back
   in the pending set, where nothing would ever complete it. The welcome menu
   then never opened again for the rest of the session.
+- The keys that open the two menus fired everywhere, including into an open
+  menu and into the description box. Rebind Report to a letter and the first
+  time you typed it the form closed and took the report with it; F11 over an
+  open report menu buried it under the info menu. The keys now stay out of a
+  menu they did not open, and switch between the two rather than stacking them.
+- The welcome menu could open a second time, over gameplay, up to two and a half
+  minutes after a player had already read it and closed it themselves.
+- A menu whose content failed to load had no way out — the back prompt is built
+  with the footer, and the footer came second.
+- Control characters a player typed reached `reports.log` unfiltered, so a
+  reporter could erase the lines above their own in a terminal. Discord's copy
+  has always stripped them; the two records of one report disagreed.
+- `logFile` set to a reserved Windows device name (`NUL`, `CON`, `COM1`, …) was
+  accepted, and every report written to it was discarded while the console
+  reported each one as written.
+- Warnings about settings that cannot change while the server runs were printed
+  once per report rather than once.
 
 ### Changed
 

@@ -48,6 +48,34 @@ class MrFrost_Log
 		Print(PREFIX + msg, LogLevel.ERROR);
 	}
 
+	//! Warnings already said, by their key.
+	protected static ref set<string> s_aSaidOnce;
+
+	//------------------------------------------------------------------------------
+	//! Says something once per process, however often it is asked.
+	//!
+	//! For a complaint about configuration. A server file is read at startup and
+	//! cannot change while the server runs, so a warning about one has nothing new
+	//! to say on the second report, or the two-thousandth - but the paths that
+	//! notice run per report, and the line was written every time. That is a slow
+	//! way to fill a disk using the diagnostic switch an owner turned on to find
+	//! the problem.
+	//!
+	//! The key is what makes two warnings the same warning, so it names the
+	//! setting rather than carrying the message text: a line quoting the offending
+	//! value would otherwise be a new key each time the value differed.
+	static void WarnOnce(string key, string msg)
+	{
+		if (!s_aSaidOnce)
+			s_aSaidOnce = new set<string>();
+
+		if (s_aSaidOnce.Contains(key))
+			return;
+
+		s_aSaidOnce.Insert(key);
+		Warn(msg);
+	}
+
 	//------------------------------------------------------------------------------
 	//! Compiled in always, gated so a release build pays only a bool check.
 	static void Debug(string msg)

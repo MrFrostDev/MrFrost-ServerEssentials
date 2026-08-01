@@ -146,12 +146,54 @@ class MrFrost_ReportDelivery
 
 		if (name.Contains("/") || name.Contains("\\") || name.Contains(":") || name.Contains(".."))
 		{
-			MrFrost_Log.Warn("logFile must be a file name, not a path. Using "
+			MrFrost_Log.WarnOnce("logFile", "logFile must be a file name, not a path. Using "
 				+ DEFAULT_LOG_FILE + " instead of: " + name);
 			return DEFAULT_LOG_FILE;
 		}
 
+		// Windows keeps a handful of names reserved for devices, and opening one
+		// SUCCEEDS - every report would then be written to a device that discards
+		// it while the console reported each one as written. On a server keeping
+		// no webhook that is the only copy. Refused here because it is the one
+		// failure of this kind that can be decided without asking the OS.
+		if (IsDeviceName(name))
+		{
+			MrFrost_Log.WarnOnce("logFile", "logFile '" + name + "' is a reserved device name on Windows, and anything written to it is discarded. Using "
+				+ DEFAULT_LOG_FILE + " instead.");
+			return DEFAULT_LOG_FILE;
+		}
+
 		return name;
+	}
+
+	//------------------------------------------------------------------------------
+	//! Whether a file name is one Windows reserves for a device.
+	//!
+	//! The reservation covers the stem, so "NUL", "nul.log" and "CON.txt" are all
+	//! the device. Case does not matter, and the list is the whole of it.
+	protected static bool IsDeviceName(string name)
+	{
+		string stem = name;
+
+		int dot = stem.IndexOf(".");
+		if (dot >= 0)
+			stem = stem.Substring(0, dot);
+
+		stem.ToLower();
+
+		if (stem == "con" || stem == "prn" || stem == "aux" || stem == "nul")
+			return true;
+
+		// COM1-COM9 and LPT1-LPT9. COM0 and LPT0 are not reserved.
+		if (stem.Length() != 4)
+			return false;
+
+		string port = stem.Substring(0, 3);
+		if (port != "com" && port != "lpt")
+			return false;
+
+		int digit = stem.ToAscii(3);
+		return digit >= 49 && digit <= 57;
 	}
 
 	//------------------------------------------------------------------------------
@@ -192,8 +234,21 @@ class MrFrost_ReportDelivery
 		description.Replace("\n", " ");
 		description.Replace("\r", " ");
 
-		line += " | " + description;
+		// Every other byte below 0x20 goes too. A description can carry them - the
+		// Discord sink has stripped them since it was written and this one had
+		// not, so the two records of the same report disagreed. An escape sequence
+		// in a file an owner tails erases the line above it, which makes the log
+		// that is meant to be the record surviving a deleted message forgeable by
+		// the person it records.
+		line += " | " + MrFrost_ServerContent.StripControls(description);
 
+		// WriteLine returns void, so a write that fails after the handle opened -
+		// a full volume is the realistic one - cannot be seen from here, and this
+		// answers true for it. Read() and Write() do return a count; WriteLine
+		// does not, and using Write() instead would mean building the line
+		// terminator by hand on a handle the rest of the file treats as text. The
+		// case that IS decidable, a name the OS accepts but discards, is refused
+		// in SafeLogName rather than guessed at here.
 		file.WriteLine(line);
 		file.Close();
 
@@ -226,11 +281,21 @@ class MrFrost_ReportDelivery
 
 		s_aQueue.Insert(report);
 
+		// Re-armed rather than trusted. s_bSending asserted that a repeating call
+		// existed; nothing ever checked that it still did, and nothing but
+		// SendNext could clear the flag - so a call lost for any reason left the
+		// flag true, every later Enqueue answering "queued", and no report
+		// reaching Discord again for the life of the process while two hundred
+		// players were told theirs was sent. Remove before CallLater makes this
+		// idempotent: re-arming an intact timer costs nothing and cannot double
+		// the send rate.
+		GetGame().GetCallqueue().Remove(SendNext);
+		GetGame().GetCallqueue().CallLater(SendNext, SEND_INTERVAL_MS, true);
+
 		if (s_bSending)
 			return true;
 
 		s_bSending = true;
-		GetGame().GetCallqueue().CallLater(SendNext, SEND_INTERVAL_MS, true);
 		SendNext();
 		return true;
 	}
@@ -373,7 +438,7 @@ class MrFrost_ReportDelivery
 		if (budget > 0)
 			description = Clamp(report.m_sDescription, budget);
 		else
-			MrFrost_Log.Warn("The embed labels on this server leave no room for a description. Shorten the report.embed.* overrides.");
+			MrFrost_Log.WarnOnce("embed.labels", "The embed labels on this server leave no room for a description. Shorten the report.embed.* overrides.");
 
 		string embed = "{";
 		embed += "\"title\":\"" + Escape(heading) + "\",";
@@ -406,11 +471,11 @@ class MrFrost_ReportDelivery
 		if (!config.m_sWebhookAvatarUrl.IsEmpty())
 		{
 			if (config.m_sWebhookAvatarUrl.Length() > MAX_AVATAR_URL)
-				MrFrost_Log.Warn("webhookAvatarUrl is too long to be a URL and was ignored.");
+				MrFrost_Log.WarnOnce("webhookAvatarUrl", "webhookAvatarUrl is too long to be a URL and was ignored.");
 			else if (config.m_sWebhookAvatarUrl.StartsWith("http"))
 				payload += ",\"avatar_url\":\"" + Escape(config.m_sWebhookAvatarUrl) + "\"";
 			else
-				MrFrost_Log.Warn("webhookAvatarUrl is not a URL and was ignored: " + config.m_sWebhookAvatarUrl);
+				MrFrost_Log.WarnOnce("webhookAvatarUrl", "webhookAvatarUrl is not a URL and was ignored: " + config.m_sWebhookAvatarUrl);
 		}
 
 		// allowed_mentions empty: a player typing @everyone into a description
