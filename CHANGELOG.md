@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Faction rules and a queue for a full faction, on a branch and not yet released.
+  Player limits, whitelists and a balance rule as one system, with a queue that
+  catches everyone they turn away. Design notes live on that branch.
+
+## [1.1.0] - 2026-08-01
+
 ### Fixed
 
 - The report menu could not be used with a controller. Nothing held focus when
@@ -22,14 +30,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - A file saved from Notepad or `Out-File` was rejected outright: both write a
   byte order mark, and the message sent the owner looking for a missing comma in
   a file whose punctuation was perfect. The mark is dropped.
-- `cooldownSeconds` above 2,147,483 wrapped to a negative number and removed the
-  cooldown entirely — the setting that asks for the strictest throttle gave the
-  weakest. It is capped at an hour, and the server says so when it caps.
+- `cooldownSeconds` is held between 0 and 3600. Above 2,147,483 it used to wrap
+  to a negative number and remove the cooldown entirely — the setting that asks
+  for the strictest throttle gave the weakest. **If your `report.json` sets it
+  above 3600, it is now 3600.** The server says so on its console when it caps.
 - A description at the documented maximum of 8191 could be cut through the
   middle of a character, which Discord rejects, losing that report.
-- With `verboseLogging` on, a modified client could write to the server log
-  without bound: two paths logged a rejection per packet with no limit and, in
-  one case, whatever text the client chose to put in it.
 - A repeated content packet after a channel had finished put that channel back
   in the pending set, where nothing would ever complete it. The welcome menu
   then never opened again for the rest of the session.
@@ -42,9 +48,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   minutes after a player had already read it and closed it themselves.
 - A menu whose content failed to load had no way out — the back prompt is built
   with the footer, and the footer came second.
-- Control characters a player typed reached `reports.log` unfiltered, so a
-  reporter could erase the lines above their own in a terminal. Discord's copy
-  has always stripped them; the two records of one report disagreed.
 - `logFile` set to a reserved Windows device name (`NUL`, `CON`, `COM1`, …) was
   accepted, and every report written to it was discarded while the console
   reported each one as written.
@@ -64,24 +67,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   server's real one never opened. It no longer counts until the content is in,
   and a mission restart offers it again.
 - A `strings` override with no `text` blanked the widget it named instead of
-  being ignored.
-- The title and the pause-menu entry read "Server Info" in English in all twelve
+  being ignored. **If you used `{"key": "…", "text": ""}` deliberately to hide a
+  label, that entry is now refused** and the built-in wording comes back.
+- The title and the pause-menu entry read "Server Info" in English in all thirteen
   languages on a default install, because the shipped value won against the
   translated fallback. Both ship empty now and read "Info" in the player's own
   language; a server that sets either still gets exactly what it wrote.
 - The Discord sender stalled under a steady stream of reports: every new report
   pushed the next send further out, so one report went and the rest queued.
 
+### Security
+
+- With `verboseLogging` on, a modified client could write to the server log
+  without bound: two paths logged a rejection per packet with no limit and, in
+  one case, whatever text the client chose to put in it.
+- Control characters a player typed reached `reports.log` unfiltered, so a
+  reporter could erase the lines above their own in a terminal. Discord's copy
+  has always stripped them, so the two records of one report disagreed.
+
 ### Changed
 
 - A mistyped `accentColor` is now reported on the server console rather than in
   every player's log, where the owner who wrote the file could not see it.
-
-### Added
-
-- Faction rules and a queue for a full faction, on a branch and not yet released.
-  Player limits, whitelists and a balance rule as one system, with a queue that
-  catches everyone they turn away. Design notes live on that branch.
 
 ## [1.0.7] - 2026-08-01
 
@@ -408,7 +415,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   server's profile directory, so one published mod carries different content on
   every server that runs it.
 
-[Unreleased]: https://github.com/MrFrostDev/MrFrost-ServerEssentials/compare/v1.0.7...HEAD
+[Unreleased]: https://github.com/MrFrostDev/MrFrost-ServerEssentials/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/MrFrostDev/MrFrost-ServerEssentials/compare/v1.0.7...v1.1.0
 [1.0.7]: https://github.com/MrFrostDev/MrFrost-ServerEssentials/compare/v1.0.6...v1.0.7
 [1.0.6]: https://github.com/MrFrostDev/MrFrost-ServerEssentials/compare/v1.0.5...v1.0.6
 [1.0.5]: https://github.com/MrFrostDev/MrFrost-ServerEssentials/compare/v1.0.4...v1.0.5

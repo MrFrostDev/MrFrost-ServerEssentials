@@ -166,7 +166,7 @@ addon/                        the addon, and the only thing the game loads
   scripts/Game/MrFrost/…/     one folder per feature
   server/MrFrost/             example server files - copy this into your profile dir
 docs/                         the documentation linked above
-.github/workflows/            builds the release archive from addon/ alone
+.github/workflows/            per-pull-request checks, and the release build
 ```
 
 Everything the game reads lives under `addon/`, which is the folder you point

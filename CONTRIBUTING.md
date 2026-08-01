@@ -8,7 +8,7 @@ and get the change accepted.
 ```
 addon/      the addon, and the only thing the game loads
 docs/       documentation
-.github/    the workflow that builds the release archive from addon/ alone
+.github/    the checks that run on every pull request, and the release build
 ```
 
 Everything the engine reads lives under `addon/`, which is the folder
@@ -28,7 +28,8 @@ and may be repeated to load several mods from different places.
 
 ## Verifying a change
 
-The engine is the only thing that reads scripts and configs. The Workbench's
+The engine is the only thing that runs scripts, and the checks that guard the
+configs run on every pull request without it. The Workbench's
 `-validate` does not load the addon and reports success on code that does not
 compile, so verification means booting the game far enough to compile the Game
 module and parse the system configs:

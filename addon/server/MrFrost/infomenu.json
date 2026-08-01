@@ -1,7 +1,6 @@
 {
   "enabled": true,
   "title": "My Server",
-  "pauseMenuEntry": "Server Info",
   "openOnJoin": true,
   "accentColor": "226,167,79",
   "menuIcon": "field-manual",

@@ -39,7 +39,7 @@ Search for `MrFrost` and you have its whole story for that session. On a server,
 |---|---|---|
 | `Loaded $profile:MrFrost/<file> (N bytes)` | Server | The server's own file was read |
 | `No $profile:MrFrost/<file> on this server` | Server | No server file — the bundled content is used |
-| `... is not sound JSON` | Server | A stray or missing comma, an unclosed brace or quote |
+| `... is not sound JSON` | Server | A stray or missing comma, an unclosed brace or quote, a capitalised `True`/`False`/`Null`, a number written `.5`, or a backslash in a text value |
 | `Could not open ...` | Server | Permissions, or the file is locked |
 | `Server content complete` | Client | Every feature's content arrived. Needs `verboseLogging` |
 | `Using this server's info menu (N categories)` | Client | The server's content is now what players see |
@@ -151,7 +151,7 @@ The server's file never made it. The **server** console says which of the three 
 |---|---|
 | `No $profile:MrFrost/... on this server` | Wrong folder, or wrong file name |
 | `Could not open ...` | Permissions, or the file is locked |
-| `report.json is not sound JSON` | A stray or missing comma, an unclosed brace or quote. The line names the file |
+| `report.json is not sound JSON` | A stray or missing comma, an unclosed brace or quote, a capitalised `True`/`False`/`Null`, a number written `.5`, or a backslash in a text value. The line names the file |
 | `infomenu.json is not sound JSON` | Same, for that file |
 | `This server sent no info menu categories` | Client. The file carried settings but no content, so the bundled categories are kept |
 | `This server's ... content did not parse` | Client. What arrived was not usable; the bundled content is used |

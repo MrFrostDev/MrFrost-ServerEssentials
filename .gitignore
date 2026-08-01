@@ -14,8 +14,9 @@ profile/
 **/MrFrost/factions.json
 reports.log
 
-# The examples under addon/server/ are the exception - they are tracked on
-# purpose and ship empty. Force-add one only after checking it is still empty.
+# The examples under addon/server/ are the exception: they are tracked on
+# purpose and ship with example content. Neither carries a webhook URL, and
+# neither should ever be updated from a live server's copy.
 !addon/server/MrFrost/*.json
 
 # Editors

@@ -51,8 +51,8 @@ JSON has no comments, so the files stay clean and everything is documented here 
 | Key | Type | Default | Meaning |
 |---|---|---|---|
 | `enabled` | bool | `true` | `false` hides the menu **and** its pause entry. The key stays bound and does nothing. The same happens when every category is switched off — unless a footer link is still drawable, since those live nowhere else |
-| `title` | string | — | Headline above the category list. Usually the server or unit name |
-| `pauseMenuEntry` | string | — | Label of the entry added next to the vanilla Field Manual |
+| `title` | string | `Info` | Headline above the category list. Usually the server or unit name |
+| `pauseMenuEntry` | string | `Info` | Label of the entry added next to the vanilla Field Manual. Left out, it reads "Info" in the player's own language |
 | `openOnJoin` | bool | `true` | Show the menu once, the first time a player spawns in. Not on respawn; again after a mission restart |
 | `accentColor` | string | white | `"226,167,79"` — ordinary sRGB, the numbers a colour picker shows. Fills the selected row and draws the line under the header |
 | `menuIcon` | string | — | Sprite next to the title and on the pause menu entry — see [Icons](Icons.md) |
@@ -98,11 +98,9 @@ Menu, pause entry and key all disappear. `report.json` takes the same key.
 ```json
 {
   "title": "My Server",
-  "pauseMenuEntry": "Server Info",
   "discordUrl": "https://discord.gg/example",
   "discordLabel": "Discord",
   "websiteUrl": "https://example.com",
-  "websiteLabel": "Website",
   "customUrl": "https://example.com/appeal",
   "customLabel": "Ban appeal",
   "accentColor": "226,167,79",

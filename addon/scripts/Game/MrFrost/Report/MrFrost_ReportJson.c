@@ -345,7 +345,7 @@ class MrFrost_ReportChannel : MrFrost_ServerContentChannel
 		// and was told nothing.
 		if (!MrFrost_ServerContent.IsJsonObject(json))
 		{
-			MrFrost_Log.Error("report.json is not sound JSON - falling back to the bundled settings. Check it for a stray or missing comma.");
+			MrFrost_Log.Error("report.json is not sound JSON - falling back to the bundled settings. Check it for a stray or missing comma, a capitalised True/False/Null, a number written .5 instead of 0.5, or a backslash in a text value.");
 			return false;
 		}
 
