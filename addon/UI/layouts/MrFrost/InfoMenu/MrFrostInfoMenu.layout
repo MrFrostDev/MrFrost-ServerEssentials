@@ -89,7 +89,7 @@ HorizontalLayoutWidgetClass {
         SizeMode Fill
        }
        components {
-        SCR_GamepadScrollComponent "{7FA1C3D2E4B51290}" {
+        SCR_GamepadScrollComponent "{7FA1C3D2E4B512F0}" {
         }
        }
        {

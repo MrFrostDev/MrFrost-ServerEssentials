@@ -64,15 +64,37 @@ jobs:
           set -euo pipefail
 
           # Two resources declaring the same GUID is a collision the engine
-          # resolves by load order, silently. Only the Name line is read: a
-          # .meta may legitimately mention another resource's GUID, and its own
-          # is the one that has to be unique.
+          # resolves by load order, silently. Only the Name line of a .meta is
+          # read: a .meta may legitimately mention another resource's GUID, and
+          # its own is the one that has to be unique.
           DUPES=$(grep -rh --include='*.meta' -oE '^ Name "\{[0-9A-F]{16}\}' addon \
-            | sort | uniq -d || true)
+            | grep -oE '\{[0-9A-F]{16}\}' | sort | uniq -d || true)
 
           if [ -n "$DUPES" ]; then
-            echo "These GUIDs are declared more than once:"
+            echo "These resource GUIDs are declared more than once:"
             echo "$DUPES"
+            exit 1
+          fi
+
+          # Widget and component ids inside the layouts are the same kind of
+          # identifier, handed out by the same counter, and they collide the same
+          # way - so a check named for duplicate GUIDs that only reads .meta will
+          # miss every one of them.
+          #
+          # Only a bare "{...}" counts. The same file also references other
+          # resources as "{...}path/to/thing.imageset", and two layouts pointing
+          # at one imageset is not a collision, it is the point.
+          LAYOUT_DUPES=$(grep -rh --include='*.layout' -oE '"\{[0-9A-F]{16}\}"' addon \
+            | grep -oE '\{[0-9A-F]{16}\}' | sort | uniq -d || true)
+
+          if [ -n "$LAYOUT_DUPES" ]; then
+            echo "These layout ids are used more than once:"
+            echo "$LAYOUT_DUPES"
+
+            for id in $LAYOUT_DUPES; do
+              grep -rn --include='*.layout' -F "$id" addon
+            done
+
             exit 1
           fi
 
@@ -172,7 +194,11 @@ jobs:
                   path = os.path.join(root, name)
                   text = open(path, encoding='utf-8').read()
 
-                  for match in re.finditer(r'\]\(([^)#h][^)]*)\)', text):
+                  # A lookahead, not a negated character class. Excluding the
+                  # letter h to skip http:// also skipped every relative target
+                  # that happens to start with one - hooks.md, home.md - and
+                  # those would have gone unchecked for as long as they existed.
+                  for match in re.finditer(r'\]\((?!https?://|#|mailto:)([^)]+)\)', text):
                       target = match.group(1).split('#')[0]
                       if target and not os.path.exists(os.path.normpath(os.path.join(root, target))):
                           broken.append(f'{path} -> {target}')
