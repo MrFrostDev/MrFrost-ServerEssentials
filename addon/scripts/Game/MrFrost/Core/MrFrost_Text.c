@@ -124,7 +124,7 @@ class MrFrost_Text
 		if (s_mResolved.Find(key, text))
 			return text;
 
-		MrFrost_Log.Warn("No text for key '" + key + "'.");
+		MrFrost_Log.WarnOnce("text." + key, "No text for key '" + key + "'.");
 		return key;
 	}
 

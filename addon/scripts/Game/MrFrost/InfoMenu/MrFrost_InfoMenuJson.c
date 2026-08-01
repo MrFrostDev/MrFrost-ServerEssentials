@@ -336,8 +336,22 @@ class MrFrost_InfoMenuChannel : MrFrost_ServerContentChannel
 
 		foreach (MrFrost_JsonString entry : strings)
 		{
-			if (entry && !entry.key.IsEmpty())
-				overrides.Set(entry.key, entry.text);
+			if (!entry || entry.key.IsEmpty())
+				continue;
+
+			// An override with no text is not an override. The key travels
+			// separately from the value, so a "text" left out arrives as an
+			// empty string - and Get() answers from the override map before it
+			// reaches the table, so one forgotten field drew a button with no
+			// label on it. That is the outcome the unknown-key path returns the
+			// key itself to avoid, reached by the one road that skipped it.
+			if (entry.text.IsEmpty())
+			{
+				MrFrost_Log.Warn("The strings override for '" + entry.key + "' has no text and was ignored.");
+				continue;
+			}
+
+			overrides.Set(entry.key, entry.text);
 		}
 
 		MrFrost_Text.SetOverrides(overrides);

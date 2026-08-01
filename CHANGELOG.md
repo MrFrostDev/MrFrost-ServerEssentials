@@ -50,6 +50,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   reported each one as written.
 - Warnings about settings that cannot change while the server runs were printed
   once per report rather than once.
+- **A server that shipped an `infomenu.json` without `categories` gave its
+  players a Discord button pointing at the addon author's server**, and no value
+  it could write would stop it — an absent key and `""` arrive identical, so the
+  empty string the documentation offers as "draws no button" was the same input
+  as saying nothing. The footer links are no longer inherited: a server that
+  ships a file owns its own footer. **If you rely on that inheritance, write
+  `discordUrl`, `websiteUrl` and `customUrl` into your file.**
+- The same merge discarded a `discordLabel`, `websiteLabel`, `customLabel` or
+  `menuIconImageset` written without its paired key.
+- The menu opened from the pause screen before the server's content had arrived
+  showed the addon's placeholder pages — and counted as the welcome, so the
+  server's real one never opened. It no longer counts until the content is in,
+  and a mission restart offers it again.
+- A `strings` override with no `text` blanked the widget it named instead of
+  being ignored.
+- The title and the pause-menu entry read "Server Info" in English in all twelve
+  languages on a default install, because the shipped value won against the
+  translated fallback. Both ship empty now and read "Info" in the player's own
+  language; a server that sets either still gets exactly what it wrote.
+- The Discord sender stalled under a steady stream of reports: every new report
+  pushed the next send further out, so one report went and the rest queued.
 
 ### Changed
 
