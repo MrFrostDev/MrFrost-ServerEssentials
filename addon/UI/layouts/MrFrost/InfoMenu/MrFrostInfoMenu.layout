@@ -88,6 +88,10 @@ HorizontalLayoutWidgetClass {
        Slot LayoutSlot "{7FA1C3D2E4B5123C}" {
         SizeMode Fill
        }
+       components {
+        SCR_GamepadScrollComponent "{7FA1C3D2E4B51290}" {
+        }
+       }
        {
         VerticalLayoutWidgetClass "{7FA1C3D2E4B51280}" {
          Name "ContentHolder"

@@ -124,6 +124,37 @@ class MrFrost_ReportUI : MrFrost_MenuBase
 		// during construction outlives the row it belongs to and hangs over the
 		// form until something closes it.
 		GetGame().GetCallqueue().CallLater(CloseDropdowns, 1, false);
+
+		// Hand something focus, or a gamepad has nothing to move from and the whole
+		// form is unreachable: no target, no player, no description - and with an
+		// empty description the send prompt stays disabled, so holding the trigger
+		// does nothing at all. The tabs still page, because paging is action-driven
+		// rather than focus-driven, so the menu looks alive while being inert. The
+		// info menu has always done this; this one never did.
+		FocusFirstControl();
+	}
+
+	//------------------------------------------------------------------------------
+	//! Puts controller focus on the first control a player would use.
+	//!
+	//! The description box on a bug report, since that is the only field; the
+	//! target picker on a player report, since that comes first.
+	protected void FocusFirstControl()
+	{
+		WorkspaceWidget workspace = GetGame().GetWorkspace();
+		if (!workspace)
+			return;
+
+		Widget target;
+
+		if (m_eKind == MrFrost_EReportKind.PLAYER && m_TargetCombo)
+			target = m_TargetCombo.GetRootWidget();
+
+		if (!target && m_Description)
+			target = m_Description.GetRootWidget();
+
+		if (target)
+			workspace.SetFocusedWidget(target);
 	}
 
 	//------------------------------------------------------------------------------

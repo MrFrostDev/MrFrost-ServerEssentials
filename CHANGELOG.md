@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- The report menu could not be used with a controller. Nothing held focus when
+  it opened, so no button responded until a mouse moved the cursor onto one, and
+  the info menu's page text could not be scrolled at all. Both menus now take
+  focus on open and answer the stick.
+
 ### Added
 
 - Faction rules and a queue for a full faction, on a branch and not yet released.
