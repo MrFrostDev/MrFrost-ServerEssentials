@@ -235,6 +235,20 @@ class MrFrost_ServerContent
 			return string.Empty;
 		}
 
+		// Notepad and PowerShell's Out-File both write a byte order mark by
+		// default, and TrimInPlace does not count EF BB BF as whitespace. The
+		// three bytes sit in front of the opening brace, so the file is rejected
+		// as malformed and the owner is told to look for a stray comma in a file
+		// whose punctuation is perfect. Dropped rather than reported: it is not a
+		// mistake, it is what the editor they used does.
+		// Masked, not compared directly: ToAscii sign-extends anything above 0x7F,
+		// so all three of these bytes arrive negative and == 0xEF is never true.
+		if (raw.Length() >= 3
+			&& (raw.ToAscii(0) & 0xFF) == 0xEF
+			&& (raw.ToAscii(1) & 0xFF) == 0xBB
+			&& (raw.ToAscii(2) & 0xFF) == 0xBF)
+			raw = raw.Substring(3, raw.Length() - 3);
+
 		if (!channel.Validate(raw))
 		{
 			MrFrost_Log.Error(path + " did not parse into anything usable - falling back to the bundled content.");
@@ -355,6 +369,15 @@ class MrFrost_ServerContent
 					int s = text.ToAscii(i);
 					if (s == 92)	// backslash
 					{
+						// The escape is checked, not merely skipped. JSON allows
+						// eight of them and \uXXXX, and a Windows path typed into a
+						// text field - "C:\Users\..." - is none of those. Skipping
+						// blind let that file through the shape check and into a
+						// parse that fails without being able to say so, which
+						// leaves every setting at its default.
+						if (!IsEscape(text, i + 1, len))
+							return false;
+
 						i += 2;
 						continue;
 					}
@@ -407,8 +430,6 @@ class MrFrost_ServerContent
 			}
 
 			// Anything else starts a bare literal: a number, true, false or null.
-			// Its contents are the JSON layer's business; all that matters here is
-			// that one is allowed at this point and that it ends where it should.
 			if (state != JSON_VALUE)
 				return false;
 
@@ -417,6 +438,8 @@ class MrFrost_ServerContent
 			// token after it, so a file missing one comma between a number and
 			// the next key read as a single clean value - and the reader joins
 			// lines without a separator, which is exactly how that file arrives.
+			int literalStart = i;
+
 			while (i < len)
 			{
 				int l = text.ToAscii(i);
@@ -429,12 +452,150 @@ class MrFrost_ServerContent
 				i++;
 			}
 
+			// The bytes are read as well as counted. Leaving them to "the JSON
+			// layer" meant True, fasle, nul and .5 all passed the shape check and
+			// then failed the real parse - and ExpandFromRAW cannot say it failed,
+			// so the file loaded as a document full of defaults. The server
+			// reported the file as read while every client fell back to the
+			// bundled demo content: one capital letter, silently.
+			if (!IsJsonLiteral(text.Substring(literalStart, i - literalStart)))
+				return false;
+
 			state = JSON_NEXT;
 			empty = false;
 		}
 
 		// A document that ended mid-container, or never opened one at all.
 		return stack.IsEmpty() && state == JSON_NEXT;
+	}
+
+	//------------------------------------------------------------------------------
+	//! Whether a bare token is one JSON allows outside a string: true, false,
+	//! null, or a number.
+	//!
+	//! The number grammar is JSON's, not a programming language's, so it is
+	//! stricter than it looks: no leading plus, no leading zero before another
+	//! digit, no bare decimal point at either end, no hex, no infinity. Those are
+	//! the shapes a hand-written file actually contains, and each of them makes
+	//! the whole document unparseable rather than just its own value.
+	protected static bool IsJsonLiteral(string value)
+	{
+		if (value == "true" || value == "false" || value == "null")
+			return true;
+
+		int len = value.Length();
+		if (len == 0)
+			return false;
+
+		int i = 0;
+		if (value.ToAscii(i) == 45)
+			i++;
+
+		// Integer part. A leading zero may stand alone but may not be followed by
+		// another digit: 0 and 0.5 are numbers, 05 is not.
+		int digits = 0;
+		while (i < len && IsDigit(value.ToAscii(i)))
+		{
+			i++;
+			digits++;
+		}
+
+		if (digits == 0)
+			return false;
+
+		if (digits > 1 && value.ToAscii(i - digits) == 48)
+			return false;
+
+		// Fraction. The point has to have at least one digit after it.
+		if (i < len && value.ToAscii(i) == 46)
+		{
+			i++;
+			digits = 0;
+
+			while (i < len && IsDigit(value.ToAscii(i)))
+			{
+				i++;
+				digits++;
+			}
+
+			if (digits == 0)
+				return false;
+		}
+
+		// Exponent, with an optional sign and at least one digit.
+		if (i < len && (value.ToAscii(i) == 101 || value.ToAscii(i) == 69))
+		{
+			i++;
+
+			if (i < len && (value.ToAscii(i) == 43 || value.ToAscii(i) == 45))
+				i++;
+
+			digits = 0;
+
+			while (i < len && IsDigit(value.ToAscii(i)))
+			{
+				i++;
+				digits++;
+			}
+
+			if (digits == 0)
+				return false;
+		}
+
+		// Anything left over is a character a number may not contain.
+		return i == len;
+	}
+
+	//------------------------------------------------------------------------------
+	protected static bool IsDigit(int value)
+	{
+		return value >= 48 && value <= 57;
+	}
+
+	//------------------------------------------------------------------------------
+	//! Whether the byte after a backslash begins an escape JSON allows.
+	//!
+	//! A trailing backslash at the very end of the text is not one - there is
+	//! nothing after it to escape, and reading past the end would answer with
+	//! whatever ToAscii returns for an index it does not have.
+	protected static bool IsEscape(string text, int at, int len)
+	{
+		if (at >= len)
+			return false;
+
+		int c = text.ToAscii(at);
+
+		// " \ / b f n r t
+		if (c == 34 || c == 92 || c == 47 || c == 98 || c == 102 || c == 110 || c == 114 || c == 116)
+			return true;
+
+		// \uXXXX, and all four have to be there. The hex digits themselves are
+		// left to the string walk, which cannot mistake one for a quote.
+		if (c != 117)
+			return false;
+
+		if (at + 4 >= len)
+			return false;
+
+		for (int i = 1; i <= 4; i++)
+		{
+			if (!IsHexDigit(text.ToAscii(at + i)))
+				return false;
+		}
+
+		return true;
+	}
+
+	//------------------------------------------------------------------------------
+	protected static bool IsHexDigit(int value)
+	{
+		if (IsDigit(value))
+			return true;
+
+		if (value >= 65 && value <= 70)		// A-F
+			return true;
+
+		return value >= 97 && value <= 102;	// a-f
 	}
 
 	//------------------------------------------------------------------------------
@@ -491,12 +652,67 @@ class MrFrost_ServerContent
 	}
 
 	//------------------------------------------------------------------------------
-	//! Splits a file for transfer, cutting only at spaces.
+	//! Removes bytes below 0x20 and leaves everything else alone.
+	//!
+	//! Cut rather than rebuilt: slicing around the offending byte keeps every
+	//! multi-byte character intact, because a control byte can never be part of a
+	//! UTF-8 sequence. In the ordinary case there is nothing to remove and the
+	//! original is handed straight back.
+	//!
+	//! Anything a player typed needs this before it is written somewhere with
+	//! lines: a newline in the middle of a string lets whoever typed it invent
+	//! log entries that look exactly like the real ones.
+	static string StripControls(string value)
+	{
+		int len = value.Length();
+
+		int start = 0;
+		string result;
+		bool found = false;
+
+		for (int i = 0; i < len; i++)
+		{
+			int c = value.ToAscii(i);
+
+			// Negative means a byte above 0x7F arrived sign-extended - part of a
+			// character, never a control.
+			if (c < 0 || c >= 32)
+				continue;
+
+			found = true;
+
+			if (i > start)
+				result += value.Substring(start, i - start);
+
+			start = i + 1;
+		}
+
+		if (!found)
+			return value;
+
+		if (start < len)
+			result += value.Substring(start, len - start);
+
+		return result;
+	}
+
+	//------------------------------------------------------------------------------
+	//! Makes a client-supplied string safe to put in a log line: bounded, on a
+	//! character boundary, and without the control bytes that would forge one.
+	static string ForLog(string value, int limit)
+	{
+		return StripControls(Truncate(value, limit));
+	}
+
+	//------------------------------------------------------------------------------
+	//! Splits a file for transfer at a fixed size, on a character boundary.
 	//!
 	//! Substring() counts bytes, and rule texts are full of multi-byte characters
 	//! — cutting at a fixed offset would eventually slice one in half and corrupt
-	//! the two chunks around it. A space is always a single byte, so a cut there
-	//! is always on a character boundary.
+	//! the two chunks around it. Cutting at the last space instead was the first
+	//! answer and the wrong one: Japanese and Chinese carry no spaces at all, so
+	//! a file in either had no cut to make. The chunk is taken at its full size
+	//! and then walked back off any continuation byte, which needs no spaces.
 	//!
 	//! Walked with an offset rather than by re-slicing the remainder. Substring()
 	//! caps its output at 8191 characters, so taking the tail of a longer file

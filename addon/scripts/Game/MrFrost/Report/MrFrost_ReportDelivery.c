@@ -41,8 +41,11 @@ class MrFrost_ReportDelivery
 	//! players report at once.
 	protected static const int SEND_INTERVAL_MS = 1500;
 
-	//! Discord's own limits. Over either one it rejects the whole embed, so both
-	//! are enforced here rather than trusted to a server owner's maxDescription.
+	//! Held below Discord's own limits, which are 4096 for the body and 1024 for
+	//! a field. The margin covers the JSON escaping, which can double a string's
+	//! length without changing what it says. Over either limit Discord rejects
+	//! the whole embed, so both are enforced here rather than trusted to a server
+	//! owner's maxDescription.
 	protected static const int MAX_DESCRIPTION = 4000;
 	protected static const int MAX_FIELD = 1000;
 
@@ -472,47 +475,6 @@ class MrFrost_ReportDelivery
 	//! Everything here comes from a text field a player typed into, so it is
 	//! hostile input by default: an unescaped quote or backslash would break the
 	//! JSON and lose the report.
-	//! Removes bytes below 0x20 and leaves everything else alone.
-	//!
-	//! Cut rather than rebuilt: slicing around the offending byte keeps every
-	//! multi-byte character intact, because a control byte can never be part
-	//! of a UTF-8 sequence. In the ordinary case there is nothing to remove
-	//! and the original is handed straight back.
-	protected static string StripControls(string value)
-	{
-		int len = value.Length();
-
-		int start = 0;
-		string result;
-		bool found = false;
-
-		for (int i = 0; i < len; i++)
-		{
-			int c = value.ToAscii(i);
-
-			// Negative means a byte above 0x7F arrived sign-extended - part of a
-			// character, never a control.
-			if (c < 0 || c >= 32)
-				continue;
-
-			found = true;
-
-			if (i > start)
-				result += value.Substring(start, i - start);
-
-			start = i + 1;
-		}
-
-		if (!found)
-			return value;
-
-		if (start < len)
-			result += value.Substring(start, len - start);
-
-		return result;
-	}
-
-	//------------------------------------------------------------------------------
 	protected static string Escape(string value)
 	{
 		string result = value;
@@ -528,7 +490,7 @@ class MrFrost_ReportDelivery
 		// string, so one byte a player typed - or pasted - was enough for
 		// Discord to reject the whole message, with an error naming the webhook
 		// settings rather than the cause.
-		return StripControls(result);
+		return MrFrost_ServerContent.StripControls(result);
 	}
 
 	//------------------------------------------------------------------------------
