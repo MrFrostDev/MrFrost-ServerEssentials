@@ -84,9 +84,18 @@ class MrFrost_ReportDelivery
 	//! Used when a server names no log file, or names something that is a path.
 	protected static const string DEFAULT_LOG_FILE = "reports.log";
 
+	//! How many send intervals of silence, with reports waiting, mean the
+	//! repeating call is gone rather than merely between ticks. Three is far
+	//! outside the jitter of a 1500 ms timer and still under five seconds.
+	protected static const int STALL_INTERVALS = 3;
+
 	//! Reports waiting for their turn at the webhook.
 	protected static ref array<ref MrFrost_Report> s_aQueue;
 	protected static bool s_bSending;
+
+	//! World time of the last report handed to the webhook. Only read to tell a
+	//! stalled sender from a busy one.
+	protected static float s_fLastSendAt;
 
 	//! Held as a ref: a RestCallback that nobody owns is deleted the moment its
 	//! call finishes, and the response would land in freed memory.
@@ -174,6 +183,10 @@ class MrFrost_ReportDelivery
 	protected static bool IsDeviceName(string name)
 	{
 		string stem = name;
+
+		// Windows drops trailing spaces before resolving a name, so "nul " is the
+		// device just as "nul" is.
+		stem.TrimInPlace();
 
 		int dot = stem.IndexOf(".");
 		if (dot >= 0)
@@ -281,21 +294,44 @@ class MrFrost_ReportDelivery
 
 		s_aQueue.Insert(report);
 
-		// Re-armed rather than trusted. s_bSending asserted that a repeating call
-		// existed; nothing ever checked that it still did, and nothing but
-		// SendNext could clear the flag - so a call lost for any reason left the
-		// flag true, every later Enqueue answering "queued", and no report
-		// reaching Discord again for the life of the process while two hundred
-		// players were told theirs was sent. Remove before CallLater makes this
-		// idempotent: re-arming an intact timer costs nothing and cannot double
-		// the send rate.
-		GetGame().GetCallqueue().Remove(SendNext);
-		GetGame().GetCallqueue().CallLater(SendNext, SEND_INTERVAL_MS, true);
-
 		if (s_bSending)
+		{
+			// The timer is trusted, but not forever.
+			//
+			// s_bSending asserts that a repeating call exists and only SendNext
+			// can clear it, so a call lost for any reason left the flag set, every
+			// later report answered "queued", and nothing reached Discord again
+			// for the life of the process while two hundred players were thanked.
+			//
+			// Re-arming on every enqueue was the wrong answer to that: Remove
+			// followed by CallLater does not merely refresh the timer, it moves
+			// the next tick to now + SEND_INTERVAL_MS. A steady trickle of reports
+			// - two reporters during an incident average well under a second and a
+			// half apart - pushed the tick forward every time and exactly one
+			// report was ever sent. The cure was worse than the disease it was
+			// written for.
+			//
+			// So the countdown is left alone on the ordinary path, and the stall
+			// is detected instead: nothing has been posted for several intervals
+			// while reports are waiting means the call really is gone.
+			float now = GetGame().GetWorld().GetWorldTime();
+			float silent = now - s_fLastSendAt;
+
+			// A world clock that has gone backwards is a mission restart, which is
+			// exactly the moment a timer is most likely to have been lost.
+			if (silent >= 0 && silent < SEND_INTERVAL_MS * STALL_INTERVALS)
+				return true;
+
+			MrFrost_Log.Warn("The Discord sender stopped ticking with " + s_aQueue.Count() + " report(s) waiting - restarting it.");
+
+			GetGame().GetCallqueue().Remove(SendNext);
+			GetGame().GetCallqueue().CallLater(SendNext, SEND_INTERVAL_MS, true);
+			SendNext();
 			return true;
+		}
 
 		s_bSending = true;
+		GetGame().GetCallqueue().CallLater(SendNext, SEND_INTERVAL_MS, true);
 		SendNext();
 		return true;
 	}
@@ -316,6 +352,8 @@ class MrFrost_ReportDelivery
 		// third, second - out of step with reports.log, which is the one thing
 		// the channel is meant to line up with.
 		s_aQueue.RemoveOrdered(0);
+
+		s_fLastSendAt = GetGame().GetWorld().GetWorldTime();
 
 		Post(report);
 	}

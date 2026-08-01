@@ -258,20 +258,6 @@ class MrFrost_ServerContent
 			return string.Empty;
 		}
 
-		// Notepad and PowerShell's Out-File both write a byte order mark by
-		// default, and TrimInPlace does not count EF BB BF as whitespace. The
-		// three bytes sit in front of the opening brace, so the file is rejected
-		// as malformed and the owner is told to look for a stray comma in a file
-		// whose punctuation is perfect. Dropped rather than reported: it is not a
-		// mistake, it is what the editor they used does.
-		// Masked, not compared directly: ToAscii sign-extends anything above 0x7F,
-		// so all three of these bytes arrive negative and == 0xEF is never true.
-		if (raw.Length() >= 3
-			&& (raw.ToAscii(0) & 0xFF) == 0xEF
-			&& (raw.ToAscii(1) & 0xFF) == 0xBB
-			&& (raw.ToAscii(2) & 0xFF) == 0xBF)
-			raw = raw.Substring(3, raw.Length() - 3);
-
 		if (!channel.Validate(raw))
 		{
 			MrFrost_Log.Error(path + " did not parse into anything usable - falling back to the bundled content.");
